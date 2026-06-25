@@ -3,6 +3,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import {
   getLatestDisclosures,
+  getLatestDisclosuresPage,
   getImportantDisclosures,
   getDisclosuresByStockCode,
   searchDisclosures,
@@ -31,8 +32,8 @@ router.get('/', async (req: Request, res: Response) => {
       const data = await getDisclosuresByFlag(flag as 'important' | 'capital' | 'good' | 'bad', limit, offset);
       return res.json({ success: true, data });
     }
-    const data = await getLatestDisclosures();
-    res.json({ success: true, data });
+    const page = await getLatestDisclosuresPage(limit, offset);
+    res.json({ success: true, data: page.items, page: { limit, offset, hasMore: page.hasMore } });
   } catch {
     res.status(500).json({ success: false, error: '공시 정보를 불러오지 못했어요.' });
   }

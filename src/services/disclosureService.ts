@@ -64,6 +64,16 @@ class DisclosureService implements IDisclosureService {
     }
   }
 
+  // jp: 전체 공시 페이지 조회 (무한스크롤용) — { items, hasMore } 반환
+  async getLatestPage(limit = 50, offset = 0): Promise<{ items: Disclosure[]; hasMore: boolean }> {
+    try {
+      const items = await apiClient.get<Disclosure[]>(`/api/disclosures?limit=${limit}&offset=${offset}`);
+      return { items: items ?? [], hasMore: (items?.length ?? 0) >= limit };
+    } catch {
+      return { items: [], hasMore: false };
+    }
+  }
+
   async getImportantDisclosures(): Promise<Disclosure[]> {
     try {
       return await apiClient.get<Disclosure[]>('/api/disclosures/important');

@@ -615,13 +615,13 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
                         <div className="flex items-center gap-1.5 px-3 py-1.5" style={{ background: '#ff5252' }}>
                           <AlertTriangle size={11} color="#fff" />
                           <span className="text-[10px] font-bold text-white">투자위험 공시</span>
-                          <span className="text-[9px] ml-auto text-white opacity-70">{d.disclosedAt?.slice(5, 10).replace('-', '.')}</span>
+                          <span className="text-[9px] ml-auto text-white opacity-70">{d.disclosedAt?.slice(0, 10).replace(/-/g, '.')}</span>
                         </div>
                       )}
                       <div className="px-3 py-2.5">
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <span className="text-[13px] font-bold truncate" style={{ color: 'var(--text-primary)' }}>{d.stockName}</span>
-                          {!risk && <span className="text-[10px] flex-shrink-0" style={{ color: 'var(--text-tertiary)' }}>{d.disclosedAt?.slice(5, 10).replace('-', '.')}</span>}
+                          {!risk && <span className="text-[10px] flex-shrink-0" style={{ color: 'var(--text-tertiary)' }}>{d.disclosedAt?.slice(0, 10).replace(/-/g, '.')}</span>}
                         </div>
                         <p className="text-[11px] leading-snug truncate" style={{ color: risk ? '#F9A8D4' : 'var(--text-secondary)' }}>{d.reportName}</p>
                       </div>
