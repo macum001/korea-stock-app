@@ -1,0 +1,8 @@
+todo
+
+근데 로그에서 두 가지 짚을 게 보여요:
+
+disc-toggle-5 폴더가 프로젝트 안에 있어요 — C:\Users\macum\Desktop\korea-stock-app\disc-toggle-5\.... 이건 예전에 zip 풀 때 잘못 들어간 폴더 같아요. vite가 이걸 감시하다 EBUSY 에러를 냈어요. 나중에 지우는 게 좋아요 (del로). 지금 급한 건 아니에요.
+사용자 앱 vite가 admin/tsconfig 변경을 감지하고 리로드했어요. 사용자 앱(5173)이 admin 폴더까지 감시하고 있어요. 이것도 나중에 vite 설정에서 admin 제외하면 깔끔해요.
+
+1순위

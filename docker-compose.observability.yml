@@ -1,0 +1,163 @@
+# jp: 토스급 운영 점검용 Compose
+# jp: api/realtime/worker를 분리하고 Prometheus/Grafana/k6/chaos 테스트를 한 번에 실행할 수 있게 구성
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: jpstock
+      POSTGRES_PASSWORD: jpstock
+      POSTGRES_DB: jpstock
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jpstock -d jpstock"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7.2-alpine
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1000", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+
+  api:
+    build:
+      context: ./backend
+    environment:
+      NODE_ENV: production
+      SERVER_ROLE: api
+      PORT: 4000
+      DATABASE_URL: postgres://jpstock:jpstock@postgres:5432/jpstock
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: local-dev-secret-change-me
+      ADMIN_API_KEY: local-admin-key
+      CORS_ORIGIN: http://localhost:5173
+      USE_MOCK_DATA: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+
+  realtime-1:
+    build:
+      context: ./backend
+    environment:
+      NODE_ENV: production
+      SERVER_ROLE: realtime
+      PORT: 4000
+      DATABASE_URL: postgres://jpstock:jpstock@postgres:5432/jpstock
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: local-dev-secret-change-me
+      ADMIN_API_KEY: local-admin-key
+      CORS_ORIGIN: http://localhost:5173
+      USE_MOCK_DATA: "false"
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "4101:4000"
+
+  realtime-2:
+    build:
+      context: ./backend
+    environment:
+      NODE_ENV: production
+      SERVER_ROLE: realtime
+      PORT: 4000
+      DATABASE_URL: postgres://jpstock:jpstock@postgres:5432/jpstock
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: local-dev-secret-change-me
+      ADMIN_API_KEY: local-admin-key
+      CORS_ORIGIN: http://localhost:5173
+      USE_MOCK_DATA: "false"
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "4102:4000"
+
+  worker:
+    build:
+      context: ./backend
+    environment:
+      NODE_ENV: production
+      SERVER_ROLE: worker
+      DATABASE_URL: postgres://jpstock:jpstock@postgres:5432/jpstock
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: local-dev-secret-change-me
+      ADMIN_API_KEY: local-admin-key
+      USE_MOCK_DATA: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+      - --web.enable-lifecycle
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/rules.yml:/etc/prometheus/rules.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - api
+      - realtime-1
+      - realtime-2
+
+  grafana:
+    image: grafana/grafana:11.0.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+
+  k6-ws:
+    image: grafana/k6:0.51.0
+    profiles: ["loadtest"]
+    volumes:
+      - ./tests/k6:/scripts:ro
+    environment:
+      WS_URL: ws://realtime-1:4000/ws
+      API_BASE_URL: http://api:4000
+      SYMBOL: "005930"
+      VUS: "50"
+      DURATION: "60s"
+    command: ["run", "/scripts/ws-realtime-load.js"]
+    depends_on:
+      - realtime-1
+      - api
+
+volumes:
+  pg_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:

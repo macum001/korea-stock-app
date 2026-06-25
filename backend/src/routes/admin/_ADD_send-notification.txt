@@ -1,0 +1,88 @@
+// ============================================================
+// jp: ===== 어드민 알림 발송 ===== (data.routes.ts의 export default router; 바로 위에 추가)
+// jp: 상단 import에 추가 필요:
+//   import { createNotification, createNotificationsForUsers } from '../../repositories/notification.repository';
+//   import { getUserFcmTokens, getAllFcmTokens } from '../../repositories/fcmToken.repository';
+//   import { sendPushToTokens } from '../../services/fcm/firebase.service';
+// ============================================================
+
+// jp: POST /api/admin/data/send-notification - 알림 발송 (특정 사용자 1명 또는 전체)
+router.post('/send-notification', async (req: AdminRequest, res: Response) => {
+  try {
+    const title = (req.body?.title as string || '').trim();
+    const body = (req.body?.body as string || '').trim();
+    const target = (req.body?.target as string || '').trim();   // jp: 'all' 또는 특정 userId
+    const userId = (req.body?.userId as string || '').trim();   // jp: target이 'user'일 때 대상 id
+
+    if (!title) {
+      return res.status(400).json({ success: false, error: '제목을 입력해주세요.' } as ApiResponse);
+    }
+    if (title.length > 200) {
+      return res.status(400).json({ success: false, error: '제목이 너무 길어요. (최대 200자)' } as ApiResponse);
+    }
+
+    // jp: DB 알림 입력 (type='system', 종목 없음)
+    const notiInput = {
+      type: 'system' as const,
+      stockCode: '',          // jp: 공지는 종목 없음 (빈 문자열)
+      title,
+      body,
+    };
+
+    if (target === 'all') {
+      // jp: 전체 발송 - 모든 사용자 id 조회
+      const userRows = await query<{ id: string }>(`SELECT id FROM users`);
+      const userIds = userRows.map((r) => r.id);
+
+      // jp: DB 알림 (전체)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await createNotificationsForUsers(userIds, notiInput as any);
+
+      // jp: FCM 푸시 (전체 토큰)
+      let pushCount = 0;
+      try {
+        const tokens = await getAllFcmTokens();
+        if (tokens.length > 0) {
+          await sendPushToTokens(tokens, title, body);
+          pushCount = tokens.length;
+        }
+      } catch (e) {
+        console.warn('[어드민] 전체 푸시 실패(알림은 저장됨):', e instanceof Error ? e.message : e);
+      }
+
+      return res.json({
+        success: true,
+        data: { sentTo: userIds.length, pushCount },
+      } as ApiResponse);
+    } else {
+      // jp: 특정 사용자 1명
+      if (!userId) {
+        return res.status(400).json({ success: false, error: '대상 사용자를 지정해주세요.' } as ApiResponse);
+      }
+
+      // jp: DB 알림 (1명)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await createNotification({ ...notiInput, userId } as any);
+
+      // jp: FCM 푸시 (그 사용자 토큰)
+      let pushCount = 0;
+      try {
+        const tokens = await getUserFcmTokens(userId);
+        if (tokens.length > 0) {
+          await sendPushToTokens(tokens, title, body);
+          pushCount = tokens.length;
+        }
+      } catch (e) {
+        console.warn('[어드민] 푸시 실패(알림은 저장됨):', e instanceof Error ? e.message : e);
+      }
+
+      return res.json({
+        success: true,
+        data: { sentTo: 1, pushCount },
+      } as ApiResponse);
+    }
+  } catch (err) {
+    console.error('[어드민] 알림 발송 실패:', err instanceof Error ? err.message : err);
+    res.status(500).json({ success: false, error: '알림 발송에 실패했어요.' } as ApiResponse);
+  }
+});

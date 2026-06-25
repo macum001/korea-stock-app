@@ -1,0 +1,10 @@
+// jp: src/types/stock.ts 의 PeriodType 수정 안내
+// jp: ※ 전체 파일 교체 X. PeriodType 한 줄만 교체하세요.
+
+// jp: 기존:
+// export type PeriodType = '10min' | 'day' | 'week' | 'month' | 'year';
+
+// jp: 변경 (분봉 단위 추가):
+// export type PeriodType = '1min' | '3min' | '5min' | '10min' | '30min' | '60min' | 'day' | 'week' | 'month' | 'year';
+
+// jp: 메모장에서 PeriodType 줄을 찾아 위 '변경' 내용으로 교체하세요.

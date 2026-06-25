@@ -1,0 +1,104 @@
+@import "tailwindcss";
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f4f2f8;
+  --bg-card: #ffffff;
+  --bg-elevated: #f7f5fb;
+  --text-primary: #15131a;
+  --text-secondary: #3d3850;
+  --text-tertiary: #6b6580;
+  --border: #e6e2ee;
+  --border-subtle: #efedf4;
+  --accent: #6d5bd0;
+  --rise: #e8342f;
+  --fall: #1a56db;
+  --rise-bg: #fff0f0;
+  --fall-bg: #f0f4ff;
+  --rise-subtle: #ffd7d7;
+  --fall-subtle: #d7e4ff;
+}
+.dark {
+  --bg-primary: #100D20;
+  --bg-secondary: #1C1730;
+  --bg-card: #1C1730;
+  --bg-elevated: #221E35;
+  --text-primary: #F0EEF8;
+  --text-secondary: #A898C8;
+  --text-tertiary: #7868A8;
+  --border: #302848;
+  --border-subtle: #241E38;
+  --accent: #A78BFA;
+  --rise: #ff5252;
+  --fall: #5c8aff;
+  --rise-bg: rgba(255, 82, 82, 0.08);
+  --fall-bg: rgba(92, 138, 255, 0.08);
+  --rise-subtle: rgba(255, 82, 82, 0.15);
+  --fall-subtle: rgba(92, 138, 255, 0.15);
+}
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  font-family: 'Nanum Gothic', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+#root {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  position: relative;
+  background-color: var(--bg-primary);
+}
+::-webkit-scrollbar {
+  width: 0px;
+}
+::selection {
+  background: var(--accent);
+  color: white;
+}
+.text-rise { color: var(--rise); }
+.text-fall { color: var(--fall); }
+.bg-rise { background-color: var(--rise-bg); }
+.bg-fall { background-color: var(--fall-bg); }
+.bg-rise-subtle { background-color: var(--rise-subtle); }
+.bg-fall-subtle { background-color: var(--fall-subtle); }
+.transition-theme {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.pb-nav {
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+}
+.tab-scroll {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.tab-scroll::-webkit-scrollbar { display: none; }
+.chart-container {
+  width: 100%;
+  height: 100%;
+}
+@keyframes priceFlashUp {
+  0%   { background-color: var(--rise-bg); box-shadow: inset 0 0 0 1.5px var(--rise); }
+  100% { background-color: transparent; box-shadow: inset 0 0 0 0 transparent; }
+}
+@keyframes priceFlashDown {
+  0%   { background-color: var(--fall-bg); box-shadow: inset 0 0 0 1.5px var(--fall); }
+  100% { background-color: transparent; box-shadow: inset 0 0 0 0 transparent; }
+}
+.price-flash-up   { animation: priceFlashUp   0.6s ease-out; }
+.price-flash-down { animation: priceFlashDown 0.6s ease-out; }
+@keyframes aiBlink {
+  0%, 80%, 100% { opacity: 0.3; }
+  40% { opacity: 1; }
+}

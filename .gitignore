@@ -1,0 +1,64 @@
+# jp: secrets / local env
+.env
+.env.*
+!.env.example
+!.env.production.example
+firebase-service-account.json
+**/firebase-service-account.json
+
+# jp: dependencies / build outputs
+node_modules/
+dist/
+build/
+coverage/
+.cache/
+.vite/
+*.tsbuildinfo
+
+# jp: logs / OS / editor
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# jp: temporary archives
+*.zip
+*.tar.gz
+
+firebase-service-account.json
+
+# jp: 백업 파일 제외
+*.bak
+
+# jp: Firebase 관리자 키 (절대 커밋 금지)
+*adminsdk*.json
+backend/gongsi-app-firebase-adminsdk-*.json
+
+# jp: DB export / 민감 데이터
+backend/prompts_export.json
+
+# jp: 백업/임시 파일
+*.good
+*.backup.ts
+*-check.txt
+*_check.txt
+audit-check*.txt
+front-check.txt
+front2-check.txt
+README_테스트푸시.txt
+
+# firebase admin key - never commit
+*adminsdk*.json
+
+# db export
+backend/prompts_export.json
+
+# backup and temp files
+*.good
+*.backup.ts
+*-check.txt
+*_check.txt

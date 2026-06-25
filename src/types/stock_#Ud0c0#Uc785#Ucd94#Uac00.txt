@@ -1,0 +1,17 @@
+// jp: src/types/stock.ts 맨 아래에 추가하세요 (StockTab은 별도 - 아래 [2] 참고)
+
+// jp: 호가 한 단계 (가격 + 잔량)
+export interface OrderbookLevel {
+  price: number;
+  volume: number;
+}
+
+// jp: 호가창 (매도 10 + 매수 10)
+export interface Orderbook {
+  code: string;
+  ask: OrderbookLevel[];   // jp: 매도호가 [최고가...최저가(현재가 근처)]
+  bid: OrderbookLevel[];   // jp: 매수호가 [최고가(현재가 근처)...최저가]
+  totalAskVolume: number;
+  totalBidVolume: number;
+  updatedAt: string;
+}

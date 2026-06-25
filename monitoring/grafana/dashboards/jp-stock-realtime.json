@@ -1,0 +1,19 @@
+{
+  "title": "JP Stock Realtime Core",
+  "schemaVersion": 39,
+  "version": 2,
+  "refresh": "5s",
+  "time": { "from": "now-30m", "to": "now" },
+  "panels": [
+    { "id": 1, "type": "stat", "title": "Redis ready", "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 }, "targets": [{ "expr": "min(jp_redis_ready)", "refId": "A" }] },
+    { "id": 2, "type": "stat", "title": "WS clients", "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 }, "targets": [{ "expr": "sum(jp_ws_clients)", "refId": "A" }] },
+    { "id": 3, "type": "stat", "title": "KIS locks held", "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 }, "targets": [{ "expr": "sum(jp_kis_lock_held_count)", "refId": "A" }] },
+    { "id": 4, "type": "stat", "title": "Stream pending", "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 }, "targets": [{ "expr": "sum(jp_stream_recovery_pending)", "refId": "A" }] },
+    { "id": 5, "type": "timeseries", "title": "Redis ops/sec", "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 }, "targets": [{ "expr": "sum(jp_redis_instantaneous_ops_per_sec)", "refId": "A" }] },
+    { "id": 6, "type": "timeseries", "title": "Realtime ticks/sec", "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 }, "targets": [{ "expr": "sum(rate(jp_redis_trade_ticks[1m]))", "legendFormat": "trade", "refId": "A" }, { "expr": "sum(rate(jp_redis_orderbook_ticks[1m]))", "legendFormat": "orderbook", "refId": "B" }] },
+    { "id": 7, "type": "timeseries", "title": "Redis memory bytes", "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 }, "targets": [{ "expr": "max(jp_redis_used_memory_bytes)", "refId": "A" }] },
+    { "id": 8, "type": "timeseries", "title": "Stream recovery", "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 }, "targets": [{ "expr": "sum(jp_stream_recovery_pending)", "legendFormat": "pending", "refId": "A" }, { "expr": "sum(rate(jp_stream_recovery_reclaimed_rows[1m]))", "legendFormat": "reclaimed/s", "refId": "B" }, { "expr": "max(jp_stream_recovery_last_max_lag_ms)", "legendFormat": "lag ms", "refId": "C" }] },
+    { "id": 9, "type": "timeseries", "title": "KIS lock activity", "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 }, "targets": [{ "expr": "sum(increase(jp_kis_lock_acquired_total[5m]))", "legendFormat": "acquired", "refId": "A" }, { "expr": "sum(increase(jp_kis_lock_contended_total[5m]))", "legendFormat": "contended", "refId": "B" }, { "expr": "sum(increase(jp_kis_lock_lost_total[5m]))", "legendFormat": "lost", "refId": "C" }] },
+    { "id": 10, "type": "timeseries", "title": "Local subscriptions by process", "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 }, "targets": [{ "expr": "jp_ws_local_orderbook_symbols", "legendFormat": "orderbook {{instance}}", "refId": "A" }, { "expr": "jp_ws_local_trade_symbols", "legendFormat": "trade {{instance}}", "refId": "B" }] }
+  ]
+}

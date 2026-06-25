@@ -1,0 +1,36 @@
+version: '3.9'
+
+# jp: 개발 환경 오버라이드
+# jp: 사용법: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  postgres:
+    ports:
+      - "5432:5432"  # jp: 개발 시 직접 접근 허용
+
+  redis:
+    ports:
+      - "6379:6379"  # jp: 개발 시 직접 접근 허용
+
+  backend:
+    build:
+      target: development  # jp: dev 스테이지 사용 (ts-node-dev)
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./backend/src:/app/src:delegated  # jp: 핫리로드
+      - ./backend/package.json:/app/package.json:ro
+      - /app/node_modules  # jp: 컨테이너 node_modules 보존
+    command: npm run dev
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile.dev
+    volumes:
+      - ./src:/app/src:delegated
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:4000

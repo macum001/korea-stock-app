@@ -1,0 +1,93 @@
+version: '3.9'
+
+# jp: 토스급 수평확장 검증용 compose
+# jp: 다운로드/배포 전에 로컬에서 API/Realtime/Worker 역할 분리와 Redis Stream 복구를 같이 검증한다.
+# jp: 사용 예시:
+# jp:   docker compose -f docker-compose.yml -f docker-compose.scale.yml up --build
+# jp:   docker compose -f docker-compose.yml -f docker-compose.scale.yml up --scale realtime=2 --scale worker=2
+
+services:
+  backend:
+    profiles: ["disabled"]
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      SERVER_ROLE: api
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgres://${POSTGRES_USER:-gongsi_user}:${POSTGRES_PASSWORD:-gongsi_pass}@postgres:5432/${POSTGRES_DB:-gongsi_db}
+      PORT: 4000
+    ports:
+      - "${API_PORT:-4000}:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - gongsi_net
+
+  realtime:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      SERVER_ROLE: realtime
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgres://${POSTGRES_USER:-gongsi_user}:${POSTGRES_PASSWORD:-gongsi_pass}@postgres:5432/${POSTGRES_DB:-gongsi_db}
+      PORT: 4000
+      REDIS_MARKET_STREAM_GROUP: market-recovery-v1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - gongsi_net
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      SERVER_ROLE: worker
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgres://${POSTGRES_USER:-gongsi_user}:${POSTGRES_PASSWORD:-gongsi_pass}@postgres:5432/${POSTGRES_DB:-gongsi_db}
+      PORT: 4000
+      REDIS_MARKET_STREAM_GROUP: market-recovery-v1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - gongsi_net
+
+  ws-lb:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - realtime
+    ports:
+      - "${WS_PORT:-4001}:80"
+    volumes:
+      - ./docker/nginx/ws-scale.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - gongsi_net

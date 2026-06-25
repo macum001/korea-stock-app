@@ -1,0 +1,74 @@
+// ============================================================
+// jp: ===== 사용자 관리 ===== (data.routes.ts의 export default router; 바로 위에 추가)
+// ============================================================
+
+// jp: ===== 사용자 목록 =====
+router.get('/users', async (req: AdminRequest, res: Response) => {
+  try {
+    const q = (req.query.q as string || '').trim();
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const size = Math.min(100, Math.max(1, parseInt(req.query.size as string) || 20));
+    const offset = (page - 1) * size;
+
+    const where: string[] = [];
+    const params: unknown[] = [];
+    let i = 1;
+    if (q) {
+      where.push(`(u.email ILIKE $${i} OR u.nickname ILIKE $${i})`);
+      params.push(`%${q}%`);
+      i++;
+    }
+    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+
+    const countRows = await query<{ cnt: string }>(
+      `SELECT COUNT(*)::text AS cnt FROM users u ${whereSql}`, params
+    );
+    const total = parseInt(countRows[0]?.cnt || '0');
+
+    // jp: 사용자 + AI 분석 횟수(서브쿼리 left join)
+    const rows = await query(
+      `SELECT u.id, u.email, u.nickname, u.created_at, u.last_login_at,
+              COALESCE(a.cnt, 0)::int AS ai_count
+         FROM users u
+         LEFT JOIN (
+           SELECT user_id, COUNT(*) AS cnt
+             FROM ai_analysis_history
+            GROUP BY user_id
+         ) a ON a.user_id = u.id
+         ${whereSql}
+        ORDER BY u.created_at DESC
+        LIMIT ${size} OFFSET ${offset}`,
+      params
+    );
+
+    res.json({ success: true, data: { items: rows, total, page, size } } as ApiResponse);
+  } catch (err) {
+    console.error('[어드민] 사용자 목록 실패:', err instanceof Error ? err.message : err);
+    res.status(500).json({ success: false, error: '사용자 목록을 불러오지 못했어요.' } as ApiResponse);
+  }
+});
+
+// jp: ===== 사용자 통계 =====
+router.get('/users-stats', async (_req: AdminRequest, res: Response) => {
+  try {
+    const totalRows = await query<{ cnt: string }>(`SELECT COUNT(*)::text AS cnt FROM users`);
+    const todayRows = await query<{ cnt: string }>(
+      `SELECT COUNT(*)::text AS cnt FROM users WHERE created_at >= date_trunc('day', now())`
+    );
+    // jp: 최근 7일 내 로그인한 활성 사용자
+    const activeRows = await query<{ cnt: string }>(
+      `SELECT COUNT(*)::text AS cnt FROM users WHERE last_login_at >= now() - interval '7 days'`
+    );
+    res.json({
+      success: true,
+      data: {
+        total: parseInt(totalRows[0]?.cnt || '0'),
+        today: parseInt(todayRows[0]?.cnt || '0'),
+        active7d: parseInt(activeRows[0]?.cnt || '0'),
+      },
+    } as ApiResponse);
+  } catch (err) {
+    console.error('[어드민] 사용자 통계 실패:', err instanceof Error ? err.message : err);
+    res.status(500).json({ success: false, error: '통계를 불러오지 못했어요.' } as ApiResponse);
+  }
+});

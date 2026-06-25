@@ -1,0 +1,35 @@
+groups:
+  - name: jp-stock-realtime
+    interval: 10s
+    rules:
+      - alert: RedisDown
+        expr: jp_redis_ready == 0
+        for: 20s
+        labels:
+          severity: critical
+        annotations:
+          summary: Redis is unavailable
+          description: Realtime cache, stream recovery, distributed lock may be degraded.
+      - alert: StreamPendingGrowing
+        expr: jp_stream_recovery_pending > 1000
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Redis Stream pending rows are growing
+          description: Consumer recovery may be delayed or a worker may be stuck.
+      - alert: WebSocketNoClients
+        expr: sum(jp_ws_clients) == 0
+        for: 5m
+        labels:
+          severity: info
+        annotations:
+          summary: No frontend WebSocket clients connected
+      - alert: RedisMemoryHigh
+        expr: jp_redis_used_memory_bytes > 500000000
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Redis memory usage is high
+          description: Check trim length, TTL, and symbol count.
