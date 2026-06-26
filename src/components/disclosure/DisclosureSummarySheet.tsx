@@ -393,6 +393,34 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                               <div className="text-[19px] font-extrabold leading-tight truncate" style={{ color: 'var(--text-primary)' }}>{primary.value}</div>
                             </div>
                           </div>
+                          {/* 슬롯③ 사업부문 비중 막대 — value에 괄호% 있는 항목 3개+ */}
+                          {(() => {
+                            const SEG_RE = /\(([\d.]+)\s*%\)/;
+                            const segs = nums
+                              .map((n) => { const m = n.value.match(SEG_RE); return m ? { label: n.label.replace(/\s*매출\s*$/, ''), value: n.value, pct: parseFloat(m[1]) } : null; })
+                              .filter((x): x is { label: string; value: string; pct: number } => x !== null);
+                            if (segs.length < 3) return null;
+                            const COLORS = ['#7F77DD', '#5DCAA5', '#f5c451', '#F472B6', '#5c8aff', '#e08a5a'];
+                            return (
+                              <div className="mb-2 px-3.5 py-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                                <div className="text-[10px] font-semibold mb-2" style={{ color: 'var(--text-tertiary)' }}>사업부문별 비중</div>
+                                <div className="flex rounded-md overflow-hidden mb-2.5" style={{ height: 9 }}>
+                                  {segs.map((s, i) => (
+                                    <div key={i} style={{ width: `${s.pct}%`, background: COLORS[i % COLORS.length], marginLeft: i === 0 ? 0 : 2 }} />
+                                  ))}
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                  {segs.map((s, i) => (
+                                    <div key={i} className="flex items-center gap-2">
+                                      <span style={{ width: 8, height: 8, borderRadius: 2, background: COLORS[i % COLORS.length], flexShrink: 0 }} />
+                                      <span className="flex-1 text-[11px] truncate" style={{ color: 'var(--text-secondary)' }}>{s.label}</span>
+                                      <span className="text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>{s.value}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })()}
                           {/* 나머지 수치 리스트 */}
                           {rest.length > 0 && (
                             <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
