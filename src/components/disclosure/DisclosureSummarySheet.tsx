@@ -421,6 +421,47 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                               </div>
                             );
                           })()}
+                          {/* 슬롯③ 지분변동 전→후 바 — 변동 전/후 항목 있으면 (매수 빨강/매도 파랑) */}
+                          {(() => {
+                            const PCT = /([\d.]+)\s*%/;
+                            const findRow = (re: RegExp) => nums.find((n) => re.test(n.label) && /([\d.]+)\s*%/.test(n.value) && !/변동\s*률|변동량/.test(n.label));
+                            const before = findRow(/(보유\s*전|취득\s*전|전\s*보유|직전|변동\s*전)/);
+                            const after  = findRow(/(보유\s*후|취득\s*후|후\s*보유|이번\s*보고|금번|변동\s*후)/);
+                            if (!before || !after) return null;
+                            const bPct = before.value.match(PCT); const aPct = after.value.match(PCT);
+                            if (!bPct || !aPct) return null;
+                            const bv = parseFloat(bPct[1]); const av = parseFloat(aPct[1]);
+                            const isBuy = av >= bv;  // 보유 증가=매수(빨강), 감소=매도(파랑)
+                            const col = isBuy ? '#ff5252' : '#5c8aff';
+                            const purpose = findRow(/보유\s*목적|취득\s*목적/);
+                            const isControl = purpose ? /경영\s*참가|경영권|영향/.test(purpose.value) : false;
+                            return (
+                              <div className="mb-2 px-3.5 py-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                                <div className="text-[10px] font-semibold mb-2.5" style={{ color: 'var(--text-tertiary)' }}>보유 지분 변동</div>
+                                <div className="flex items-center gap-2.5">
+                                  <div className="text-center flex-shrink-0">
+                                    <div className="text-[9px]" style={{ color: 'var(--text-tertiary)' }}>변동 전</div>
+                                    <div className="text-[15px] font-bold" style={{ color: 'var(--text-secondary)' }}>{before.value.replace(/\s*\(.*/, '') || before.value}</div>
+                                  </div>
+                                  <div className="flex-1 flex flex-col items-center gap-0.5">
+                                    <span style={{ color: col, fontSize: 18, lineHeight: 1 }}>{isBuy ? '\u2192' : '\u2192'}</span>
+                                    <span className="text-[9px] font-bold" style={{ color: col }}>{isBuy ? '\uB9E4\uC218' : '\uB9E4\uB3C4'}</span>
+                                  </div>
+                                  <div className="text-center flex-shrink-0">
+                                    <div className="text-[9px] font-bold" style={{ color: col }}>변동 후</div>
+                                    <div className="text-[17px] font-extrabold" style={{ color: col }}>{after.value.replace(/\s*\(.*/, '') || after.value}</div>
+                                  </div>
+                                </div>
+                                {purpose && (
+                                  <div className="mt-2.5 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg" style={{ background: isControl ? 'rgba(255,82,82,0.10)' : 'rgba(255,255,255,0.04)' }}>
+                                    <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>보유 목적</span>
+                                    <span className="text-[11px] font-bold" style={{ color: isControl ? '#ff7a7a' : 'var(--text-secondary)' }}>{purpose.value}</span>
+                                    {isControl && <span className="text-[9px] ml-auto" style={{ color: '#ff7a7a' }}>경영권 영향 주의</span>}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
                           {/* 나머지 수치 리스트 */}
                           {rest.length > 0 && (
                             <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
