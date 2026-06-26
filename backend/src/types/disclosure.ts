@@ -48,6 +48,7 @@ export type DisclosureClassification = {
   isCorrection:     boolean;
   normalizedTitle:  string;
   category:         string;
+  categoryType:     string;   // jp: 종류 축 (투자위험/증자감자/...) — 6개 탭 분류
 };
 
 // jp: DART 기업 매핑

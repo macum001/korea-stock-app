@@ -115,6 +115,83 @@ function matchAny(normalizedTitle: string, normalizedKeywords: string[], origina
 }
 
 // ============================================================
+// jp: 종류 축 (categoryType) — 6개 탭 분류. 신호 축과 독립.
+// jp: 단일 카테고리(한 공시 = 한 종류). 위에서 먼저 매칭된 것 우선.
+// jp: 기존 normalizeTitle 재사용 → 가운뎃점/특수문자/대소문자 정규화 일관 적용.
+// ============================================================
+
+export type DisclosureCategoryType =
+  | '투자위험'
+  | '증자감자'
+  | '합병분할'
+  | '실적재무'
+  | '계약소송'
+  | '배당주총'
+  | '기타';
+
+// jp: [순서 중요] 위에서 먼저 매칭되면 그 카테고리로 확정
+const CATEGORY_TYPE_RULES: { keywords: string[]; type: DisclosureCategoryType }[] = [
+  // ── 투자위험 (최우선: 부도·상폐·관리종목)
+  { keywords: ['부도', '당좌거래정지'], type: '투자위험' },
+  { keywords: ['회생', '파산', '워크아웃'], type: '투자위험' },
+  { keywords: ['상장폐지', '정리매매'], type: '투자위험' },
+  { keywords: ['관리종목'], type: '투자위험' },
+  { keywords: ['횡령', '배임'], type: '투자위험' },
+  { keywords: ['거래정지', '매매정지', '매매거래정지'], type: '투자위험' },
+  { keywords: ['불성실공시', '공시불이행', '투자주의환기'], type: '투자위험' },
+  // ── 증자·감자 (희석·소각·분할)
+  { keywords: ['유상증자', '주주배정', '제3자배정', '제삼자배정', '일반공모'], type: '증자감자' },
+  { keywords: ['무상증자'], type: '증자감자' },
+  { keywords: ['전환사채', '신주인수권부사채', '교환사채', 'CB', 'BW', 'EB'], type: '증자감자' },
+  { keywords: ['전환청구', '신주인수권행사', '전환권행사'], type: '증자감자' },
+  { keywords: ['감자', '자본감소'], type: '증자감자' },
+  { keywords: ['주식분할', '주식병합', '액면분할', '액면병합'], type: '증자감자' },
+  { keywords: ['주식소각', '이익소각', '자기주식소각', '자사주소각'], type: '증자감자' },
+  // ── 합병·분할 (지배구조)
+  { keywords: ['최대주주변경', '대주주변경'], type: '합병분할' },
+  { keywords: ['최대주주소유주식변동', '대주주소유주식'], type: '합병분할' },
+  { keywords: ['합병', '피합병'], type: '합병분할' },
+  { keywords: ['분할합병', '물적분할', '인적분할', '회사분할'], type: '합병분할' },
+  { keywords: ['영업양수', '영업양도', '자산양수', '자산양도'], type: '합병분할' },
+  { keywords: ['주식교환', '주식이전'], type: '합병분할' },
+  // ── 실적·재무
+  { keywords: ['매출액또는손익구조', '매출액변동', '손익구조변동', '매출액·손익구조'], type: '실적재무' },
+  { keywords: ['잠정실적', '영업실적', '연간실적', '반기실적', '분기실적'], type: '실적재무' },
+  { keywords: ['자본잠식'], type: '실적재무' },
+  { keywords: ['채무보증', '채무인수', '담보제공'], type: '실적재무' },
+  { keywords: ['재무제표', '감사보고서', '반기보고서', '분기보고서', '사업보고서'], type: '실적재무' },
+  // ── 계약·소송
+  { keywords: ['단일판매', '공급계약', '판매계약'], type: '계약소송' },
+  { keywords: ['자기주식취득', '자사주취득', '자기주식처분', '자사주처분'], type: '계약소송' },
+  { keywords: ['소송', '중재', '판결', '가처분'], type: '계약소송' },
+  { keywords: ['특허', '지식재산', '라이선스계약'], type: '계약소송' },
+  { keywords: ['풍문', '조회공시', '해명공시', '보도해명'], type: '계약소송' },
+  { keywords: ['유형자산취득', '유형자산처분', '토지취득', '건물취득'], type: '계약소송' },
+  // ── 배당·주총
+  { keywords: ['현금배당', '주식배당', '중간배당', '결산배당', '배당결정'], type: '배당주총' },
+  { keywords: ['주주명부폐쇄', '명의개서정지', '기준일'], type: '배당주총' },
+  { keywords: ['주주총회', '임시주주총회', '정기주주총회'], type: '배당주총' },
+  { keywords: ['임원변경', '대표이사변경', '사외이사', '감사위원'], type: '배당주총' },
+];
+
+// jp: 정규화된 RULES (런타임 1회 계산)
+const CATEGORY_TYPE_RULES_N = CATEGORY_TYPE_RULES.map((r) => ({
+  type: r.type,
+  keywords: r.keywords.map(nk),
+}));
+
+// jp: 공시명 → 종류 카테고리 1개 반환 (매칭 없으면 '기타')
+export function classifyCategoryType(reportName: string): DisclosureCategoryType {
+  const norm = normalizeTitle(reportName);
+  for (const rule of CATEGORY_TYPE_RULES_N) {
+    for (const kw of rule.keywords) {
+      if (kw && norm.includes(kw)) return rule.type;
+    }
+  }
+  return '기타';
+}
+
+// ============================================================
 // jp: 핵심 분류 함수
 // ============================================================
 
@@ -198,11 +275,12 @@ export function classifyDisclosure(reportName: string, _disclosureType?: string)
     isCorrection,
     normalizedTitle: norm,
     category,
+    categoryType: classifyCategoryType(reportName),
   };
 }
 
 // jp: 점수만 계산 (디버그용)
-export function calculateDisclosureScore(reportName: string): Omit<DisclosureClassification, 'importance' | 'sentiment'> {
+export function calculateDisclosureScore(reportName: string): Omit<DisclosureClassification, 'importance' | 'sentiment' | 'categoryType'> {
   const r = classifyDisclosure(reportName);
   return {
     positiveScore: r.positiveScore, negativeScore: r.negativeScore, cautionScore: r.cautionScore,
