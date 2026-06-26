@@ -222,13 +222,6 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
     }
   }, [disclosure?.receiptNo, disclosure?.stockCode, isOpen]);
 
-  // jp: 공시 열리면 자동으로 AI 분석 시작 (로그인 사용자만)
-  useEffect(() => {  // 자동 분석 트리거
-    if (isOpen && disclosure && isLoggedIn && !ai && !loading) {
-      runAi();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, disclosure?.receiptNo, isLoggedIn]);
 
   if (!isOpen || !disclosure) return null;
 
@@ -292,6 +285,22 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
 
           {/* AI 분석 결과 */}
           {/* ── AI 공시 분석: 자동 실행 + 4개 탭 ── */}
+          {/* 분석 전: AI 분석 / DART 원문 버튼 */}
+          {!ai && !loading && (
+            <div className="mb-5 flex flex-col gap-2.5">
+              <button onClick={runAi}
+                className="flex items-center justify-center gap-2 py-3.5 rounded-2xl text-[13px] font-bold active:scale-[0.98] transition-all"
+                style={{ background: 'linear-gradient(135deg,#7F77DD,#DB2777)', color: '#fff' }}>
+                <Sparkles size={16} /> AI 공시분석 하기
+              </button>
+              <button onClick={() => window.open(`https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${disclosure.receiptNo}`, '_blank', 'noopener')}
+                className="flex items-center justify-center gap-2 py-3.5 rounded-2xl text-[13px] font-bold active:scale-[0.98] transition-all"
+                style={{ background: 'rgba(92,138,255,0.14)', border: '1px solid #5c8aff', color: '#8aa8ff' }}>
+                <ExternalLink size={15} /> DART 원문 보기
+              </button>
+            </div>
+          )}
+
           {loading && !ai && (
             <div className="mb-5 relative overflow-hidden p-5 rounded-2xl text-center flex flex-col items-center" style={{ background: 'linear-gradient(135deg, rgba(127,119,221,0.14), rgba(219,39,119,0.12))', border: '1px solid rgba(127,119,221,0.35)' }}>
               <div className="absolute top-0 h-full" style={{ left: '-40%', width: '40%', background: 'linear-gradient(90deg,transparent,rgba(127,119,221,0.18),transparent)', animation: 'dssSweep 1.8s linear infinite' }} />
