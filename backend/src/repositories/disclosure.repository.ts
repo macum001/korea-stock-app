@@ -32,6 +32,7 @@ function rowToDisclosure(row: Record<string, unknown>): Disclosure {
     isCorrection:    Boolean(row.is_correction),
     normalizedTitle: row.normalized_title as string,
     category:        row.category as string,
+    categoryType:    row.category_type as string,
   };
 }
 
@@ -57,9 +58,9 @@ export async function upsertDisclosure(d: Disclosure): Promise<{ saved: boolean;
         disclosure_type, importance, sentiment,
         positive_score, negative_score, caution_score, matched_keywords,
         summary, original_url, disclosed_at,
-        is_important, is_capital, is_good, is_bad, is_correction, normalized_title, category,
+        is_important, is_capital, is_good, is_bad, is_correction, normalized_title, category, category_type,
         collected_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,NOW())
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,NOW())
       ON CONFLICT (receipt_no) DO NOTHING
       RETURNING *`,
       [
@@ -69,6 +70,7 @@ export async function upsertDisclosure(d: Disclosure): Promise<{ saved: boolean;
         d.summary ?? null, d.originalUrl ?? null, d.disclosedAt,
         d.isImportant ?? false, d.isCapital ?? false, d.isGood ?? false, d.isBad ?? false,
         d.isCorrection ?? false, d.normalizedTitle ?? null, d.category ?? null,
+        d.categoryType ?? null,
       ]
     );
 

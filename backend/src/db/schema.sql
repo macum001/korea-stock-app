@@ -304,8 +304,11 @@ ALTER TABLE disclosures ADD COLUMN IF NOT EXISTS is_bad         BOOLEAN DEFAULT 
 ALTER TABLE disclosures ADD COLUMN IF NOT EXISTS is_correction  BOOLEAN DEFAULT FALSE;
 ALTER TABLE disclosures ADD COLUMN IF NOT EXISTS normalized_title TEXT;
 ALTER TABLE disclosures ADD COLUMN IF NOT EXISTS category       VARCHAR(20);
+ALTER TABLE disclosures ADD COLUMN IF NOT EXISTS category_type  VARCHAR(20);
 -- jp: 탭 필터 인덱스 (중요/자본조달/호재/악재 조회 빠르게)
 CREATE INDEX IF NOT EXISTS idx_disclosures_flags ON disclosures(is_important, is_capital, is_good, is_bad);
+-- jp: 종류 축 탭 필터 인덱스 (6개 탭 조회 빠르게)
+CREATE INDEX IF NOT EXISTS idx_disclosures_category_type ON disclosures(category_type, disclosed_at DESC);
 
 -- jp: 아래 내용을 backend/src/db/schema.sql 맨 아래에 추가하세요.
 
@@ -332,7 +335,7 @@ ALTER TABLE disclosure_alerts ADD COLUMN IF NOT EXISTS alert_bad       BOOLEAN D
 
 
 
--- jp: �Ϻ� ĵ�� ���̺� (10��ġ �̻� ����)
+-- jp: �Ϻ� ĵ�� ���̺� (10��ġ �̻� ����)
 CREATE TABLE IF NOT EXISTS stock_daily_candles (stock_code VARCHAR(10) NOT NULL, candle_date INTEGER NOT NULL, period CHAR(1) NOT NULL DEFAULT 'D', open INTEGER NOT NULL, high INTEGER NOT NULL, low INTEGER NOT NULL, close INTEGER NOT NULL, volume BIGINT DEFAULT 0, trade_value BIGINT DEFAULT 0, created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now(), PRIMARY KEY (stock_code, candle_date, period));
 CREATE INDEX IF NOT EXISTS idx_daily_candles_code_date ON stock_daily_candles (stock_code, candle_date DESC);
 CREATE INDEX IF NOT EXISTS idx_daily_candles_code_period_date ON stock_daily_candles (stock_code, period, candle_date DESC);

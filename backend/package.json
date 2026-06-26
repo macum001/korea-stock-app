@@ -19,7 +19,8 @@
     "benchmark:ws-fanout": "ts-node -r tsconfig-paths/register src/scripts/wsFanoutLoadTest.ts",
     "test:chaos:redis": "bash ../scripts/chaos/redis-restart.sh",
     "test:chaos:realtime": "bash ../scripts/chaos/kill-realtime.sh",
-    "test:candle-buckets": "ts-node -r tsconfig-paths/register src/scripts/testCandleBuckets.ts"
+    "test:candle-buckets": "ts-node -r tsconfig-paths/register src/scripts/testCandleBuckets.ts",
+    "disclosure:backfill-category": "ts-node -r tsconfig-paths/register src/scripts/backfillCategoryType.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",

@@ -62,3 +62,7 @@ backend/prompts_export.json
 *.backup.ts
 *-check.txt
 *_check.txt
+
+# DB 백업 파일 (대용량, git 제외)
+backup_before_*.sql
+*.dump
