@@ -2,7 +2,7 @@
 // jp: 5개씩 표시 + 더보기 / 단건 X 삭제 / 전체 삭제 / 클릭하면 결과 펼침
 // jp: 항목 글자수: 타이틀 + 서브타이틀 + 시간 + X
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Clock, Trash2, X, ChevronDown } from 'lucide-react';
 import { aiService, AiHistoryItem } from '@/services/aiService';
 import { useAuthStore } from '@/store/authStore';
@@ -74,6 +74,38 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
     try { await aiService.deleteHistory(id); } catch { setItems(prev); }
   };
 
+  // jp: 꾹 눌러 삭제 + 실행취소 (5초 지연 후 실제 DB 삭제 → 진짜 복구). 삭제 항목 기억 → 즉시 복구
+  const [pressingId, setPressingId] = useState<string | null>(null);
+  const [undoItem, setUndoItem] = useState<{ item: AiHistoryItem; title: string } | null>(null);
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lpFired = useRef(false);
+  const delTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const startPress = (id: string) => {
+    lpFired.current = false; setPressingId(id);
+    pressTimer.current = setTimeout(() => {
+      lpFired.current = true; setPressingId(null);
+      if (navigator.vibrate) navigator.vibrate(50);
+      const it = items.find((x) => x.id === id);
+      if (!it) return;
+      setItems((l) => l.filter((x) => x.id !== id));
+      if (openId === id) setOpenId(null);
+      setUndoItem({ item: it, title: titleOf(it) });
+      if (delTimer.current) clearTimeout(delTimer.current);
+      delTimer.current = setTimeout(() => {
+        aiService.deleteHistory(id).catch(() => {});
+        setUndoItem(null);
+      }, 5000);
+    }, 500);
+  };
+  const cancelPress = () => { if (pressTimer.current) clearTimeout(pressTimer.current); setPressingId(null); };
+  const undoDelete = () => {
+    if (!undoItem) return;
+    if (delTimer.current) clearTimeout(delTimer.current);
+    setItems((l) => [undoItem.item, ...l].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
+    setUndoItem(null);
+  };
+
   const handleClearAll = async () => {
     if (items.length === 0) return;
     if (!window.confirm('최근 분석을 전체 삭제할까요?')) return;
@@ -134,22 +166,30 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
           <Trash2 size={13} /> 전체 삭제
         </button>
       </div>
+      {undoItem && (
+        <div className="px-3 py-2 mb-2 rounded-xl text-xs flex items-center justify-between" style={{ background: '#2a2640', color: '#fff', border: '1px solid rgba(255,255,255,0.12)' }}>
+          <span className="flex items-center gap-2"><Trash2 size={13} style={{ color: '#F472B6' }} /><span>{undoItem.title} 삭제됨</span></span>
+          <button onClick={undoDelete} className="font-bold" style={{ color: '#A78BFA' }}>실행취소</button>
+        </div>
+      )}
 
       {visible.map((item, idx) => {
         const isOpen = openId === item.id;
         const isLast = idx === visible.length - 1;
         return (
           <div key={item.id} style={{ borderBottom: isLast ? 'none' : '0.5px solid var(--border-subtle)' }}>
-            <div className="flex items-center gap-2.5 py-3">
+            <div className="flex items-center gap-2.5 py-3 px-2 rounded-lg transition-colors" style={{ background: pressingId === item.id ? 'rgba(255,82,82,0.16)' : 'transparent' }}>
               <Clock size={15} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
-              <button onClick={() => setOpenId(isOpen ? null : item.id)} className="flex-1 min-w-0 text-left active:opacity-70">
+              <button
+                onClick={() => { if (lpFired.current) { lpFired.current = false; return; } setOpenId(isOpen ? null : item.id); }}
+                onPointerDown={() => startPress(item.id)}
+                onPointerUp={cancelPress}
+                onPointerLeave={cancelPress}
+                className="flex-1 min-w-0 text-left active:opacity-70">
                 <p className="text-[13px] font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{titleOf(item)}</p>
                 <p className="text-[11px] truncate mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{subtitleOf(item)}</p>
               </button>
               <span className="text-[11px] flex-shrink-0" style={{ color: 'var(--text-tertiary)' }}>{relativeTime(item.createdAt)}</span>
-              <button onClick={() => handleDelete(item.id)} className="flex-shrink-0 p-1 active:opacity-60">
-                <X size={14} style={{ color: 'var(--text-tertiary)' }} />
-              </button>
             </div>
 
             {isOpen && item.answer && (
