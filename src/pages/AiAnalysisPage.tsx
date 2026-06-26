@@ -356,16 +356,19 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
     let active = true;
     setFeedLoading(true);
     setFeedOffset(0);
-    if (selectedStock) {
-      disclosureService.getStockDisclosurePage(selectedStock, 50, 0)
+    if (selectedStock || feedMode === 'all') {
+      // jp: 선택 종목 또는 전체종목 → 페이지네이션 무한스크롤
+      const first = selectedStock
+        ? disclosureService.getStockDisclosurePage(selectedStock, 50, 0)
+        : disclosureService.getLatestPage(50, 0);
+      first
         .then((res) => { if (active) { setFeed(res.items); setFeedHasMore(res.hasMore); setFeedOffset(res.items.length); } })
         .catch(() => { if (active) { setFeed([]); setFeedHasMore(false); } })
         .finally(() => { if (active) setFeedLoading(false); });
     } else {
+      // jp: 관심종목 모드 → 합산 피드 (한 번)
       setFeedHasMore(false);
-      (feedMode === 'watch'
-        ? disclosureService.getMyFeed()
-        : disclosureService.getAllDisclosures())
+      disclosureService.getMyFeed()
         .then((list) => { if (active) setFeed(list || []); })
         .catch(() => { if (active) setFeed([]); })
         .finally(() => { if (active) setFeedLoading(false); });
@@ -375,11 +378,15 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
 
   // jp: 더보기 — 다음 페이지 추가 로드
   const loadMoreFeed = () => {
-    if (!selectedStock || feedMoreLoading || !feedHasMore) return;
+    if (feedMoreLoading || !feedHasMore) return;
+    if (!selectedStock && feedMode !== 'all') return;
     setFeedMoreLoading(true);
-    disclosureService.getStockDisclosurePage(selectedStock, 50, feedOffset)
+    const next = selectedStock
+      ? disclosureService.getStockDisclosurePage(selectedStock, 50, feedOffset)
+      : disclosureService.getLatestPage(50, feedOffset);
+    next
       .then((res) => {
-        setFeed((prev) => [...prev, ...res.items]);
+        setFeed((prev) => { const ids = new Set(prev.map((d) => d.receiptNo)); return [...prev, ...res.items.filter((d) => !ids.has(d.receiptNo))]; });
         setFeedHasMore(res.hasMore);
         setFeedOffset((prev) => prev + res.items.length);
       })
@@ -387,19 +394,27 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
       .finally(() => setFeedMoreLoading(false));
   };
 
-  // jp: 무한스크롤 — 센티넬이 보이면 자동 다음 페이지
+  // jp: observer가 항상 최신 loadMoreFeed를 호출하도록 ref 동기화
+  const loadMoreRef = useRef(loadMoreFeed);
+  loadMoreRef.current = loadMoreFeed;
+
+  // jp: 무한스크롤 — 스크롤이 바닥 근처면 다음 페이지 (폭주 방지 가드)
   const feedSentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    if (!selectedStock || !feedHasMore) return;
-    const el = feedSentinelRef.current;
-    if (!el) return;
-    const ob = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting) loadMoreFeed();
-    }, { rootMargin: "200px" });
-    ob.observe(el);
-    return () => ob.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStock, feedHasMore, feedMoreLoading, feedOffset]);
+    if ((!selectedStock && feedMode !== 'all') || !feedHasMore) return;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 600;
+        if (nearBottom) loadMoreRef.current();
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [selectedStock, feedMode, feedHasMore]);
 
   const showingResults = search.trim().length > 0;
 
@@ -599,13 +614,13 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
           {feedLoading ? (
             <p className="text-center text-xs py-10" style={{ color: 'var(--text-tertiary)' }}>공시 불러오는 중…</p>
           ) : (() => {
-            const filtered = feed.filter((d) => category === 'all' || classifyDisclosure(d.reportName) === category);
+            const seen = new Set<string>(); const filtered = feed.filter((d) => { if (seen.has(d.receiptNo)) return false; seen.add(d.receiptNo); return category === 'all' || classifyDisclosure(d.reportName) === category; });
             if (filtered.length === 0) {
               return <p className="text-center text-xs py-10" style={{ color: 'var(--text-tertiary)' }}>{feedMode === 'watch' ? '관심종목의 공시가 없어요' : '해당 공시가 없어요'}</p>;
             }
             return (
               <div className="space-y-2">
-                {(selectedStock ? filtered : filtered.slice(0, 40)).map((d) => {
+                {filtered.map((d) => {
                   const risk = isRiskDisclosure(d.reportName);
                   return (
                     <div key={d.receiptNo} onClick={() => onOpenDisclosure?.(d.receiptNo, d.stockCode, d.stockName)}
@@ -628,7 +643,7 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
                     </div>
                   );
                 })}
-                {selectedStock && feedHasMore && (
+                {(selectedStock || feedMode === 'all') && feedHasMore && (
                   <div ref={feedSentinelRef} className="py-4 text-center text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
                     {feedMoreLoading ? '공시 더 불러오는 중…' : ''}
                   </div>
