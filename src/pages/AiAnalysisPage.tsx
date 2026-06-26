@@ -5,7 +5,7 @@ import {
   Info, X, TrendingUp, TrendingDown, FileText,
   Sparkles, ArrowRight, Newspaper,
   Search, AlertTriangle,
-, Info } from 'lucide-react';
+} from 'lucide-react';
 import { aiService, StockAnalysisResult } from '@/services/aiService';
 import { StreamingStockTab } from '@/components/ai/StreamingStockTab';
 import { newsService, StockNewsItem } from '@/services/aiService';
