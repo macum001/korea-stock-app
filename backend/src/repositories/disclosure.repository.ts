@@ -156,12 +156,15 @@ export async function getDisclosuresByCategoryPage(
 export async function getDisclosuresByStockCode(
   stockCode: string,
   limit = 30,
-  offset = 0
+  offset = 0,
+  categoryType?: string
 ): Promise<Disclosure[]> {
   try {
     const rows = await query<Record<string, unknown>>(
-      'SELECT * FROM disclosures WHERE stock_code = $1 ORDER BY disclosed_at DESC, receipt_no DESC LIMIT $2 OFFSET $3',
-      [stockCode, limit, offset]
+      categoryType
+        ? 'SELECT * FROM disclosures WHERE stock_code = $1 AND category_type = $4 ORDER BY disclosed_at DESC, receipt_no DESC LIMIT $2 OFFSET $3'
+        : 'SELECT * FROM disclosures WHERE stock_code = $1 ORDER BY disclosed_at DESC, receipt_no DESC LIMIT $2 OFFSET $3',
+      categoryType ? [stockCode, limit, offset, categoryType] : [stockCode, limit, offset]
     );
     return rows.map(rowToDisclosure);
   } catch (err) {
@@ -170,11 +173,13 @@ export async function getDisclosuresByStockCode(
 }
 
 // jp: 종목별 공시 총 건수 (스크롤 끝 판단용)
-export async function countDisclosuresByStockCode(stockCode: string): Promise<number> {
+export async function countDisclosuresByStockCode(stockCode: string, categoryType?: string): Promise<number> {
   try {
     const rows = await query<{ cnt: string }>(
-      'SELECT COUNT(*) AS cnt FROM disclosures WHERE stock_code = $1',
-      [stockCode]
+      categoryType
+        ? 'SELECT COUNT(*) AS cnt FROM disclosures WHERE stock_code = $1 AND category_type = $2'
+        : 'SELECT COUNT(*) AS cnt FROM disclosures WHERE stock_code = $1',
+      categoryType ? [stockCode, categoryType] : [stockCode]
     );
     return Number(rows[0]?.cnt ?? 0);
   } catch {

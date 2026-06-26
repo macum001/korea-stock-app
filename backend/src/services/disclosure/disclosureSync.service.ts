@@ -113,15 +113,16 @@ export interface StockDisclosurePage {
 export async function getStockDisclosurePage(
   stockCode: string,
   limit = 50,
-  offset = 0
+  offset = 0,
+  categoryType?: string
 ): Promise<StockDisclosurePage> {
   let items: Disclosure[] = [];
   let total = 0;
   try {
     // jp: DB 직접 조회 (캐시 우회) - 보유분 전체를 페이지로 끝까지 넘길 수 있게
     [items, total] = await Promise.all([
-      dbGetByStock(stockCode, limit, offset),
-      dbCountByStock(stockCode),
+      dbGetByStock(stockCode, limit, offset, categoryType),
+      dbCountByStock(stockCode, categoryType),
     ]);
   } catch {
     // jp: DB 실패 시 provider fallback (페이지네이션 불가 → 전체 반환)

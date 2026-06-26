@@ -226,30 +226,36 @@ const GUEST_DEFAULT_STOCKS = [
 ];
 
 // jp: 공시 6대 카테고리 — reportName 키워드 기반 분류
+// jp: 탭 key = 백엔드 category_type 값과 1:1 일치 ('all'은 전체). 변환 레이어 없음.
 const DISCLOSURE_CATEGORIES = [
-  { key: 'all',     label: '전체' },
-  { key: 'risk',    label: '투자위험' },
-  { key: 'capital', label: '증자·감자' },
-  { key: 'merge',   label: '합병·분할' },
-  { key: 'earn',    label: '실적·재무' },
-  { key: 'deal',    label: '계약·소송' },
-  { key: 'right',   label: '배당·주총' },
+  { key: 'all',      label: '전체' },
+  { key: '투자위험', label: '투자위험' },
+  { key: '지분변동', label: '지분변동' },
+  { key: '합병분할', label: '합병·분할' },
+  { key: '증자감자', label: '증자·감자' },
+  { key: '실적재무', label: '실적·재무' },
+  { key: '계약소송', label: '계약·소송' },
+  { key: '배당주총', label: '배당·주총' },
+  { key: '기타', label: 'IR·기타' },
 ] as const;
+
+// jp: 카테고리별 색상 (탭 + 카드 색바/배지 공용) — 앱 색 토큰 기반
+const CATEGORY_COLORS: Record<string, string> = {
+  '투자위험': '#ff5252',
+  '지분변동': '#5DCAA5',
+  '합병분할': '#5c8aff',
+  '증자감자': '#A78BFA',
+  '실적재무': '#97C459',
+  '계약소송': '#e08a5a',
+  '배당주총': '#F472B6',
+  '기타': '#888888',
+};
 type DiscCategory = typeof DISCLOSURE_CATEGORIES[number]['key'];
 
 // jp: 위험 카테고리 (알림 카드로 강조)
 const RISK_KEYWORDS = ['상장폐지', '관리종목', '부도', '당좌거래정지', '회생', '파산', '거래정지', '감사의견', '자본잠식', '불성실공시', '투자주의', '투자경고', '투자위험'];
 
-function classifyDisclosure(reportName: string): DiscCategory {
-  const n = reportName || '';
-  if (RISK_KEYWORDS.some((k) => n.includes(k))) return 'risk';
-  if (/유상증자|무상증자|전환사채|신주인수권|교환사채|감자|전환청구|주식소각|주식분할|주식병합|사채/.test(n)) return 'capital';
-  if (/합병|분할|최대주주|영업양수|영업양도|자산양수|주식교환|주식이전/.test(n)) return 'merge';
-  if (/실적|매출|영업이익|손익|결산|분기보고|반기보고|사업보고|횡령|배임|채무보증|담보제공/.test(n)) return 'earn';
-  if (/공급계약|단일판매|자기주식|소송|판결|특허|조회공시|풍문|유형자산/.test(n)) return 'deal';
-  if (/배당|주주총회|주총|명의개서|주주명부|임원|대표이사/.test(n)) return 'right';
-  return 'all';
-}
+// jp: 공시 종류 분류는 백엔드 category_type 사용 (프론트 자체 분류 제거)
 
 // jp: 위험 공시 여부 (빨간 알림 카드용)
 function isRiskDisclosure(reportName: string): boolean {
@@ -279,6 +285,18 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
   const { hasItem, addItem, removeItem } = useWatchlistStore();
   const myStocks = items.filter((i) => i.assetType !== 'index' && /^\d{6}$/.test(i.code));
   const displayStocks = isLoggedIn ? myStocks : GUEST_DEFAULT_STOCKS;
+
+  // jp: AI공시 첫 진입 시 — 제일 먼저 등록한 관심종목 1개를 디폴트로 활성화 (없거나 비로그인이면 전체종목)
+  const didInitDefaultRef = useRef(false);
+  useEffect(() => {
+    if (didInitDefaultRef.current) return;
+    if (!isLoggedIn) { setFeedMode('all'); didInitDefaultRef.current = true; return; }
+    if (myStocks.length > 0) {
+      const firstStock = [...myStocks].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))[0];
+      if (firstStock) { setSelectedStock(firstStock.code); didInitDefaultRef.current = true; }
+    }
+    // jp: 로그인했지만 myStocks가 아직 비어있으면(로딩 중) 다음 렌더에서 재시도
+  }, [isLoggedIn, myStocks]);
 
   useEffect(() => {
     if (!isLoggedIn) { setAlertOn({}); return; }
@@ -356,34 +374,46 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
     let active = true;
     setFeedLoading(true);
     setFeedOffset(0);
-    if (selectedStock || feedMode === 'all') {
-      // jp: 선택 종목 또는 전체종목 → 페이지네이션 무한스크롤
-      const first = selectedStock
-        ? disclosureService.getStockDisclosurePage(selectedStock, 50, 0)
+    // jp: 범위(칩/관심/전체) ∩ 카테고리 교차 필터
+    if (selectedStock) {
+      // jp: 종목 칩 + 카테고리 → 그 종목의 그 카테고리 (무한스크롤)
+      disclosureService.getStockDisclosurePage(selectedStock, 50, 0, category)
+        .then((res) => { if (active) { setFeed(res.items); setFeedHasMore(res.hasMore); setFeedOffset(res.items.length); } })
+        .catch(() => { if (active) { setFeed([]); setFeedHasMore(false); } })
+        .finally(() => { if (active) setFeedLoading(false); });
+    } else if (feedMode === 'all') {
+      // jp: 전체종목 + 카테고리 → 전체의 그 카테고리 (무한스크롤)
+      const first = category !== 'all'
+        ? disclosureService.getCategoryPage(category, 50, 0)
         : disclosureService.getLatestPage(50, 0);
       first
         .then((res) => { if (active) { setFeed(res.items); setFeedHasMore(res.hasMore); setFeedOffset(res.items.length); } })
         .catch(() => { if (active) { setFeed([]); setFeedHasMore(false); } })
         .finally(() => { if (active) setFeedLoading(false); });
     } else {
-      // jp: 관심종목 모드 → 합산 피드 (한 번)
+      // jp: 관심종목 + 카테고리 → 내 종목들의 그 카테고리 (한 번 로드)
       setFeedHasMore(false);
-      disclosureService.getMyFeed()
+      disclosureService.getMyFeed(undefined, category)
         .then((list) => { if (active) setFeed(list || []); })
         .catch(() => { if (active) setFeed([]); })
         .finally(() => { if (active) setFeedLoading(false); });
     }
     return () => { active = false; };
-  }, [feedMode, isLoggedIn, selectedStock]);
+  }, [feedMode, isLoggedIn, selectedStock, category]);
 
   // jp: 더보기 — 다음 페이지 추가 로드
   const loadMoreFeed = () => {
     if (feedMoreLoading || !feedHasMore) return;
-    if (!selectedStock && feedMode !== 'all') return;
+    if (!selectedStock && feedMode !== 'all') return;  // jp: 관심모드는 한번 로드(더보기 X)
     setFeedMoreLoading(true);
-    const next = selectedStock
-      ? disclosureService.getStockDisclosurePage(selectedStock, 50, feedOffset)
-      : disclosureService.getLatestPage(50, feedOffset);
+    let next;
+    if (selectedStock) {
+      next = disclosureService.getStockDisclosurePage(selectedStock, 50, feedOffset, category);
+    } else if (category !== 'all') {
+      next = disclosureService.getCategoryPage(category, 50, feedOffset);
+    } else {
+      next = disclosureService.getLatestPage(50, feedOffset);
+    }
     next
       .then((res) => {
         setFeed((prev) => { const ids = new Set(prev.map((d) => d.receiptNo)); return [...prev, ...res.items.filter((d) => !ids.has(d.receiptNo))]; });
@@ -414,7 +444,7 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, [selectedStock, feedMode, feedHasMore]);
+  }, [selectedStock, feedMode, feedHasMore, category]);
 
   const showingResults = search.trim().length > 0;
 
@@ -528,7 +558,7 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
                 <p className="text-[11px] font-bold mb-2.5 px-1" style={{ color: 'var(--text-tertiary)' }}>
                   {isLoggedIn ? `내 관심종목 ${myStocks.length}개` : '종목별 최신 공시를 AI로 분석해드려요'}
                 </p>
-                <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                <div className="flex flex-wrap gap-2 pb-1">
                   {displayStocks.map((it) => {
                     const on = alertOn[it.code];
                     const sel = selectedStock === it.code;
@@ -592,17 +622,18 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
           </div>
 
           {/* 카테고리 탭 */}
-          <div className="flex gap-1.5 overflow-x-auto pb-2 mb-1" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex flex-wrap gap-1.5 pb-2 mb-1" style={{ scrollbarWidth: 'none' }}>
             {DISCLOSURE_CATEGORIES.map((c) => {
               const on = category === c.key;
-              const isRisk = c.key === 'risk';
+              const isRisk = c.key === '투자위험';
+              const catColor = CATEGORY_COLORS[c.key] || '#A78BFA';
               return (
                 <button key={c.key} onClick={() => setCategory(c.key)}
                   className="flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold active:scale-95 transition-all whitespace-nowrap"
                   style={{
-                    color: on ? (isRisk ? '#F9A8D4' : '#A78BFA') : 'var(--text-tertiary)',
-                    background: on ? (isRisk ? 'rgba(255,82,82,0.12)' : 'rgba(127,119,221,0.12)') : 'transparent',
-                    border: on ? (isRisk ? '1px solid rgba(255,82,82,0.45)' : '1px solid #7F77DD') : '1px solid var(--border)',
+                    color: c.key === 'all' ? (on ? '#fff' : 'var(--text-tertiary)') : (on ? catColor : `${catColor}99`),
+                    background: c.key === 'all' ? (on ? 'rgba(255,255,255,0.10)' : 'transparent') : (on ? `${catColor}22` : 'transparent'),
+                    border: c.key === 'all' ? `1px solid ${on ? 'rgba(255,255,255,0.25)' : 'var(--border)'}` : `1px solid ${on ? catColor : catColor + '2e'}`,
                   }}>
                   {isRisk && <AlertTriangle size={9} style={{ display: 'inline', marginRight: 2, marginTop: -2 }} />}{c.label}
                 </button>
@@ -614,31 +645,28 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
           {feedLoading ? (
             <p className="text-center text-xs py-10" style={{ color: 'var(--text-tertiary)' }}>공시 불러오는 중…</p>
           ) : (() => {
-            const seen = new Set<string>(); const filtered = feed.filter((d) => { if (seen.has(d.receiptNo)) return false; seen.add(d.receiptNo); return category === 'all' || classifyDisclosure(d.reportName) === category; });
+            const seen = new Set<string>(); const filtered = feed.filter((d) => { if (seen.has(d.receiptNo)) return false; seen.add(d.receiptNo); return category === 'all' || d.categoryType === category; });
             if (filtered.length === 0) {
               return <p className="text-center text-xs py-10" style={{ color: 'var(--text-tertiary)' }}>{feedMode === 'watch' ? '관심종목의 공시가 없어요' : '해당 공시가 없어요'}</p>;
             }
             return (
               <div className="space-y-2">
                 {filtered.map((d) => {
-                  const risk = isRiskDisclosure(d.reportName);
+                  const catType = d.categoryType || '';
+                  const catColor = CATEGORY_COLORS[catType];
                   return (
                     <div key={d.receiptNo} onClick={() => onOpenDisclosure?.(d.receiptNo, d.stockCode, d.stockName)}
                       className="rounded-xl overflow-hidden cursor-pointer active:scale-[0.99] transition-all"
-                      style={{ background: risk ? 'rgba(255,82,82,0.08)' : 'var(--bg-card)', border: risk ? '1px solid rgba(255,82,82,0.4)' : '1px solid var(--border)' }}>
-                      {risk && (
-                        <div className="flex items-center gap-1.5 px-3 py-1.5" style={{ background: '#ff5252' }}>
-                          <AlertTriangle size={11} color="#fff" />
-                          <span className="text-[10px] font-bold text-white">투자위험 공시</span>
-                          <span className="text-[9px] ml-auto text-white opacity-70">{d.disclosedAt?.slice(0, 10).replace(/-/g, '.')}</span>
-                        </div>
-                      )}
+                      style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderLeft: catColor ? `3px solid ${catColor}` : '1px solid var(--border)' }}>
                       <div className="px-3 py-2.5">
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <span className="text-[13px] font-bold truncate" style={{ color: 'var(--text-primary)' }}>{d.stockName}</span>
-                          {!risk && <span className="text-[10px] flex-shrink-0" style={{ color: 'var(--text-tertiary)' }}>{d.disclosedAt?.slice(0, 10).replace(/-/g, '.')}</span>}
+                          <span className="flex items-center gap-1.5 flex-shrink-0">
+                            {catColor && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${catColor}29`, color: catColor }}>{catType}</span>}
+                            <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{d.disclosedAt?.slice(0, 10).replace(/-/g, '.')}</span>
+                          </span>
                         </div>
-                        <p className="text-[11px] leading-snug truncate" style={{ color: risk ? '#F9A8D4' : 'var(--text-secondary)' }}>{d.reportName}</p>
+                        <p className="text-[11px] leading-snug truncate" style={{ color: 'var(--text-secondary)' }}>{d.reportName}</p>
                       </div>
                     </div>
                   );

@@ -139,7 +139,8 @@ router.get('/feed/my', requireAuth, async (req: AuthedRequest, res: Response) =>
       ((req as unknown as { userId?: string }).userId) ||
       (req.query.userId as string) ||
       'default';
-    const data = await getMyDisclosureFeed(userId);
+    const feedCat = (req.query.category as string) && req.query.category !== 'all' ? (req.query.category as string) : undefined;
+    const data = await getMyDisclosureFeed(userId, 50, feedCat);
     res.json({ success: true, data });
   } catch {
     res.status(500).json({ success: false, error: '내 공시 피드를 불러오지 못했어요.' });
@@ -179,8 +180,9 @@ router.get('/stock/:stockCode', async (req: Request, res: Response) => {
   try {
     const limit = Math.min(parseInt((req.query.limit as string) || '50', 10) || 50, 200);
     const offset = Math.max(parseInt((req.query.offset as string) || '0', 10) || 0, 0);
+    const stockCat = (req.query.category as string) && req.query.category !== 'all' ? (req.query.category as string) : undefined;
 
-    const page = await getStockDisclosurePage(stockCode, limit, offset);
+    const page = await getStockDisclosurePage(stockCode, limit, offset, stockCat);
 
     // jp: 첫 페이지인데 비어있으면 → 과거 공시 수집 1회 트리거 후 재조회
     if (page.total === 0 && offset === 0 && !stockSyncInProgress.has(stockCode)) {
@@ -188,7 +190,7 @@ router.get('/stock/:stockCode', async (req: Request, res: Response) => {
       try {
         console.log(`[공시] ${stockCode} 공시 0건, 수집 시도`);
         await syncDisclosuresByStockCode(stockCode);
-        const retry = await getStockDisclosurePage(stockCode, limit, offset);
+        const retry = await getStockDisclosurePage(stockCode, limit, offset, stockCat);
         return res.json({ success: true, data: retry.items, page: { total: retry.total, limit: retry.limit, offset: retry.offset, hasMore: retry.hasMore } });
       } finally {
         stockSyncInProgress.delete(stockCode);

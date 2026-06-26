@@ -55,9 +55,10 @@ class DisclosureService implements IDisclosureService {
   }
 
   // jp: 종목별 공시 페이지 조회 (무한스크롤용) — { items, hasMore } 반환
-  async getStockDisclosurePage(stockCode: string, limit = 50, offset = 0): Promise<{ items: Disclosure[]; hasMore: boolean }> {
+  async getStockDisclosurePage(stockCode: string, limit = 50, offset = 0, category?: string): Promise<{ items: Disclosure[]; hasMore: boolean }> {
     try {
-      const items = await apiClient.get<Disclosure[]>(`/api/disclosures/stock/${stockCode}?limit=${limit}&offset=${offset}`);
+      const catParam = category && category !== 'all' ? `&category=${encodeURIComponent(category)}` : '';
+      const items = await apiClient.get<Disclosure[]>(`/api/disclosures/stock/${stockCode}?limit=${limit}&offset=${offset}${catParam}`);
       return { items: items ?? [], hasMore: (items?.length ?? 0) >= limit };
     } catch {
       return { items: [], hasMore: false };
@@ -68,6 +69,16 @@ class DisclosureService implements IDisclosureService {
   async getLatestPage(limit = 50, offset = 0): Promise<{ items: Disclosure[]; hasMore: boolean }> {
     try {
       const items = await apiClient.get<Disclosure[]>(`/api/disclosures?limit=${limit}&offset=${offset}`);
+      return { items: items ?? [], hasMore: (items?.length ?? 0) >= limit };
+    } catch {
+      return { items: [], hasMore: false };
+    }
+  }
+
+  // jp: 종류 축 카테고리 페이지 조회 (7개 탭 무한스크롤) — 백엔드 ?category= 필터
+  async getCategoryPage(category: string, limit = 50, offset = 0): Promise<{ items: Disclosure[]; hasMore: boolean }> {
+    try {
+      const items = await apiClient.get<Disclosure[]>(`/api/disclosures?category=${encodeURIComponent(category)}&limit=${limit}&offset=${offset}`);
       return { items: items ?? [], hasMore: (items?.length ?? 0) >= limit };
     } catch {
       return { items: [], hasMore: false };
@@ -116,9 +127,10 @@ class DisclosureService implements IDisclosureService {
 
   // jp: ★ 내 관심종목 공시 피드 - /api/disclosures/feed/my
   // jp: 백엔드 응답이 { success, data } 형식이라 apiClient.get<Disclosure[]>가 data를 풀어줌
-  async getMyFeed(filter?: DisclosureFilter): Promise<Disclosure[]> {
+  async getMyFeed(filter?: DisclosureFilter, category?: string): Promise<Disclosure[]> {
     try {
-      const list = await apiClient.get<Disclosure[]>('/api/disclosures/feed/my');
+      const catParam = category && category !== 'all' ? `?category=${encodeURIComponent(category)}` : '';
+      const list = await apiClient.get<Disclosure[]>(`/api/disclosures/feed/my${catParam}`);
       const result = applyDisclosureFilter(list ?? [], filter);
       return result.sort(
         (a, b) => new Date(b.disclosedAt).getTime() - new Date(a.disclosedAt).getTime()

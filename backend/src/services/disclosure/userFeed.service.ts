@@ -14,7 +14,7 @@ export async function getMyWatchlistCodes(userId: string): Promise<string[]> {
 
 // jp: 내 구독 종목 공시 피드
 // jp: getLatestDisclosures()가 이미 Redis 캐시(latest 500)를 쓰므로 여기선 메모리 필터만
-export async function getMyDisclosureFeed(userId: string, limit = 50): Promise<Disclosure[]> {
+export async function getMyDisclosureFeed(userId: string, limit = 50, categoryType?: string): Promise<Disclosure[]> {
   const codes = await getMyWatchlistCodes(userId);
   if (codes.length === 0) return [];
   // jp: 관심종목 각각 DB에서 공시 조회 후 합쳐서 최신순 (캐시 latest 500 필터로는 종목별 누락 발생)
@@ -23,5 +23,6 @@ export async function getMyDisclosureFeed(userId: string, limit = 50): Promise<D
   );
   const merged = perStock.flat();
   merged.sort((a, b) => new Date(b.disclosedAt).getTime() - new Date(a.disclosedAt).getTime());
-  return merged.slice(0, limit);
+  const filtered = categoryType ? merged.filter((d) => d.categoryType === categoryType) : merged;
+  return filtered.slice(0, limit);
 }

@@ -25,6 +25,7 @@ export interface Disclosure {
   isCorrection?: boolean;
   // jp: 공시 카테고리 (백엔드 분류, 없으면 general)
   category?: string;
+  categoryType?: string;  // jp: 종류 축 — 7개 탭 (백엔드 category_type)
 }
 
 export interface DisclosureFilter {
