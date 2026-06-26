@@ -280,6 +280,9 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
   const touchStartX = useRef(0);
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);  // long-press 타이머
   const lpFired = useRef(false);                            // long-press 발동 플래그
+  const [pressingCode, setPressingCode] = useState<string | null>(null);  // 꾹 누르는 중인 칸
+  const [undoData, setUndoData] = useState<{ code: string; name: string; groupId?: string } | null>(null);
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [feedOffset, setFeedOffset] = useState(0);          // 무한스크롤 offset
   const [feedHasMore, setFeedHasMore] = useState(false);    // 더 불러올 게 있나
   const [feedMoreLoading, setFeedMoreLoading] = useState(false);
@@ -346,6 +349,24 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
 
   const handleRemove = (e: React.MouseEvent, code: string, name: string) => {
     e.stopPropagation(); removeItem(code); setToast(`${name} 제거됨`);
+  };
+
+  // jp: 관심종목 삭제 + 실행취소 (진동 → 즉시삭제 → 5초 복구 가능)
+  const removeWithUndo = (code: string, name: string) => {
+    const item = items.find((i) => i.code === code);
+    if (navigator.vibrate) navigator.vibrate(50);
+    removeItem(code);
+    if (selectedStock === code) setSelectedStock(null);
+    setUndoData({ code, name, groupId: item?.groupId });
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    undoTimer.current = setTimeout(() => setUndoData(null), 5000);
+  };
+
+  const undoRemove = () => {
+    if (!undoData) return;
+    addItem(undoData.code, undoData.name, undoData.groupId);
+    setUndoData(null);
+    if (undoTimer.current) clearTimeout(undoTimer.current);
   };
 
   const enableAlert = async (code: string, name: string) => {
@@ -486,6 +507,19 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
         </div>
       )}
 
+      {undoData && (
+        <div className="px-4 mt-2">
+          <div className="px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-between"
+            style={{ background: '#2a2640', color: '#fff', border: '1px solid rgba(255,255,255,0.12)' }}>
+            <span className="flex items-center gap-2">
+              <Trash2 size={13} style={{ color: '#F472B6' }} />
+              <span>{undoData.name} 삭제됨</span>
+            </span>
+            <button onClick={undoRemove} className="font-bold" style={{ color: '#A78BFA' }}>실행취소</button>
+          </div>
+        </div>
+      )}
+
       {permAsk && (
         <div className="px-4 mt-3">
           <div className="rounded-2xl p-4 text-center"
@@ -587,11 +621,11 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
                           return (
                             <button key={it.code}
                               onClick={() => { if (lpFired.current) { lpFired.current = false; return; } setSelectedStock(sel ? null : it.code); }}
-                              onPointerDown={() => { lpFired.current = false; if (isLoggedIn) { pressTimer.current = setTimeout(() => { lpFired.current = true; if (window.confirm(`${it.name}을(를) 관심종목에서 삭제할까요?`)) { removeItem(it.code); setToast(`${it.name} 제거됨`); } }, 500); } }}
-                              onPointerUp={() => { if (pressTimer.current) clearTimeout(pressTimer.current); }}
-                              onPointerLeave={() => { if (pressTimer.current) clearTimeout(pressTimer.current); }}
+                              onPointerDown={() => { lpFired.current = false; if (isLoggedIn) { setPressingCode(it.code); pressTimer.current = setTimeout(() => { lpFired.current = true; setPressingCode(null); removeWithUndo(it.code, it.name); }, 500); } }}
+                              onPointerUp={() => { if (pressTimer.current) clearTimeout(pressTimer.current); setPressingCode(null); }}
+                              onPointerLeave={() => { if (pressTimer.current) clearTimeout(pressTimer.current); setPressingCode(null); }}
                               className="relative flex flex-col items-start justify-center px-2.5 py-2 rounded-xl active:scale-[0.97] transition-all"
-                              style={{ minHeight: 46, background: sel ? 'rgba(127,119,221,0.16)' : 'var(--bg-card)', border: `1px solid ${sel ? '#7F77DD' : 'var(--border)'}` }}>
+                              style={{ minHeight: 46, background: pressingCode === it.code ? 'rgba(255,82,82,0.18)' : (sel ? 'rgba(127,119,221,0.16)' : 'var(--bg-card)'), border: `1px solid ${pressingCode === it.code ? '#ff5252' : (sel ? '#7F77DD' : 'var(--border)')}` }}>
                               <span className="text-[12px] font-bold leading-tight truncate w-full text-left" style={{ color: sel ? '#A78BFA' : 'var(--text-primary)', paddingRight: 16 }}>{it.name}</span>
                               <span className="text-[9px] leading-tight" style={{ color: 'var(--text-tertiary)' }}>{it.code}</span>
                               <span onClick={(e) => handleToggleAlert(e, it.code, it.name)} className="absolute top-1.5 right-1.5 flex items-center justify-center" aria-label={on ? `${it.name} 알림 끄기` : `${it.name} 알림 켜기`}>
