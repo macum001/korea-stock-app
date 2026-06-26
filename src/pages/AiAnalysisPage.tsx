@@ -5,7 +5,7 @@ import {
   Info, X, TrendingUp, TrendingDown, FileText,
   Sparkles, ArrowRight, Newspaper,
   Search, AlertTriangle,
-} from 'lucide-react';
+, Info } from 'lucide-react';
 import { aiService, StockAnalysisResult } from '@/services/aiService';
 import { StreamingStockTab } from '@/components/ai/StreamingStockTab';
 import { newsService, StockNewsItem } from '@/services/aiService';
@@ -596,6 +596,12 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
                 <p className="text-[11px] font-bold mb-2.5 px-1" style={{ color: 'var(--text-tertiary)' }}>
                   {isLoggedIn ? `내 관심종목 ${myStocks.length}개` : '종목별 최신 공시를 AI로 분석해드려요'}
                 </p>
+                {isLoggedIn && myStocks.length > 0 && (
+                  <div className="flex items-center gap-1.5 mb-2 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(167,139,250,0.08)' }}>
+                    <Info size={11} style={{ color: '#A78BFA', flexShrink: 0 }} />
+                    <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>종목을 길게 누르면 삭제할 수 있어요</span>
+                  </div>
+                )}
                 {(() => {
                   const PER = 6;
                   const pages = [];
