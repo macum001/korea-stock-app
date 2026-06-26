@@ -264,6 +264,7 @@ function isRiskDisclosure(reportName: string): boolean {
 
 function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosures?: (code: string, name: string) => void; onOpenDisclosure?: (receiptNo: string, stockCode: string, stockName?: string) => void }) {
   const [search, setSearch] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);  // +추가 버튼 → 검색창 포커스용
   const [stockResults, setStockResults] = useState<Stock[]>([]);
   const [stockSearching, setStockSearching] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -484,7 +485,7 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
         <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl"
           style={{ background: 'var(--bg-elevated)', border: `1px solid ${showingResults ? 'rgba(219,39,119,0.45)' : 'var(--border)'}` }}>
           <Search size={16} style={{ color: 'var(--text-tertiary)' }} />
-          <input type="text" placeholder="종목명으로 관심종목 추가"
+          <input ref={searchInputRef} type="text" placeholder="종목명으로 관심종목 추가"
             value={search} onChange={(e) => setSearch(e.target.value)}
             className="flex-1 text-sm bg-transparent outline-none"
             style={{ color: 'var(--text-primary)' }} />
@@ -642,7 +643,7 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
                           );
                         })}
                         {isLast && isLoggedIn && cur.length < PER && (
-                          <button onClick={() => { const el = document.querySelector('input[placeholder*="관심종목"]') as HTMLInputElement | null; el?.focus(); }} className="flex flex-col items-center justify-center rounded-xl active:scale-[0.97] transition-all" style={{ minHeight: 46, border: '1px dashed var(--border)', color: 'var(--text-tertiary)' }}>
+                          <button onClick={() => { searchInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); searchInputRef.current?.focus(); }} className="flex flex-col items-center justify-center rounded-xl active:scale-[0.97] transition-all" style={{ minHeight: 46, border: '1px dashed var(--border)', color: 'var(--text-tertiary)' }}>
                             <Plus size={15} />
                             <span className="text-[10px] mt-0.5">추가</span>
                           </button>
