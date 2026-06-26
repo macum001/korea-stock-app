@@ -276,6 +276,10 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
   const [feed, setFeed] = useState<Disclosure[]>([]);
   const [feedLoading, setFeedLoading] = useState(false);
   const [selectedStock, setSelectedStock] = useState<string | null>(null);  // 칩으로 종목 필터
+  const [chipPage, setChipPage] = useState(0);
+  const touchStartX = useRef(0);
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);  // long-press 타이머
+  const lpFired = useRef(false);                            // long-press 발동 플래그
   const [feedOffset, setFeedOffset] = useState(0);          // 무한스크롤 offset
   const [feedHasMore, setFeedHasMore] = useState(false);    // 더 불러올 게 있나
   const [feedMoreLoading, setFeedMoreLoading] = useState(false);
@@ -558,46 +562,63 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
                 <p className="text-[11px] font-bold mb-2.5 px-1" style={{ color: 'var(--text-tertiary)' }}>
                   {isLoggedIn ? `내 관심종목 ${myStocks.length}개` : '종목별 최신 공시를 AI로 분석해드려요'}
                 </p>
-                <div className="flex flex-wrap gap-2 pb-1">
-                  {displayStocks.map((it) => {
-                    const on = alertOn[it.code];
-                    const sel = selectedStock === it.code;
-                    return (
-                      <div key={it.code} className="flex items-stretch flex-shrink-0" style={{ height: 44 }}>
-                        {/* 칩 본체: 누르면 그 종목 공시만 필터 (토글) */}
-                        <button
-                          onClick={() => setSelectedStock(sel ? null : it.code)}
-                          className="flex items-center gap-2 px-2.5 active:scale-[0.98] transition-all"
-                          style={{
-                            background: sel ? 'rgba(127,119,221,0.16)' : 'var(--bg-card)',
-                            borderTop: `1px solid ${sel ? '#7F77DD' : 'var(--border)'}`,
-                            borderBottom: `1px solid ${sel ? '#7F77DD' : 'var(--border)'}`, borderLeft: `1px solid ${sel ? '#7F77DD' : 'var(--border)'}`, borderRight: 'none',
-                            borderRadius: isLoggedIn ? '12px 0 0 12px' : '12px',
-                          }}>
-                          <div className="flex flex-col items-start">
-                            <span className="text-[12px] font-bold leading-tight" style={{ color: sel ? '#A78BFA' : 'var(--text-primary)' }}>{it.name}</span>
-                            <span className="text-[9px] leading-tight" style={{ color: 'var(--text-tertiary)' }}>{it.code}</span>
-                          </div>
-                          <span onClick={(e) => handleToggleAlert(e, it.code, it.name)}
-                            className="relative flex items-center justify-center ml-0.5"
-                            aria-label={on ? `${it.name} 알림 끄기` : `${it.name} 알림 켜기`}>
-                            <AlertBell on={!!on} size={17} />
-                            {on && <span className="absolute -top-0.5 -right-0.5 w-[7px] h-[7px] rounded-full" style={{ background: '#4ADE80', border: '1.5px solid var(--bg-card)' }} />}
-                          </span>
-                        </button>
-                        {/* 휴지통: 분리된 삭제 버튼 */}
-                        {isLoggedIn && (
-                          <button onClick={(e) => handleRemove(e, it.code, it.name)}
-                            className="flex items-center justify-center px-2.5 active:scale-90 transition-all"
-                            style={{ background: 'rgba(219,39,119,0.14)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', borderRight: '1px solid var(--border)', borderLeft: '1px solid rgba(219,39,119,0.2)', borderRadius: '0 12px 12px 0' }}
-                            aria-label={`${it.name} 삭제`}>
-                            <Trash2 size={15} style={{ color: '#F472B6' }} />
+                {(() => {
+                  const PER = 6;
+                  const pages = [];
+                  for (let i = 0; i < displayStocks.length; i += PER) pages.push(displayStocks.slice(i, i + PER));
+                  if (pages.length === 0) pages.push([]);
+                  const pg = Math.min(chipPage, pages.length - 1);
+                  const cur = pages[pg] || [];
+                  const isLast = pg === pages.length - 1;
+                  return (
+                    <div>
+                      <div
+                        onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+                        onTouchEnd={(e) => {
+                          const dx = e.changedTouches[0].clientX - touchStartX.current;
+                          if (dx < -40 && pg < pages.length - 1) setChipPage(pg + 1);
+                          else if (dx > 40 && pg > 0) setChipPage(pg - 1);
+                        }}
+                        className="grid grid-cols-3 gap-2"
+                        style={{ touchAction: 'pan-y' }}>
+                        {cur.map((it) => {
+                          const on = alertOn[it.code];
+                          const sel = selectedStock === it.code;
+                          return (
+                            <button key={it.code}
+                              onClick={() => { if (lpFired.current) { lpFired.current = false; return; } setSelectedStock(sel ? null : it.code); }}
+                              onPointerDown={() => { lpFired.current = false; if (isLoggedIn) { pressTimer.current = setTimeout(() => { lpFired.current = true; if (window.confirm(`${it.name}을(를) 관심종목에서 삭제할까요?`)) { removeItem(it.code); setToast(`${it.name} 제거됨`); } }, 500); } }}
+                              onPointerUp={() => { if (pressTimer.current) clearTimeout(pressTimer.current); }}
+                              onPointerLeave={() => { if (pressTimer.current) clearTimeout(pressTimer.current); }}
+                              className="relative flex flex-col items-start justify-center px-2.5 py-2 rounded-xl active:scale-[0.97] transition-all"
+                              style={{ minHeight: 46, background: sel ? 'rgba(127,119,221,0.16)' : 'var(--bg-card)', border: `1px solid ${sel ? '#7F77DD' : 'var(--border)'}` }}>
+                              <span className="text-[12px] font-bold leading-tight truncate w-full text-left" style={{ color: sel ? '#A78BFA' : 'var(--text-primary)', paddingRight: 16 }}>{it.name}</span>
+                              <span className="text-[9px] leading-tight" style={{ color: 'var(--text-tertiary)' }}>{it.code}</span>
+                              <span onClick={(e) => handleToggleAlert(e, it.code, it.name)} className="absolute top-1.5 right-1.5 flex items-center justify-center" aria-label={on ? `${it.name} 알림 끄기` : `${it.name} 알림 켜기`}>
+                                <AlertBell on={!!on} size={15} />
+                                {on && <span className="absolute -top-0.5 -right-0.5 w-[6px] h-[6px] rounded-full" style={{ background: '#4ADE80' }} />}
+                              </span>
+                            </button>
+                          );
+                        })}
+                        {isLast && isLoggedIn && cur.length < PER && (
+                          <button onClick={() => { const el = document.querySelector('input[placeholder*="관심종목"]') as HTMLInputElement | null; el?.focus(); }} className="flex flex-col items-center justify-center rounded-xl active:scale-[0.97] transition-all" style={{ minHeight: 46, border: '1px dashed var(--border)', color: 'var(--text-tertiary)' }}>
+                            <Plus size={15} />
+                            <span className="text-[10px] mt-0.5">추가</span>
                           </button>
                         )}
                       </div>
-                    );
-                  })}
-                </div>
+                      {pages.length > 1 && (
+                        <div className="flex items-center justify-center gap-1.5 mt-2.5">
+                          {pages.map((_, i) => (
+                            <button key={i} onClick={() => setChipPage(i)} aria-label={`${i + 1}페이지`} className="transition-all" style={{ height: 6, width: i === pg ? 16 : 6, borderRadius: 3, background: i === pg ? '#A78BFA' : 'var(--border)', border: 'none', padding: 0 }} />
+                          ))}
+                          <span className="text-[9px] ml-1" style={{ color: 'var(--text-tertiary)' }}>{pg + 1}/{pages.length}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </>
             )}
           </>
