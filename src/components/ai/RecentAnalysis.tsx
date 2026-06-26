@@ -3,7 +3,7 @@
 // jp: 항목 글자수: 타이틀 + 서브타이틀 + 시간 + X
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Clock, Trash2, X, ChevronDown } from 'lucide-react';
+import { Clock, Trash2, X, ChevronDown , Info } from 'lucide-react';
 import { aiService, AiHistoryItem } from '@/services/aiService';
 import { useAuthStore } from '@/store/authStore';
 import { AnalysisResultCard } from '@/components/ai/AnalysisResultCard';
@@ -76,6 +76,7 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
 
   // jp: 꾹 눌러 삭제 + 실행취소 (5초 지연 후 실제 DB 삭제 → 진짜 복구). 삭제 항목 기억 → 즉시 복구
   const [pressingId, setPressingId] = useState<string | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [undoItem, setUndoItem] = useState<{ item: AiHistoryItem; title: string } | null>(null);
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lpFired = useRef(false);
@@ -108,7 +109,6 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
 
   const handleClearAll = async () => {
     if (items.length === 0) return;
-    if (!window.confirm('최근 분석을 전체 삭제할까요?')) return;
     const prev = items;
     setItems([]);
     setOpenId(null);
@@ -123,6 +123,23 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
 
   if (loading) {
     return <Wrap><p className="text-sm text-center py-2" style={{ color: 'var(--text-tertiary)' }}>불러오는 중..</p></Wrap>;
+      {showClearConfirm && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowClearConfirm(false)}>
+          <div className="w-full max-w-md m-3 p-5 rounded-2xl" style={{ background: '#16122a', border: '1px solid rgba(255,255,255,0.12)' }} onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-center mb-3">
+              <span className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 22, background: 'rgba(255,82,82,0.14)' }}>
+                <Trash2 size={20} style={{ color: '#ff5252' }} />
+              </span>
+            </div>
+            <p className="text-center text-sm font-bold mb-1" style={{ color: '#fff' }}>최근 분석 전체 삭제</p>
+            <p className="text-center text-[11px] mb-4 leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>분석 기록 {items.length}개가 모두 삭제돼요.<br />이 작업은 되돌릴 수 없어요.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setShowClearConfirm(false)} className="flex-1 py-2.5 rounded-xl text-[13px] active:scale-[0.98]" style={{ color: 'var(--text-secondary)', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>취소</button>
+              <button onClick={() => { setShowClearConfirm(false); void handleClearAll(); }} className="flex-1 py-2.5 rounded-xl text-[13px] font-bold active:scale-[0.98]" style={{ color: '#fff', background: '#ff5252' }}>전체 삭제</button>
+            </div>
+          </div>
+        </div>
+      )}
   }
 
   if (!isAuthenticated) {
@@ -162,10 +179,19 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
     <Wrap>
       <div className="flex items-center justify-between mb-1">
         <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>최근 분석</span>
-        <button onClick={handleClearAll} className="flex items-center gap-1 text-xs active:opacity-60" style={{ color: 'var(--fall)' }}>
-          <Trash2 size={13} /> 전체 삭제
+        <button onClick={() => { if (items.length > 0) setShowClearConfirm(true); }}
+          className="flex items-center justify-center active:scale-90 transition-all"
+          style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid rgba(255,82,82,0.3)', color: '#ff7a7a', opacity: items.length > 0 ? 1 : 0.3 }}
+          aria-label="전체 삭제">
+          <Trash2 size={15} />
         </button>
       </div>
+      {items.length > 0 && (
+        <div className="flex items-center gap-1.5 mb-2 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(167,139,250,0.08)' }}>
+          <Info size={11} style={{ color: '#A78BFA', flexShrink: 0 }} />
+          <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>항목을 길게 누르면 삭제할 수 있어요</span>
+        </div>
+      )}
       {undoItem && (
         <div className="px-3 py-2 mb-2 rounded-xl text-xs flex items-center justify-between" style={{ background: '#2a2640', color: '#fff', border: '1px solid rgba(255,255,255,0.12)' }}>
           <span className="flex items-center gap-2"><Trash2 size={13} style={{ color: '#F472B6' }} /><span>{undoItem.title} 삭제됨</span></span>
