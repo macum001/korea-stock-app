@@ -135,6 +135,24 @@ export async function getImportantDisclosures(limit = 50): Promise<Disclosure[]>
 
 // jp: 종목별 공시 조회 - ★ offset 추가 (무한스크롤 페이지네이션)
 // jp: ORDER BY 에 receipt_no DESC 보조정렬 → disclosed_at 이 날짜만(00:00:00)이라 같은 날 순서 안정화
+// jp: 종류 축(category_type) 필터 페이지 조회 — 7개 탭용. idx_disclosures_category_type 인덱스 사용
+export async function getDisclosuresByCategoryPage(
+  categoryType: string,
+  limit = 50,
+  offset = 0
+): Promise<{ items: Disclosure[]; hasMore: boolean }> {
+  try {
+    const rows = await query<Record<string, unknown>>(
+      'SELECT * FROM disclosures WHERE category_type = $1 ORDER BY disclosed_at DESC, receipt_no DESC LIMIT $2 OFFSET $3',
+      [categoryType, limit, offset]
+    );
+    const items = rows.map(rowToDisclosure);
+    return { items, hasMore: items.length >= limit };
+  } catch (err) {
+    throw new AppError('DATABASE_ERROR', `카테고리 공시 조회 실패: ${err}`);
+  }
+}
+
 export async function getDisclosuresByStockCode(
   stockCode: string,
   limit = 30,

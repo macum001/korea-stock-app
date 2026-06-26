@@ -13,7 +13,7 @@ import {
 } from '../services/disclosure/disclosureSync.service';
 import { getMyDisclosureFeed } from '../services/disclosure/userFeed.service';
 import { setDisclosureAlert, removeDisclosureAlert, setDisclosureAlertPrefs, getDisclosureAlertPrefs } from '../repositories/disclosureAlert.repository';
-import { getDisclosureAi, saveDisclosureAi, findDisclosureByReceiptNo, getDisclosuresByFlag } from '../repositories/disclosure.repository';
+import { getDisclosureAi, saveDisclosureAi, findDisclosureByReceiptNo, getDisclosuresByFlag, getDisclosuresByCategoryPage } from '../repositories/disclosure.repository';
 import { analyzeDisclosure, isAiAnalysisEnabled } from '../services/disclosure/disclosureAiAnalysis.service';
 import { analyzeByReceiptNo } from '../services/ai/receiptAnalysis.service';
 import { getUserStatByReceiptNo, getUserStatByType } from '../services/disclosure/disclosureStatsUser.service';
@@ -31,6 +31,11 @@ router.get('/', async (req: Request, res: Response) => {
     if (flag && ['important', 'capital', 'good', 'bad'].includes(flag)) {
       const data = await getDisclosuresByFlag(flag as 'important' | 'capital' | 'good' | 'bad', limit, offset);
       return res.json({ success: true, data });
+    }
+    const category = req.query.category as string | undefined;
+    if (category && category !== 'all') {
+      const catPage = await getDisclosuresByCategoryPage(category, limit, offset);
+      return res.json({ success: true, data: catPage.items, page: { limit, offset, hasMore: catPage.hasMore } });
     }
     const page = await getLatestDisclosuresPage(limit, offset);
     res.json({ success: true, data: page.items, page: { limit, offset, hasMore: page.hasMore } });
