@@ -100,9 +100,9 @@ function normalize(r: AiResultRaw) {
 }
 
 function impactStyle(level: string): { bg: string; color: string } {
-  if (level.includes('긍정')) return { bg: 'rgba(244,114,166,0.18)', color: '#F9A8D4' };
-  if (level.includes('부정')) return { bg: 'rgba(127,119,221,0.18)', color: '#A78BFA' };
-  return { bg: 'var(--bg-elevated)', color: 'var(--text-secondary)' };
+  if (level.includes('긍정') || level.includes('호재')) return { bg: 'var(--rise-bg)', color: 'var(--rise)' };
+  if (level.includes('부정') || level.includes('악재')) return { bg: 'var(--fall-bg)', color: 'var(--fall)' };
+  return { bg: 'rgba(127,119,221,0.15)', color: '#A78BFA' };
 }
 
 // jp: 탭 빈 상태 표시
@@ -266,7 +266,7 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
         <div className="px-5">
           {/* 배지 */}
           <div className="flex items-center gap-2 mb-3 mt-1">
-            <ImportantDisclosureBadge importance={disclosure.importance} sentiment={disclosure.sentiment} />
+            <ImportantDisclosureBadge importance={disclosure.importance} sentiment={disclosure.sentiment} showSentiment={!ai} />
           </div>
 
           {/* 종목 · 시간 */}
