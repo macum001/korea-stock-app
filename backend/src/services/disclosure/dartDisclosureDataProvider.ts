@@ -31,6 +31,7 @@ async function normalizeDartItem(item: DartListItem): Promise<Disclosure> {
     isCorrection:    classification.isCorrection,
     normalizedTitle: classification.normalizedTitle,
     category:        classification.category,
+    categoryType:    classification.categoryType,
     originalUrl:     createDartOriginalUrl(item.rcept_no),
     disclosedAt:     new Date(
       item.rcept_dt.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')

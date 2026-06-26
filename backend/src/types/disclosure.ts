@@ -30,6 +30,7 @@ export type Disclosure = {
   isCorrection?:    boolean;  // jp: 정정공시 표시
   normalizedTitle?: string;   // jp: 정규화된 제목 (분류/검색용)
   category?:        string;   // jp: 내부 대표 분류 (general/important/capital/good/bad)
+  categoryType?:    string;   // jp: 종류 축 (투자위험/증자감자/합병분할/실적재무/계약소송/배당주총/기타) — 6개 탭
 };
 
 // jp: 분류 결과 타입
