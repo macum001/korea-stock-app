@@ -500,6 +500,36 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                               </div>
                             );
                           })()}
+                          {/* 슬롯③ 배당 시가배당률 — 구간 게이지 (낮음/보통/양호/고배당) */}
+                          {(() => {
+                            const dyRow = nums.find((n) => /시가배당률|시가\s*배당/.test(n.label));
+                            if (!dyRow) return null;
+                            const m = dyRow.value.match(/([\d.]+)\s*%/);
+                            if (!m) return null;
+                            const dy = parseFloat(m[1]);
+                            if (!(dy >= 0 && dy <= 50)) return null;
+                            const tiers = ['낮음', '보통', '양호', '고배당'];
+                            const ti = dy < 1 ? 0 : dy < 2.5 ? 1 : dy < 4 ? 2 : 3;
+                            const C = '#5DCAA5';
+                            const dpsRow = nums.find((n) => /주당\s*배당금|1주당\s*배당/.test(n.label));
+                            return (
+                              <div className="mb-2 px-3.5 py-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                                <div className="flex items-center justify-between mb-2.5">
+                                  <span className="text-[10px] font-semibold" style={{ color: 'var(--text-tertiary)' }}>시가배당률</span>
+                                  <span className="text-[15px] font-extrabold" style={{ color: C }}>{dy}% <span className="text-[10px] font-semibold" style={{ color: 'var(--text-tertiary)' }}>{tiers[ti]}</span></span>
+                                </div>
+                                <div className="flex gap-1 mb-1.5">
+                                  {tiers.map((_, i) => (
+                                    <div key={i} style={{ flex: 1, height: 7, borderRadius: 3, background: i <= ti ? C : 'rgba(255,255,255,0.1)', opacity: i < ti ? 0.5 : 1 }} />
+                                  ))}
+                                </div>
+                                <div className="flex justify-between" style={{ fontSize: 8, color: 'var(--text-tertiary)' }}>
+                                  {tiers.map((t, i) => (<span key={i} style={{ fontWeight: i === ti ? 700 : 400, color: i === ti ? C : undefined }}>{t}</span>))}
+                                </div>
+                                {dpsRow && <div className="mt-2 text-[10px]" style={{ color: 'var(--text-secondary)' }}>주당 {dpsRow.value}</div>}
+                              </div>
+                            );
+                          })()}
                           {/* 나머지 수치 리스트 */}
                           {rest.length > 0 && (
                             <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
