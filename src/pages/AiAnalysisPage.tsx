@@ -642,12 +642,6 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
                             </button>
                           );
                         })}
-                        {isLast && isLoggedIn && cur.length < PER && (
-                          <button onClick={() => { searchInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); searchInputRef.current?.focus(); }} className="flex flex-col items-center justify-center rounded-xl active:scale-[0.97] transition-all" style={{ minHeight: 46, border: '1px dashed var(--border)', color: 'var(--text-tertiary)' }}>
-                            <Plus size={15} />
-                            <span className="text-[10px] mt-0.5">추가</span>
-                          </button>
-                        )}
                       </div>
                       {pages.length > 1 && (
                         <div className="flex items-center justify-center gap-1.5 mt-2.5">
