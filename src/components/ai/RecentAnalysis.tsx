@@ -57,7 +57,8 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
     if (!isAuthenticated) { setItems([]); setLoading(false); return; }
     setLoading(true);
     try {
-      setItems(await aiService.getHistory(kind));
+      const data = await aiService.getHistory(kind);
+      setItems(data.filter((d) => !pendingDelete.current.has(d.id)));
     } catch {
       setItems([]);
     } finally {
@@ -81,20 +82,22 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lpFired = useRef(false);
   const delTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingDelete = useRef<Set<string>>(new Set());  // 삭제 대기 중인 id (load 후에도 숨김 유지)
 
   const startPress = (id: string) => {
     lpFired.current = false; setPressingId(id);
     pressTimer.current = setTimeout(() => {
       lpFired.current = true; setPressingId(null);
       if (navigator.vibrate) navigator.vibrate(50);
-      const it = items.find((x) => x.id === id);
-      if (!it) return;
-      setItems((l) => l.filter((x) => x.id !== id));
+      pendingDelete.current.add(id);
+      let removed: AiHistoryItem | undefined;
+      setItems((l) => { removed = l.find((x) => x.id === id); return l.filter((x) => x.id !== id); });
       if (openId === id) setOpenId(null);
-      setUndoItem({ item: it, title: titleOf(it) });
+      setTimeout(() => { if (removed) setUndoItem({ item: removed, title: titleOf(removed) }); }, 0);
       if (delTimer.current) clearTimeout(delTimer.current);
       delTimer.current = setTimeout(() => {
         aiService.deleteHistory(id).catch(() => {});
+        pendingDelete.current.delete(id);
         setUndoItem(null);
       }, 5000);
     }, 500);
@@ -103,6 +106,7 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
   const undoDelete = () => {
     if (!undoItem) return;
     if (delTimer.current) clearTimeout(delTimer.current);
+    pendingDelete.current.delete(undoItem.item.id);
     setItems((l) => [undoItem.item, ...l].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
     setUndoItem(null);
   };
