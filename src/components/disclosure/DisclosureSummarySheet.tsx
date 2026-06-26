@@ -462,6 +462,44 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                               </div>
                             );
                           })()}
+                          {/* 슬롯③ 증자 희석률 — 희석률 항목 있으면 기존 vs 신주 가로 바 */}
+                          {(() => {
+                            const dilRow = nums.find((n) => /희석률|희석 비율/.test(n.label));
+                            if (!dilRow) return null;
+                            const m = dilRow.value.match(/([\d.]+)\s*%/);
+                            if (!m) return null;
+                            const dil = parseFloat(m[1]);
+                            if (!(dil > 0 && dil <= 100)) return null;
+                            const existing = +(100 - dil).toFixed(1);
+                            const beforeRow = nums.find((n) => /증자\s*전.*발행주식|발행주식총수.*전|기존.*발행주식/.test(n.label));
+                            const newRow = nums.find((n) => /신주\s*발행\s*주수|신주의?\s*수|신주 수/.test(n.label));
+                            const beforeShares = beforeRow ? beforeRow.value : null;
+                            const newShares = newRow ? newRow.value : null;
+                            return (
+                              <div className="mb-2 px-3.5 py-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                                <div className="flex items-center justify-between mb-2.5">
+                                  <span className="text-[10px] font-semibold" style={{ color: 'var(--text-tertiary)' }}>증자 후 지분 구성</span>
+                                  <span className="text-[12px] font-extrabold" style={{ color: '#f5c451' }}>희석 {dil}%</span>
+                                </div>
+                                <div className="flex rounded-md overflow-hidden mb-2.5" style={{ height: 12 }}>
+                                  <div style={{ width: `${existing}%`, background: '#7F77DD' }} />
+                                  <div style={{ width: `${dil}%`, background: '#f5c451' }} />
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <span style={{ width: 8, height: 8, borderRadius: 2, background: '#7F77DD', flexShrink: 0 }} />
+                                    <span className="flex-1 text-[11px]" style={{ color: 'var(--text-secondary)' }}>기존 주주</span>
+                                    <span className="text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>{existing}%{beforeShares ? ` · ${beforeShares}` : ''}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span style={{ width: 8, height: 8, borderRadius: 2, background: '#f5c451', flexShrink: 0 }} />
+                                    <span className="flex-1 text-[11px]" style={{ color: 'var(--text-secondary)' }}>신주(희석분)</span>
+                                    <span className="text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>{dil}%{newShares ? ` · ${newShares}` : ''}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()}
                           {/* 나머지 수치 리스트 */}
                           {rest.length > 0 && (
                             <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
