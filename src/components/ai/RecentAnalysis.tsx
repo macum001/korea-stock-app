@@ -115,6 +115,11 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
     if (items.length === 0) return;
     const prev = items;
     setItems([]);
+    // 전체삭제: 개별 대기 정리 (충돌 방지)
+    if (delTimer.current) clearTimeout(delTimer.current);
+    if (pressTimer.current) clearTimeout(pressTimer.current);
+    pendingDelete.current.clear();
+    setUndoItem(null); setPressingId(null);
     setOpenId(null);
     try { await aiService.clearHistory(); } catch { setItems(prev); }
   };
@@ -127,23 +132,6 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
 
   if (loading) {
     return <Wrap><p className="text-sm text-center py-2" style={{ color: 'var(--text-tertiary)' }}>불러오는 중..</p></Wrap>;
-      {showClearConfirm && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowClearConfirm(false)}>
-          <div className="w-full max-w-md m-3 p-5 rounded-2xl" style={{ background: '#16122a', border: '1px solid rgba(255,255,255,0.12)' }} onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-center mb-3">
-              <span className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 22, background: 'rgba(255,82,82,0.14)' }}>
-                <Trash2 size={20} style={{ color: '#ff5252' }} />
-              </span>
-            </div>
-            <p className="text-center text-sm font-bold mb-1" style={{ color: '#fff' }}>최근 분석 전체 삭제</p>
-            <p className="text-center text-[11px] mb-4 leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>분석 기록 {items.length}개가 모두 삭제돼요.<br />이 작업은 되돌릴 수 없어요.</p>
-            <div className="flex gap-2">
-              <button onClick={() => setShowClearConfirm(false)} className="flex-1 py-2.5 rounded-xl text-[13px] active:scale-[0.98]" style={{ color: 'var(--text-secondary)', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>취소</button>
-              <button onClick={() => { setShowClearConfirm(false); void handleClearAll(); }} className="flex-1 py-2.5 rounded-xl text-[13px] font-bold active:scale-[0.98]" style={{ color: '#fff', background: '#ff5252' }}>전체 삭제</button>
-            </div>
-          </div>
-        </div>
-      )}
   }
 
   if (!isAuthenticated) {
@@ -181,6 +169,23 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
 
   return (
     <Wrap>
+      {showClearConfirm && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowClearConfirm(false)}>
+          <div className="w-full max-w-md m-3 p-5 rounded-2xl" style={{ background: '#16122a', border: '1px solid rgba(255,255,255,0.12)' }} onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-center mb-3">
+              <span className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 22, background: 'rgba(255,82,82,0.14)' }}>
+                <Trash2 size={20} style={{ color: '#ff5252' }} />
+              </span>
+            </div>
+            <p className="text-center text-sm font-bold mb-1" style={{ color: '#fff' }}>최근 분석 전체 삭제</p>
+            <p className="text-center text-[11px] mb-4 leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>분석 기록 {items.length}개가 모두 삭제돼요.<br />이 작업은 되돌릴 수 없어요.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setShowClearConfirm(false)} className="flex-1 py-2.5 rounded-xl text-[13px] active:scale-[0.98]" style={{ color: 'var(--text-secondary)', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>취소</button>
+              <button onClick={() => { setShowClearConfirm(false); void handleClearAll(); }} className="flex-1 py-2.5 rounded-xl text-[13px] font-bold active:scale-[0.98]" style={{ color: '#fff', background: '#ff5252' }}>전체 삭제</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-1">
         <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>최근 분석</span>
         <button onClick={() => { if (items.length > 0) setShowClearConfirm(true); }}
