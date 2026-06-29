@@ -260,7 +260,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
             onClick={handleSubmit}
             disabled={loading}
             className="w-full py-[15px] rounded-[15px] text-sm font-extrabold flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.99] transition-all mt-1"
-            style={{ background: '#c2620e', color: '#ffffff', boxShadow: '0 10px 26px rgba(194,98,14,0.35)' }}
+            style={{ background: '#e8893f', color: '#ffffff', boxShadow: '0 10px 26px rgba(232,137,63,0.35)' }}
           >
             {loading && <Loader2 size={16} className="animate-spin" />}
             {mode === 'login' ? '로그인' : '회원가입'}

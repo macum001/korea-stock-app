@@ -773,9 +773,9 @@ const CATEGORY_RULES: { label: string; bg: string; color: string; keywords: stri
   { label: '반도체', bg: 'rgba(219,39,119,0.15)', color: '#ffffff', keywords: ['반도체','HBM','파운드리','D램','낸드','TSMC','삼성전자','SK하이닉스','마이크론','엔비디아'] },
   { label: '바이오', bg: 'rgba(255,255,255,0.15)', color: '#ffffff', keywords: ['바이오','제약','임상','허가','FDA','항암','신약','셀트리온','삼성바이오','에이치엘비'] },
   { label: '2차전지', bg: 'rgba(74,222,128,0.13)', color: '#9DA7B3', keywords: ['2차전지','배터리','IRA','LG에너지','삼성SDI','SK온','양극재','음극재','전고체'] },
-  { label: '자동차', bg: 'rgba(194,98,14,0.13)', color: '#e8893f', keywords: ['자동차','현대차','기아','전기차','EV','완성차','모빌리티','IPO','자율주행'] },
+  { label: '자동차', bg: 'rgba(232,137,63,0.13)', color: '#e8893f', keywords: ['자동차','현대차','기아','전기차','EV','완성차','모빌리티','IPO','자율주행'] },
   { label: 'AI·플랫폼', bg: 'rgba(255,255,255,0.1)', color: '#ffffff', keywords: ['AI','인공지능','플랫폼','카카오','네이버','광고','데이터','클라우드','소프트웨어'] },
-  { label: '에너지', bg: 'rgba(194,98,14,0.1)', color: '#e8893f', keywords: ['에너지','태양광','풍력','원전','수소','LS','한화','두산'] },
+  { label: '에너지', bg: 'rgba(232,137,63,0.1)', color: '#e8893f', keywords: ['에너지','태양광','풍력','원전','수소','LS','한화','두산'] },
   { label: '금융', bg: 'rgba(59,130,246,0.13)', color: '#93C5FD', keywords: ['금융','은행','증권','보험','카드','금리','채권','주가'] },
 ];
 
@@ -978,7 +978,7 @@ function LoadingDots({ text }: { text: string }) {
 
 function ErrorBox({ msg, onClose }: { msg: string; onClose: () => void }) {
   return (
-    <div className="rounded-[16px] p-3.5 mb-3 flex items-start gap-2" style={{ background: 'rgba(194,98,14,0.12)', border: '1px solid rgba(194,98,14,0.25)' }}>
+    <div className="rounded-[16px] p-3.5 mb-3 flex items-start gap-2" style={{ background: 'rgba(232,137,63,0.12)', border: '1px solid rgba(232,137,63,0.25)' }}>
       <Info size={16} color="#e8893f" style={{ flexShrink: 0, marginTop: 1 }} />
       <span className="text-[13px] flex-1" style={{ color: 'var(--text-primary)' }}>{msg}</span>
       <button onClick={onClose}><X size={15} color="var(--text-tertiary)" /></button>

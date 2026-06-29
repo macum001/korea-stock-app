@@ -173,7 +173,7 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
         <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowClearConfirm(false)}>
           <div className="w-full max-w-md m-3 p-5 rounded-2xl" style={{ background: '#0e1118', border: '1px solid rgba(255,255,255,0.12)' }} onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-center mb-3">
-              <span className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 22, background: 'rgba(194,98,14,0.18)' }}>
+              <span className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 22, background: 'rgba(232,137,63,0.18)' }}>
                 <Trash2 size={20} style={{ color: '#e8893f' }} />
               </span>
             </div>
@@ -181,7 +181,7 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
             <p className="text-center text-[11px] mb-4 leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>분석 기록 {items.length}개가 모두 삭제돼요.<br />이 작업은 되돌릴 수 없어요.</p>
             <div className="flex gap-2">
               <button onClick={() => setShowClearConfirm(false)} className="flex-1 py-2.5 rounded-xl text-[13px] active:scale-[0.98]" style={{ color: 'var(--text-secondary)', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>취소</button>
-              <button onClick={() => { setShowClearConfirm(false); void handleClearAll(); }} className="flex-1 py-2.5 rounded-xl text-[13px] font-bold active:scale-[0.98]" style={{ color: '#fff', background: '#c2620e' }}>전체 삭제</button>
+              <button onClick={() => { setShowClearConfirm(false); void handleClearAll(); }} className="flex-1 py-2.5 rounded-xl text-[13px] font-bold active:scale-[0.98]" style={{ color: '#fff', background: '#e8893f' }}>전체 삭제</button>
             </div>
           </div>
         </div>
@@ -190,7 +190,7 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
         <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>최근 분석</span>
         <button onClick={() => { if (items.length > 0) setShowClearConfirm(true); }}
           className="flex items-center justify-center active:scale-90 transition-all"
-          style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid rgba(194,98,14,0.4)', color: '#c2620e', opacity: items.length > 0 ? 1 : 0.3 }}
+          style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid rgba(232,137,63,0.4)', color: '#e8893f', opacity: items.length > 0 ? 1 : 0.3 }}
           aria-label="전체 삭제">
           <Trash2 size={15} />
         </button>

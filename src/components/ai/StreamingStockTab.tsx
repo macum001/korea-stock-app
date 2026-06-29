@@ -226,7 +226,7 @@ export function StreamingStockTab({
               { emoji: '⚠️', title: '조심할 것', sub: '리스크 요인' },
               { emoji: '👀', title: '지켜볼 사항', sub: '주목 포인트' },
             ].map((f) => (
-              <div key={f.title} className="rounded-[10px] p-3" style={{ background: '#c2620e' }}>
+              <div key={f.title} className="rounded-[10px] p-3" style={{ background: '#e8893f' }}>
                 <p className="text-[15px] mb-1">{f.emoji}</p>
                 <p className="text-[13px] font-semibold" style={{ color: '#ffffff' }}>{f.title}</p>
                 <p className="text-[11px] mt-0.5" style={{ color: '#ffe0bf' }}>{f.sub}</p>
@@ -247,7 +247,7 @@ export function StreamingStockTab({
               ].map((step, i) => (
                 <div key={i} className="flex gap-2.5 items-start">
                   <span className="flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-white"
-                    style={{ width: 20, height: 20, borderRadius: '50%', background: '#c2620e' }}>{i + 1}</span>
+                    style={{ width: 20, height: 20, borderRadius: '50%', background: '#e8893f' }}>{i + 1}</span>
                   <p className="text-[13px] leading-[1.6]" style={{ color: 'var(--text-secondary)' }}>{step}</p>
                 </div>
               ))}
@@ -289,7 +289,7 @@ export function StreamingStockTab({
 
       {/* jp: 오류 */}
       {state.status === 'error' && (
-        <div className="rounded-[16px] p-3.5 mb-3 flex items-start gap-2" style={{ background: 'rgba(194,98,14,0.12)', border: '1px solid rgba(194,98,14,0.25)' }}>
+        <div className="rounded-[16px] p-3.5 mb-3 flex items-start gap-2" style={{ background: 'rgba(232,137,63,0.12)', border: '1px solid rgba(232,137,63,0.25)' }}>
           <Info size={16} color="#e8893f" style={{ flexShrink: 0, marginTop: 1 }} />
           <span className="text-[13px] flex-1" style={{ color: 'var(--text-primary)' }}>{state.error}</span>
           <button onClick={reset}><X size={15} color="var(--text-tertiary)" /></button>

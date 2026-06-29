@@ -1,5 +1,5 @@
-// jp: 내 정보 관리 - 공통 BottomSheet(중앙 모달) 사용
-// jp: ★ 푸시 알림 토글 제거 (종목별 🔔로 관리), 아바타 제거, 얇은 폰트 통일
+﻿// jp: ???뺣낫 愿由?- 怨듯넻 BottomSheet(以묒븰 紐⑤떖) ?ъ슜
+// jp: ???몄떆 ?뚮┝ ?좉? ?쒓굅 (醫낅ぉ蹂??뵒濡?愿由?, ?꾨컮? ?쒓굅, ?뉗? ?고듃 ?듭씪
 import { useState, useEffect } from 'react';
 import { Pencil, KeyRound, LogOut, Check, Loader2, Mail, Calendar, Eye, EyeOff, ChevronRight } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -27,7 +27,7 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
   }, [open]);
 
   return (
-    <BottomSheet isOpen={open} onClose={onClose} title="내 정보 관리">
+    <BottomSheet isOpen={open} onClose={onClose} title="???뺣낫 愿由?>
       <div className="px-5 pt-2 pb-5">
         {mode === 'view' && (
           <ViewMode
@@ -62,7 +62,7 @@ function ViewMode({ profile, nickname, onEditNickname, onEditPassword, onLogout 
 }) {
   return (
     <div>
-      {/* jp: 그라데이션 프로필 헤더 - 아바타 없이 닉네임 중심, 얇은 폰트 */}
+      {/* jp: 洹몃씪?곗씠???꾨줈???ㅻ뜑 - ?꾨컮? ?놁씠 ?됰꽕??以묒떖, ?뉗? ?고듃 */}
       <div
         className="rounded-2xl p-5 mb-4"
         style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
@@ -71,18 +71,17 @@ function ViewMode({ profile, nickname, onEditNickname, onEditPassword, onLogout 
         <p className="text-xs font-light mt-1" style={{ color: 'var(--text-tertiary)' }}>{profile?.email || ''}</p>
         <span className="inline-flex items-center gap-1.5 text-[10px] font-normal px-2.5 py-1 rounded-full mt-3"
           style={{ background: 'var(--accent-bg)', color: 'var(--accent)' }}>
-          <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--success)' }} />활동 중
-        </span>
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--success)' }} />?쒕룞 以?        </span>
       </div>
 
-      {/* jp: 정보 */}
+      {/* jp: ?뺣낫 */}
       <div className="space-y-2 mb-4">
-        <InfoRow Icon={Mail} label="이메일" value={profile?.email || '—'} />
-        <InfoRow Icon={Calendar} label="가입일" value={profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('ko-KR') : '—'} />
+        <InfoRow Icon={Mail} label="?대찓?? value={profile?.email || '??} />
+        <InfoRow Icon={Calendar} label="媛?낆씪" value={profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('ko-KR') : '??} />
       </div>
 
-      {/* jp: 계정 (푸시 알림 토글 제거됨) */}
-      <p className="text-[11px] font-normal mb-2 px-1" style={{ color: 'var(--text-tertiary)' }}>계정</p>
+      {/* jp: 怨꾩젙 (?몄떆 ?뚮┝ ?좉? ?쒓굅?? */}
+      <p className="text-[11px] font-normal mb-2 px-1" style={{ color: 'var(--text-tertiary)' }}>怨꾩젙</p>
       <button onClick={onEditNickname}
         className="w-full flex items-center gap-3 p-3.5 rounded-xl mb-2 active:opacity-70 transition-all"
         style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
@@ -90,7 +89,7 @@ function ViewMode({ profile, nickname, onEditNickname, onEditPassword, onLogout 
           style={{ background: 'var(--accent-bg)' }}>
           <Pencil size={16} style={{ color: 'var(--purple2, #ffffff)' }} />
         </span>
-        <span className="text-sm font-normal flex-1 text-left" style={{ color: 'var(--text-primary)' }}>닉네임 변경</span>
+        <span className="text-sm font-normal flex-1 text-left" style={{ color: 'var(--text-primary)' }}>?됰꽕??蹂寃?/span>
         <ChevronRight size={16} style={{ color: 'var(--text-tertiary)' }} />
       </button>
       <button onClick={onEditPassword}
@@ -100,16 +99,16 @@ function ViewMode({ profile, nickname, onEditNickname, onEditPassword, onLogout 
           style={{ background: 'var(--accent-bg)' }}>
           <KeyRound size={16} style={{ color: 'var(--purple2, #ffffff)' }} />
         </span>
-        <span className="text-sm font-normal flex-1 text-left" style={{ color: 'var(--text-primary)' }}>비밀번호 변경</span>
+        <span className="text-sm font-normal flex-1 text-left" style={{ color: 'var(--text-primary)' }}>鍮꾨?踰덊샇 蹂寃?/span>
         <ChevronRight size={16} style={{ color: 'var(--text-tertiary)' }} />
       </button>
 
-      {/* jp: 로그아웃 */}
+      {/* jp: 濡쒓렇?꾩썐 */}
       <button onClick={onLogout}
         className="w-full flex items-center justify-center gap-2 p-3.5 rounded-xl mt-2 active:opacity-70 transition-all"
-        style={{ background: 'rgba(194,98,14,0.10)', border: '1px solid rgba(194,98,14,0.4)' }}>
-        <LogOut size={16} style={{ color: '#c2620e' }} />
-        <span className="text-sm font-medium" style={{ color: '#c2620e' }}>로그아웃</span>
+        style={{ background: 'rgba(232,137,63,0.10)', border: '1px solid rgba(232,137,63,0.4)' }}>
+        <LogOut size={16} style={{ color: '#e8893f' }} />
+        <span className="text-sm font-medium" style={{ color: '#e8893f' }}>濡쒓렇?꾩썐</span>
       </button>
     </div>
   );
@@ -132,36 +131,35 @@ function NicknameMode({ current, onDone, onCancel }: { current: string; onDone: 
 
   const save = async () => {
     const nn = value.trim();
-    if (nn.length < 1 || nn.length > 20) { setError('닉네임은 1~20자로 입력해주세요.'); return; }
+    if (nn.length < 1 || nn.length > 20) { setError('?됰꽕?꾩? 1~20?먮줈 ?낅젰?댁＜?몄슂.'); return; }
     if (nn === current) { onCancel(); return; }
     setBusy(true); setError('');
     try {
       await authService.updateNickname(nn);
       onDone(nn);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '변경에 실패했어요.');
+      setError(e instanceof Error ? e.message : '蹂寃쎌뿉 ?ㅽ뙣?덉뼱??');
     } finally { setBusy(false); }
   };
 
   return (
     <div>
-      <p className="text-sm font-medium mb-3" style={{ color: 'var(--text-primary)' }}>닉네임 변경</p>
+      <p className="text-sm font-medium mb-3" style={{ color: 'var(--text-primary)' }}>?됰꽕??蹂寃?/p>
       <input
         value={value}
         onChange={(e) => setValue(e.target.value)}
         maxLength={20}
-        placeholder="새 닉네임 (1~20자)"
+        placeholder="???됰꽕??(1~20??"
         className="w-full p-3 rounded-xl text-sm font-normal mb-1 outline-none"
         style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
       />
       <p className="text-[11px] font-light mb-3" style={{ color: 'var(--text-tertiary)' }}>{value.length}/20</p>
       {error && <p className="text-xs font-normal mb-3" style={{ color: 'var(--fall)' }}>{error}</p>}
       <div className="flex gap-2">
-        <button onClick={onCancel} className="flex-1 p-3 rounded-xl text-sm font-normal" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>취소</button>
+        <button onClick={onCancel} className="flex-1 p-3 rounded-xl text-sm font-normal" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>痍⑥냼</button>
         <button onClick={save} disabled={busy} className="flex-1 p-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5"
           style={{ background: '#ffffff', color: '#000000' }}>
-          {busy ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} 저장
-        </button>
+          {busy ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} ???        </button>
       </div>
     </div>
   );
@@ -180,16 +178,16 @@ function PasswordMode({ onDone, onCancel }: { onDone: () => void; onCancel: () =
     const cur = current.trim();
     const nxt = next.trim();
     const cfm = confirm.trim();
-    if (!cur || !nxt) { setError('현재 비밀번호와 새 비밀번호를 입력해주세요.'); return; }
-    if (nxt.length < 8) { setError('새 비밀번호는 8자 이상이어야 해요.'); return; }
-    if (nxt !== cfm) { setError('새 비밀번호가 일치하지 않아요.'); return; }
+    if (!cur || !nxt) { setError('?꾩옱 鍮꾨?踰덊샇? ??鍮꾨?踰덊샇瑜??낅젰?댁＜?몄슂.'); return; }
+    if (nxt.length < 8) { setError('??鍮꾨?踰덊샇??8???댁긽?댁뼱???댁슂.'); return; }
+    if (nxt !== cfm) { setError('??鍮꾨?踰덊샇媛 ?쇱튂?섏? ?딆븘??'); return; }
     setBusy(true); setError('');
     try {
       await authService.changePassword(cur, nxt);
       setDone(true);
       setTimeout(onDone, 1200);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '변경에 실패했어요.');
+      setError(e instanceof Error ? e.message : '蹂寃쎌뿉 ?ㅽ뙣?덉뼱??');
     } finally { setBusy(false); }
   };
 
@@ -199,7 +197,7 @@ function PasswordMode({ onDone, onCancel }: { onDone: () => void; onCancel: () =
         <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: '#ffffff' }}>
           <Check size={28} color="#000000" />
         </div>
-        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>비밀번호가 변경됐어요</p>
+        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>鍮꾨?踰덊샇媛 蹂寃쎈릱?댁슂</p>
       </div>
     );
   }
@@ -210,26 +208,25 @@ function PasswordMode({ onDone, onCancel }: { onDone: () => void; onCancel: () =
 
   return (
     <div>
-      <p className="text-sm font-medium mb-3" style={{ color: 'var(--text-primary)' }}>비밀번호 변경</p>
+      <p className="text-sm font-medium mb-3" style={{ color: 'var(--text-primary)' }}>鍮꾨?踰덊샇 蹂寃?/p>
       <div className={boxCls} style={boxStyle}>
-        <input type={showPw ? 'text' : 'password'} value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="현재 비밀번호" autoComplete="current-password" autoCapitalize="none" spellCheck={false} className={inputCls} style={{ color: 'var(--text-primary)' }} />
+        <input type={showPw ? 'text' : 'password'} value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="?꾩옱 鍮꾨?踰덊샇" autoComplete="current-password" autoCapitalize="none" spellCheck={false} className={inputCls} style={{ color: 'var(--text-primary)' }} />
       </div>
       <div className={boxCls} style={boxStyle}>
-        <input type={showPw ? 'text' : 'password'} value={next} onChange={(e) => setNext(e.target.value)} placeholder="새 비밀번호 (8자 이상)" autoComplete="new-password" autoCapitalize="none" spellCheck={false} className={inputCls} style={{ color: 'var(--text-primary)' }} />
+        <input type={showPw ? 'text' : 'password'} value={next} onChange={(e) => setNext(e.target.value)} placeholder="??鍮꾨?踰덊샇 (8???댁긽)" autoComplete="new-password" autoCapitalize="none" spellCheck={false} className={inputCls} style={{ color: 'var(--text-primary)' }} />
       </div>
       <div className={boxCls} style={boxStyle}>
-        <input type={showPw ? 'text' : 'password'} value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="새 비밀번호 확인" autoComplete="new-password" autoCapitalize="none" spellCheck={false} className={inputCls} style={{ color: 'var(--text-primary)' }} />
-        <button type="button" onClick={() => setShowPw(v => !v)} className="p-0.5" aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 보기'}>
+        <input type={showPw ? 'text' : 'password'} value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="??鍮꾨?踰덊샇 ?뺤씤" autoComplete="new-password" autoCapitalize="none" spellCheck={false} className={inputCls} style={{ color: 'var(--text-primary)' }} />
+        <button type="button" onClick={() => setShowPw(v => !v)} className="p-0.5" aria-label={showPw ? '鍮꾨?踰덊샇 ?④린湲? : '鍮꾨?踰덊샇 蹂닿린'}>
           {showPw ? <EyeOff size={18} style={{ color: 'var(--text-tertiary)' }} /> : <Eye size={18} style={{ color: 'var(--text-tertiary)' }} />}
         </button>
       </div>
       {error && <p className="text-xs font-normal mb-3" style={{ color: 'var(--fall)' }}>{error}</p>}
       <div className="flex gap-2 mt-1">
-        <button onClick={onCancel} className="flex-1 p-3 rounded-xl text-sm font-normal" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>취소</button>
+        <button onClick={onCancel} className="flex-1 p-3 rounded-xl text-sm font-normal" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>痍⑥냼</button>
         <button onClick={save} disabled={busy} className="flex-1 p-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5"
           style={{ background: '#ffffff', color: '#000000' }}>
-          {busy ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} 변경
-        </button>
+          {busy ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} 蹂寃?        </button>
       </div>
     </div>
   );
