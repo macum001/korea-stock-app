@@ -53,28 +53,38 @@ function buildMarketDataText(items: BriefingDataItem[]): string {
   return lines.join('\n');
 }
 
-// jp: 네이버 뉴스 수집 (국내 + 미국 증시)
+// jp: 네이버 뉴스 수집 (국내 + 미국 증시 + 경제) - 제목 + 설명까지 풍부하게
 async function fetchMarketNews(): Promise<string> {
   try {
-    const [krNews, usNews, forexNews] = await Promise.all([
-      searchStockNews('코스피 증시', 5),
+    const [krNews, usNews, forexNews, econNews] = await Promise.all([
+      searchStockNews('코스피 증시', 6),
       searchStockNews('미국증시 나스닥', 5),
       searchStockNews('원달러 환율', 3),
+      searchStockNews('한국 경제 금리', 4),
     ]);
 
     const lines: string[] = [];
+    const fmt = (n: { title: string; source: string; description?: string }, i: number) => {
+      let s = `  ${i + 1}. ${n.title} (${n.source})`;
+      if (n.description) s += `\n     → ${n.description.slice(0, 120)}`;
+      return s;
+    };
 
     if (krNews.length > 0) {
       lines.push('▶ 국내 증시 뉴스');
-      krNews.forEach((n, i) => lines.push(`  ${i + 1}. ${n.title} (${n.source})`));
+      krNews.forEach((n, i) => lines.push(fmt(n, i)));
     }
     if (usNews.length > 0) {
       lines.push('▶ 미국 증시 뉴스');
-      usNews.forEach((n, i) => lines.push(`  ${i + 1}. ${n.title} (${n.source})`));
+      usNews.forEach((n, i) => lines.push(fmt(n, i)));
     }
     if (forexNews.length > 0) {
       lines.push('▶ 환율 관련 뉴스');
-      forexNews.forEach((n, i) => lines.push(`  ${i + 1}. ${n.title} (${n.source})`));
+      forexNews.forEach((n, i) => lines.push(fmt(n, i)));
+    }
+    if (econNews.length > 0) {
+      lines.push('▶ 경제·정책 뉴스');
+      econNews.forEach((n, i) => lines.push(fmt(n, i)));
     }
 
     return lines.length > 0 ? lines.join('\n') : '뉴스를 가져오지 못했습니다.';
@@ -219,19 +229,36 @@ function validateNoHallucination(analysis: BriefingAnalysis): boolean {
 }
 
 function parseAIResponse(text: string): BriefingAnalysis | null {
-  try {
-    const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/(\{[\s\S]*\})/);
-    if (!jsonMatch) return null;
-    const parsed = JSON.parse(jsonMatch[1]) as Record<string, unknown>;
-    const required = ['status', 'summary', 'why', 'korea_impact', 'strong_area', 'caution', 'conclusion'];
-    for (const field of required) {
-      if (!parsed[field]) return null;
-    }
-    parsed.status = normalizeStatus(String(parsed.status));
-    return parsed as unknown as BriefingAnalysis;
-  } catch {
-    return null;
+  // jp: 첫 { 부터 마지막 } 까지 추출 (백틱·json표기·앞뒤설명 무시), 실패 시 잘림 복구
+  const tryParse = (s: string): Record<string, unknown> | null => {
+    try { return JSON.parse(s) as Record<string, unknown>; } catch { return null; }
+  };
+  const raw = (text || '').trim();
+  let parsed: Record<string, unknown> | null = null;
+
+  const start = raw.indexOf('{');
+  const end = raw.lastIndexOf('}');
+  if (start !== -1 && end !== -1 && end > start) {
+    parsed = tryParse(raw.slice(start, end + 1));
   }
+  if (!parsed) {
+    const cleaned = raw.replace(/```json|```/g, '').replace(/^\s*json\s*/i, '').trim();
+    parsed = tryParse(cleaned);
+  }
+  // jp: 토큰 한계로 잘린 경우 마지막 온전한 필드까지 복구
+  if (!parsed && start !== -1) {
+    const body = raw.slice(start);
+    const lastComplete = body.lastIndexOf('",');
+    if (lastComplete > 0) parsed = tryParse(body.slice(0, lastComplete + 1) + '}');
+  }
+  if (!parsed) return null;
+
+  const required = ['status', 'summary', 'why', 'korea_impact', 'strong_area', 'caution', 'conclusion'];
+  for (const field of required) {
+    if (!parsed[field]) return null;
+  }
+  parsed.status = normalizeStatus(String(parsed.status));
+  return parsed as unknown as BriefingAnalysis;
 }
 
 async function callAI(
@@ -242,7 +269,7 @@ async function callAI(
   const finalSystem = extraWarning ? `${systemPrompt}\n\n${extraWarning}` : systemPrompt;
   const response = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 2500,
+    max_tokens: 3500,
     system: finalSystem,
     messages: [{ role: 'user', content: userMessage }],
   });

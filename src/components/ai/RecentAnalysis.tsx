@@ -107,7 +107,7 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
     if (!undoItem) return;
     if (delTimer.current) clearTimeout(delTimer.current);
     pendingDelete.current.delete(undoItem.item.id);
-    setItems((l) => [undoItem.item, ...l].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
+    setItems((l) => [undoItem.item, ...l].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()));
     setUndoItem(null);
   };
 

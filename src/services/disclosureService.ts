@@ -34,9 +34,13 @@ export interface IDisclosureService {
   getDisclosuresByStock(stockCode: string, filter?: DisclosureFilter): Promise<Disclosure[]>;
   getImportantDisclosures(): Promise<Disclosure[]>;
   getAllDisclosures(filter?: DisclosureFilter): Promise<Disclosure[]>;
-  getMyFeed(filter?: DisclosureFilter): Promise<Disclosure[]>;
+  getMyFeed(filter?: DisclosureFilter, category?: string): Promise<Disclosure[]>;
   searchDisclosures(keyword: string): Promise<Disclosure[]>;
   getDisclosureDetail(id: string): Promise<Disclosure | null>;
+  // jp: 페이지네이션 메서드 (무한스크롤용)
+  getStockDisclosurePage(stockCode: string, limit?: number, offset?: number, category?: string): Promise<{ items: Disclosure[]; hasMore: boolean }>;
+  getLatestPage(limit?: number, offset?: number): Promise<{ items: Disclosure[]; hasMore: boolean }>;
+  getCategoryPage(category: string, limit?: number, offset?: number): Promise<{ items: Disclosure[]; hasMore: boolean }>;
 }
 
 class DisclosureService implements IDisclosureService {

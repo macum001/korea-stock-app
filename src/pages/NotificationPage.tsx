@@ -1,6 +1,6 @@
 // jp: 알림페이지 - 공시/관리자공지 탭 + 날짜그룹 + 펼침 UX
 // jp: 탭 스타일 AI인사이트와 동일한 박스형으로 변경
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { useNotificationStore } from '@/store/notificationStore';
 import { getNotificationTab, getNotificationBadge, NotificationTab } from '@/types/notification';
 import { NotificationBadge } from '@/components/notification/NotificationBadge';
@@ -45,6 +45,15 @@ export function NotificationPage({ onBack, onGoToStock, onOpenDisclosure }: Noti
     useNotificationStore();
   const loadFromServer = useNotificationStore(s => s.loadFromServer);
   const [tab, setTab] = useState<NotificationTab>('disclosure');
+  // jp: 공지 등 펼쳐볼 알림의 펼침 상태 (클릭하면 메시지 2줄 제한 풀림)
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const toggleExpand = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   useEffect(() => { loadFromServer(); }, [loadFromServer]);
 
@@ -80,12 +89,12 @@ export function NotificationPage({ onBack, onGoToStock, onOpenDisclosure }: Noti
     <div style={{ minHeight: '100dvh', background: 'var(--bg-primary)' }}>
 
       {/* jp: 헤더 — 그라데이션 + 컴팩트 (알림 텍스트 제거) */}
-      <div style={{ background: 'linear-gradient(135deg,#7F77DD,#DB2877)', padding: '8px 10px' }}>
+      <div style={{ background: 'var(--bg-secondary)', padding: '8px 10px', borderBottom: '0.5px solid var(--border)' }}>
         {/* jp: 뒤로가기 + 액션버튼 한 줄 */}
         <div className="flex items-center justify-between mb-[7px]">
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
-              <span className="text-[10px] px-2 py-[3px] rounded-full" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}>
+              <span className="text-[10px] px-2 py-[3px] rounded-full" style={{ background: 'var(--accent-bg)', color: '#A78BFA' }}>
                 안읽음 {unreadCount}개
               </span>
             )}
@@ -94,14 +103,14 @@ export function NotificationPage({ onBack, onGoToStock, onOpenDisclosure }: Noti
             {unreadCount > 0 && (
               <button onClick={markAllAsRead}
                 className="flex items-center gap-1 px-2.5 h-7 rounded-full text-[11px] font-semibold"
-                style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}>
+                style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '0.5px solid var(--border)' }}>
                 <CheckCheck size={13} /> 모두 읽음
               </button>
             )}
             {notifications.length > 0 && (
               <button onClick={clearAll}
                 className="w-7 h-7 flex items-center justify-center rounded-full"
-                style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}>
+                style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '0.5px solid var(--border)' }}>
                 <Trash2 size={14} />
               </button>
             )}
@@ -119,15 +128,15 @@ export function NotificationPage({ onBack, onGoToStock, onOpenDisclosure }: Noti
                 onClick={() => setTab(key)}
                 className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold py-[9px] rounded-[10px] transition-all"
                 style={{
-                  color: on ? '#fff' : 'rgba(255,255,255,0.5)',
-                  background: on ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)',
-                  border: on ? '1px solid rgba(255,255,255,0.55)' : '1px solid rgba(255,255,255,0.12)',
+                  color: on ? '#1a1530' : 'var(--text-tertiary)',
+                  background: on ? '#A78BFA' : 'transparent',
+                  border: on ? '1px solid #A78BFA' : '1px solid var(--border)',
                 }}
               >
                 {label}
                 {cnt > 0 && (
                   <span className="inline-flex items-center justify-center min-w-[14px] h-[14px] px-1 rounded-full text-[8px] font-bold"
-                    style={{ background: on ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.25)', color: '#fff' }}>
+                    style={{ background: on ? 'rgba(26,21,48,0.25)' : 'var(--accent-bg)', color: on ? '#1a1530' : '#A78BFA' }}>
                     {cnt}
                   </span>
                 )}
@@ -143,7 +152,7 @@ export function NotificationPage({ onBack, onGoToStock, onOpenDisclosure }: Noti
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center px-8">
           <div className="w-[120px] h-[120px] rounded-[36px] flex items-center justify-center mb-5"
-            style={{ background: 'linear-gradient(135deg, rgba(127,119,221,0.12), rgba(219,39,119,0.10))', border: '1px solid rgba(219,39,119,0.22)' }}>
+            style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}>
             <AlertBell on={true} size={60} shake={true} tone="gradient" />
           </div>
           <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>알림이 없어요</p>
@@ -158,18 +167,28 @@ export function NotificationPage({ onBack, onGoToStock, onOpenDisclosure }: Noti
                 const tabType = getNotificationTab(n.type);
                 const badge = getNotificationBadge(n.type, n.category);
                 const isDisclosure = tabType === 'disclosure';
-                const canOpen = isDisclosure && !!n.receiptNo && !!onOpenDisclosure;
+                // jp: 공시 알림이면서 receiptNo가 있으면 "공시 분석 보기" 버튼 노출 가능
+                const hasDisclosure = isDisclosure && !!n.receiptNo && !!onOpenDisclosure;
+                const isExpanded = expandedIds.has(n.id);
 
+                // jp: 카드 클릭 = 항상 펼침/접기 토글 (공시 분석은 펼친 뒤 버튼으로)
                 const handleClick = () => {
                   if (!n.isRead) markAsRead(n.id);
-                  if (canOpen) onOpenDisclosure!(n.receiptNo!, n.stockCode, n.stockName);
+                  toggleExpand(n.id);
+                };
+
+                // jp: 버튼 클릭 = 공시 AI 분석 시트 열기
+                const handleOpenDisclosureClick = (e: MouseEvent) => {
+                  e.stopPropagation();
+                  if (!n.isRead) markAsRead(n.id);
+                  onOpenDisclosure?.(n.receiptNo!, n.stockCode, n.stockName);
                 };
 
                 return (
                   <div key={n.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                     <div
                       onClick={handleClick}
-                      className={`w-full flex items-start gap-3 px-4 py-3.5 text-left transition-all ${canOpen ? 'cursor-pointer active:scale-[0.99]' : ''}`}
+                      className="w-full flex items-start gap-3 px-4 py-3.5 text-left transition-all cursor-pointer active:scale-[0.99]"
                       style={{ background: n.isRead ? 'transparent' : 'var(--bg-elevated)' }}
                     >
                       <div className="pt-0.5">
@@ -190,12 +209,31 @@ export function NotificationPage({ onBack, onGoToStock, onOpenDisclosure }: Noti
                             {timeLabel(n.createdAt)}
                           </span>
                         </div>
-                        <p className="text-xs leading-relaxed mt-0.5 line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
+                        <p
+                          className={`text-xs leading-relaxed mt-0.5 ${isExpanded ? '' : 'line-clamp-2'}`}
+                          style={{ color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}
+                        >
                           {n.message || n.title}
                         </p>
-                        {canOpen && (
-                          <p className="text-[11px] font-bold mt-1.5 flex items-center gap-1" style={{ color: 'var(--pink2, #F9A8D4)' }}>
-                            <Sparkles size={11} /> 탭하면 AI 분석 보기
+                        {/* jp: 공시 알림 — 펼치면 "관련 공시 분석 보기" 버튼, 접혀있으면 힌트 */}
+                        {hasDisclosure && !isExpanded && (
+                          <p className="text-[11px] font-bold mt-1.5 flex items-center gap-1" style={{ color: '#A78BFA' }}>
+                            <Sparkles size={11} /> 탭하면 펼쳐보기
+                          </p>
+                        )}
+                        {hasDisclosure && isExpanded && (
+                          <button
+                            onClick={handleOpenDisclosureClick}
+                            className="mt-2.5 inline-flex items-center gap-1.5 text-[12px] font-bold rounded-lg px-3.5 py-2"
+                            style={{ background: '#A78BFA', color: '#1a1530', border: 'none' }}
+                          >
+                            📄 관련 공시 분석 보기
+                          </button>
+                        )}
+                        {/* jp: 공시 아닌 알림(공지 등) — 펼침/접기 힌트 */}
+                        {!hasDisclosure && (n.message || '').length > 40 && (
+                          <p className="text-[11px] font-bold mt-1.5" style={{ color: 'var(--text-tertiary)' }}>
+                            {isExpanded ? '접기 ▴' : '탭하면 전체 보기 ▾'}
                           </p>
                         )}
                       </div>

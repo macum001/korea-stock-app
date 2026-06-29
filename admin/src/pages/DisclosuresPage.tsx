@@ -213,16 +213,16 @@ function DetailModal({ detail, onClose }: { detail: Record<string, unknown>; onC
         <Field label="분류" value={`${CATEGORY_LABEL[s('category')] || s('category')} (${s('importance')} / ${s('sentiment')})`} />
         <Field label="AI 상태" value={`${AI_STATUS_LABEL[s('ai_status')] || s('ai_status')} ${detail['ai_model'] ? '· ' + s('ai_model') : ''}`} />
 
-        {detail['ai_summary'] && (
+        {!!detail['ai_summary'] && (
           <div style={{ marginTop: 14, padding: 14, background: 'var(--admin-elevated)', borderRadius: 10 }}>
             <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--admin-text-sec)', margin: '0 0 6px' }}>AI 요약</p>
             <p style={{ fontSize: 13, margin: 0, lineHeight: 1.6 }}>{s('ai_summary')}</p>
-            {detail['ai_investor_note'] && <p style={{ fontSize: 12, color: 'var(--admin-text-sec)', margin: '8px 0 0', lineHeight: 1.6 }}>💡 {s('ai_investor_note')}</p>}
-            {detail['ai_risk_note'] && <p style={{ fontSize: 12, color: '#f59e0b', margin: '6px 0 0', lineHeight: 1.6 }}>⚠ {s('ai_risk_note')}</p>}
+            {!!detail['ai_investor_note'] && <p style={{ fontSize: 12, color: 'var(--admin-text-sec)', margin: '8px 0 0', lineHeight: 1.6 }}>💡 {s('ai_investor_note')}</p>}
+            {!!detail['ai_risk_note'] && <p style={{ fontSize: 12, color: '#f59e0b', margin: '6px 0 0', lineHeight: 1.6 }}>⚠ {s('ai_risk_note')}</p>}
           </div>
         )}
 
-        {detail['original_url'] && (
+        {!!detail['original_url'] && (
           <a href={s('original_url')} target="_blank" rel="noopener noreferrer"
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 16, padding: 11, borderRadius: 10, background: 'var(--admin-accent)', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
             <ExternalLink size={15} /> DART 원문 보기

@@ -18,7 +18,7 @@ function fmtPrice(n: number, unit?: string): string {
   return unit ? `${num}${unit}` : num;
 }
 
-function DataRow({ item }: { item: BriefingDataItem }) {
+function DataCell({ item }: { item: BriefingDataItem }) {
   const up = item.changeRate > 0;
   const down = item.changeRate < 0;
   const color = rateColor(item.changeRate);
@@ -26,18 +26,16 @@ function DataRow({ item }: { item: BriefingDataItem }) {
   const arrow = up ? '▲' : down ? '▼' : '–';
 
   return (
-    <div className="rounded-xl flex items-center justify-between overflow-hidden"
+    <div className="rounded-xl overflow-hidden"
       style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', position: 'relative' }}>
-      <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: barColor }} />
-      <div className="pl-4 pr-3 py-3 flex-1 min-w-0">
-        <p className="text-[12.5px] font-bold truncate" style={{ color: 'var(--text-primary)' }}>{item.name}</p>
-      </div>
-      <div className="pr-3.5 py-3 text-right flex-shrink-0">
-        <p className="text-[14px] font-extrabold tabular-nums leading-tight" style={{ color: 'var(--text-primary)' }}>
+      <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: barColor }} />
+      <div className="pl-3 pr-2.5 py-2.5">
+        <p className="text-[11.5px] font-bold truncate mb-1" style={{ color: 'var(--text-primary)' }}>{item.name}</p>
+        <p className="text-[13.5px] font-extrabold tabular-nums leading-tight truncate" style={{ color: 'var(--text-primary)' }}>
           {fmtPrice(item.price, item.unit)}
         </p>
-        <p className="text-[11.5px] font-extrabold tabular-nums flex items-center justify-end gap-1" style={{ color }}>
-          <span style={{ fontSize: 9 }}>{arrow}</span>
+        <p className="text-[10.5px] font-extrabold tabular-nums flex items-center gap-1 mt-0.5" style={{ color }}>
+          <span style={{ fontSize: 8 }}>{arrow}</span>
           {item.changeRateStr}
         </p>
       </div>
@@ -60,13 +58,15 @@ export function MarketDataGrid({ briefing }: Props) {
       {CATEGORY_ORDER.map(cat => {
         const catItems = byCategory[cat];
         if (!catItems || catItems.length === 0) return null;
+        // jp: 항목 2개 이하 → 2열, 3개 이상 → 3열
+        const cols = catItems.length <= 2 ? 2 : 3;
         return (
           <section key={cat} className="mb-5">
             <h3 className="text-[13px] font-bold mb-2.5" style={{ color: 'var(--text-secondary)' }}>
               {CATEGORY_LABELS[cat] ?? cat}
             </h3>
-            <div className="flex flex-col gap-2">
-              {catItems.map(item => <DataRow key={item.key} item={item} />)}
+            <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+              {catItems.map(item => <DataCell key={item.key} item={item} />)}
             </div>
           </section>
         );

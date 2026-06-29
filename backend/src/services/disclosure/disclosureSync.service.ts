@@ -18,6 +18,7 @@ import {
   invalidateDisclosureCaches,
 } from './disclosureCache.service';
 import { createDisclosureNotification } from './disclosureAlert.service';
+import { invalidateReportCacheForDisclosure } from './reportCacheInvalidator.service';
 import { broadcastDisclosureUpdate } from '../realtime/broadcast.service';
 
 export interface SyncResult {
@@ -207,6 +208,14 @@ async function processNewDisclosure(disclosure: Disclosure, result: SyncResult):
   }
 
   result.newCount++;
+
+  // jp: 확정 공시면 해당 종목의 정기보고서 캐시 무효화 -> 다음 조회 시 DART 최신 재조회
+  try {
+    const invalidated = await invalidateReportCacheForDisclosure(disclosure.corpCode, disclosure.reportName);
+    if (invalidated.length > 0) {
+      console.log('[ReportCache] 무효화 ' + disclosure.corpCode + ' (' + disclosure.reportName + ') -> [' + invalidated.join(', ') + ']');
+    }
+  } catch { /* 무효화 실패는 무시 (다음 24h 캐시 만료로 자연 갱신) */ }
 
   // jp: 모든 신규 공시를 알림 함수에 전달 (구독 안 한 종목/유형은 내부에서 자동 필터)
   if (disclosure.importance !== 'normal') result.important++;

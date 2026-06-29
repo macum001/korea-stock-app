@@ -26,6 +26,8 @@ export interface Disclosure {
   // jp: 공시 카테고리 (백엔드 분류, 없으면 general)
   category?: string;
   categoryType?: string;  // jp: 종류 축 — 7개 탭 (백엔드 category_type)
+  // jp: 시장 구분 (stock_master.market) — 코스피/코스닥 배지용
+  market?: string | null;  // 'KOSPI' | 'KOSDAQ'
 }
 
 export interface DisclosureFilter {

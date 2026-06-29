@@ -31,7 +31,7 @@ export interface WatchlistGroup {
 export type DeleteGroupMode = 'move_to_default' | 'delete_all';
 
 const MEMO_MAX_LENGTH = 500;
-const MAX_STOCKS_PER_GROUP = 10; // jp: 그룹당 종목 최대 (지수 제외)
+const MAX_STOCKS_PER_GROUP = 20; // jp: 그룹당 종목 최대 (지수 제외)
 const DEFAULT_GROUP_ID = 'default';
 
 // jp: ★ 비회원/신규에게 보여줄 기본 7종목 (지수 5 + 종목 2)

@@ -97,7 +97,7 @@ export async function getNotificationsByUser(userId: string, limit = 50): Promis
               d.category AS category, d.receipt_no AS receipt_no,
               n.is_read, n.created_at
          FROM notifications n
-         LEFT JOIN disclosures d ON n.target_id = d.id::text
+         LEFT JOIN disclosures d ON n.target_id = d.receipt_no
         WHERE n.user_id = $1
         ORDER BY n.created_at DESC
         LIMIT $2`,

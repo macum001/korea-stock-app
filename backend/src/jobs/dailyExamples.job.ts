@@ -1,10 +1,10 @@
-// jp: 매일 새벽 5시 - 오늘의 AI 예시 질문 5개 자동 생성
-// jp: 최근 24시간 공시에서 주요 종목 추출 → 템플릿 조합 → Redis 저장 (24시간 TTL)
-// jp: 토큰 0개 소모 (Claude 호출 없음, 순수 DB + 템플릿)
+// jp: AI 기업분석 예시 질문 5개 생성 - 매 요청마다 랜덤 (새로고침할 때마다 다른 종목)
+// jp: 최근 30일 공시 종목 중 검색 보장되는 것만(stock_master 등록 + 6자리 코드) 랜덤 추출 → 템플릿 조합
+// jp: 토큰 0개 소모 (Claude 호출 없음, 순수 DB + 템플릿). 크론잡은 Redis 백업용으로만 유지.
 
 import cron from 'node-cron';
 import { query } from '../config/db';
-import { safeSetEx, safeGet } from '../config/redis';
+import { safeSetEx } from '../config/redis';
 
 export const DAILY_EXAMPLES_KEY = 'ai:daily_examples';
 const DAILY_EXAMPLES_TTL = 60 * 60 * 24; // 24시간
@@ -28,42 +28,30 @@ interface ExampleItem {
   stockName: string;
 }
 
-// jp: 오늘의 예시 생성 - 최근 24시간 중요 공시 종목에서 추출
+// jp: 오늘의 예시 생성 - 최근 30일 공시 종목 중 "검색 100% 보장되는" 종목에서 랜덤 추출
+// jp: 검색 보장: ① stock_master(검색 마스터 4019종목)에 등록된 종목만(JOIN) ② 정상 6자리 코드만(정규식) → 기업분석 검색이 반드시 종목을 찾음
 export async function generateDailyExamples(): Promise<ExampleItem[]> {
   try {
-    // jp: 최근 24시간 공시 종목 (중요도 높은 것 우선, 중복 제거)
+    // jp: 최근 30일 공시 종목 중 검색 가능한 것만 랜덤 5개
+    // jp: DISTINCT는 서브쿼리에서, RANDOM 정렬은 바깥에서 (DISTINCT+ORDER BY RANDOM 동시 사용 불가)
     const rows = await query<{ stock_code: string; stock_name: string }>(
-      `SELECT DISTINCT ON (stock_code) stock_code, stock_name
-         FROM disclosures
-        WHERE disclosed_at > now() - INTERVAL '24 hours'
-          AND stock_name IS NOT NULL
-          AND stock_code IS NOT NULL
-        ORDER BY stock_code, is_important DESC, disclosed_at DESC
-        LIMIT 30`
+      `SELECT stock_code, stock_name FROM (
+         SELECT DISTINCT d.stock_code, d.stock_name
+           FROM disclosures d
+           JOIN stock_master sm ON d.stock_code = sm.code
+          WHERE d.stock_code ~ '^[0-9]{6}$'
+            AND d.stock_name IS NOT NULL
+            AND d.disclosed_at >= NOW() - INTERVAL '30 days'
+       ) t
+       ORDER BY RANDOM()
+       LIMIT 5`
     );
-
-    if (rows.length < 3) {
-      // jp: 24시간 공시가 부족하면 최근 7일로 확장
-      const extended = await query<{ stock_code: string; stock_name: string }>(
-        `SELECT DISTINCT ON (stock_code) stock_code, stock_name
-           FROM disclosures
-          WHERE disclosed_at > now() - INTERVAL '7 days'
-            AND stock_name IS NOT NULL
-            AND stock_code IS NOT NULL
-          ORDER BY stock_code, is_important DESC, disclosed_at DESC
-          LIMIT 30`
-      );
-      rows.push(...extended.filter(r => !rows.find(e => e.stock_code === r.stock_code)));
-    }
 
     if (rows.length === 0) return getDefaultExamples();
 
-    // jp: 랜덤으로 5개 종목 선택
-    const shuffled = rows.sort(() => Math.random() - 0.5).slice(0, 5);
-
     // jp: 각 종목에 랜덤 템플릿 조합
     const usedTemplates = new Set<number>();
-    return shuffled.map((row) => {
+    return rows.map((row) => {
       // jp: 중복 템플릿 최소화
       let idx: number;
       do { idx = Math.floor(Math.random() * TEMPLATES.length); }
@@ -91,18 +79,10 @@ function getDefaultExamples(): ExampleItem[] {
 }
 
 // jp: Redis에서 오늘의 예시 조회
+// jp: 오늘의 예시 조회 - 매 요청마다 새로 랜덤 생성 (새로고침할 때마다 다른 종목 노출)
+// jp: 쿼리 1번이라 가벼움. 캐시를 쓰면 하루 종일 같은 질문이라 "랜덤" 효과가 없어서 캐시 안 씀.
 export async function getDailyExamples(): Promise<ExampleItem[]> {
-  try {
-    const cached = await safeGet(DAILY_EXAMPLES_KEY);
-    if (cached) return JSON.parse(cached) as ExampleItem[];
-  } catch { /* 무시 */ }
-
-  // jp: Redis에 없으면 즉시 생성 후 저장
-  const examples = await generateDailyExamples();
-  try {
-    await safeSetEx(DAILY_EXAMPLES_KEY, DAILY_EXAMPLES_TTL, JSON.stringify(examples));
-  } catch { /* 무시 */ }
-  return examples;
+  return generateDailyExamples();
 }
 
 let task: ReturnType<typeof cron.schedule> | null = null;

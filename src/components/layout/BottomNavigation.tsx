@@ -42,7 +42,7 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
               {isActive && (
                 <span
                   className="absolute top-0 w-9 h-[3px] rounded-b-[5px]"
-                  style={{ background: 'linear-gradient(135deg,#7F77DD,#DB2877)', boxShadow: '0 0 12px rgba(219,39,119,0.7)' }}
+                  style={{ background: '#A78BFA', boxShadow: '0 0 10px rgba(167,139,250,0.6)' }}
                 />
               )}
 
@@ -51,8 +51,8 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
                 <span
                   className="w-[44px] h-[34px] rounded-[12px] flex items-center justify-center transition-all"
                   style={{
-                    background: isActive ? 'linear-gradient(135deg,#7F77DD,#DB2877)' : 'transparent',
-                    boxShadow: isActive ? '0 5px 16px rgba(219,39,119,0.4)' : 'none',
+                    background: isActive ? '#A78BFA' : 'transparent',
+                    boxShadow: isActive ? '0 4px 14px rgba(167,139,250,0.35)' : 'none',
                   }}
                 >
                   <AlertBell
@@ -67,15 +67,15 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
                 <span
                   className="w-[44px] h-[34px] rounded-[12px] flex items-center justify-center transition-all"
                   style={{
-                    background: isActive ? 'linear-gradient(135deg,#7F77DD,#DB2877)' : 'transparent',
-                    boxShadow: isActive ? '0 5px 16px rgba(219,39,119,0.4)' : 'none',
+                    background: isActive ? '#A78BFA' : 'transparent',
+                    boxShadow: isActive ? '0 4px 14px rgba(167,139,250,0.35)' : 'none',
                   }}
                 >
                   {id === 'stocks' && (
-                    <Sparkles size={22} strokeWidth={isActive ? 2.4 : 1.9} color={isActive ? '#fff' : 'var(--text-tertiary)'} fill="none" />
+                    <Sparkles size={22} strokeWidth={isActive ? 2.4 : 1.9} color={isActive ? '#1a1530' : 'var(--text-tertiary)'} fill="none" />
                   )}
                   {id === 'settings' && (
-                    <Settings size={22} strokeWidth={isActive ? 2.4 : 1.9} color={isActive ? '#fff' : 'var(--text-tertiary)'} fill="none" />
+                    <Settings size={22} strokeWidth={isActive ? 2.4 : 1.9} color={isActive ? '#1a1530' : 'var(--text-tertiary)'} fill="none" />
                   )}
                 </span>
               )}

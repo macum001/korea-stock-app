@@ -1,4 +1,4 @@
-﻿// jp: ?쒕쾭 ?쒖옉??
+// jp: ?쒕쾭 ?쒖옉??
 // jp: ?댁쁺 ??븷 遺꾨━ 吏??
 // jp: SERVER_ROLE=all(default) | api | realtime | worker | batch
 // jp: ?좎뒪湲??댁쁺?먯꽌??api/realtime/worker瑜?蹂꾨룄 ?꾨줈?몄뒪/而⑦뀒?대꼫濡??꾩썙 ?μ븷 諛섍꼍怨?遺?섎? 遺꾨━?쒕떎.
@@ -27,6 +27,7 @@ import { startInvestorFlowSyncJob, stopInvestorFlowSyncJob } from './jobs/invest
 import { initFcm } from './services/fcm/firebase.service';
 import { startMarketSnapshotFinalizeJob, stopMarketSnapshotFinalizeJob } from './jobs/marketSnapshotFinalize.job';
 import { startDailyExamplesJob, stopDailyExamplesJob } from './jobs/dailyExamples.job';
+import { startNotesEmbedRetryJob, stopNotesEmbedRetryJob } from './jobs/notesEmbedRetry.job';
 import { startLiveCandleEngine } from './services/chart/liveCandleEngine.service';
 import { startRedisStreamRecovery, stopRedisStreamRecovery } from './services/realtime/redisStreamRecovery.service';
 import { stopKisSubscriptionLockRenewal } from './services/realtime/distributedKisSubscriptionLock.service';
@@ -74,6 +75,7 @@ async function startWorkersAndJobs(): Promise<void> {
   startInvestorFlowSyncJob();
   startMarketSnapshotFinalizeJob();
   startDailyExamplesJob();
+  startNotesEmbedRetryJob();   // jp: RAG 주석 임베딩 실패 자동 재처리 (10분)
 }
 
 async function bootstrap(): Promise<void> {

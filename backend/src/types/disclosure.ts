@@ -1,4 +1,4 @@
-// jp: 공시 관련 타입 정의
+﻿// jp: 공시 관련 타입 정의
 
 export type DisclosureImportance = 'important' | 'warning' | 'normal';
 export type DisclosureSentiment  = 'positive' | 'negative' | 'caution' | 'neutral';
@@ -31,6 +31,7 @@ export type Disclosure = {
   normalizedTitle?: string;   // jp: 정규화된 제목 (분류/검색용)
   category?:        string;   // jp: 내부 대표 분류 (general/important/capital/good/bad)
   categoryType?:    string;   // jp: 종류 축 (투자위험/증자감자/합병분할/실적재무/계약소송/배당주총/기타) — 6개 탭
+  market?:          string | null;
 };
 
 // jp: 분류 결과 타입

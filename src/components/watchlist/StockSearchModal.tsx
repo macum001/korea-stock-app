@@ -132,14 +132,14 @@ export function StockSearchModal({ open, onClose, groupId }: StockSearchModalPro
       {pickedList.length > 0 && (
         <div
           className="mx-4 mt-3 p-2.5 rounded-xl flex flex-wrap gap-2"
-          style={{ background: 'rgba(219,39,119,0.07)', border: '1px solid rgba(219,39,119,0.22)' }}
+          style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}
         >
           {pickedList.map((s) => (
             <button
               key={s.code}
               onClick={() => toggle(s)}
               className="flex items-center gap-1.5 text-xs font-bold pl-2.5 pr-2 py-1.5 rounded-lg active:scale-95"
-              style={{ background: 'linear-gradient(135deg,#7F77DD,#DB2777)', color: '#fff' }}
+              style={{ background: '#A78BFA', color: '#1a1530' }}
             >
               {s.name}
               <X size={12} style={{ opacity: 0.85 }} />
@@ -198,8 +198,8 @@ export function StockSearchModal({ open, onClose, groupId }: StockSearchModalPro
                 <span
                   className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0 text-xs font-bold"
                   style={{
-                    background: already ? 'var(--bg-elevated)' : isPicked ? 'linear-gradient(135deg,#7F77DD,#DB2777)' : 'var(--bg-elevated)',
-                    color: already ? 'var(--text-tertiary)' : isPicked ? '#fff' : 'var(--text-secondary)',
+                    background: already ? 'var(--bg-elevated)' : isPicked ? '#A78BFA' : 'var(--bg-elevated)',
+                    color: already ? 'var(--text-tertiary)' : isPicked ? '#1a1530' : 'var(--text-secondary)',
                     border: isPicked ? 'none' : '1px solid var(--border)',
                   }}
                 >
@@ -217,7 +217,7 @@ export function StockSearchModal({ open, onClose, groupId }: StockSearchModalPro
           <button
             onClick={handleAddAll}
             className="w-full py-3.5 rounded-2xl text-sm font-extrabold active:scale-[0.99] transition-all"
-            style={{ background: 'linear-gradient(135deg,#7F77DD,#DB2777)', color: '#fff', boxShadow: '0 8px 24px rgba(219,39,119,0.32)' }}
+            style={{ background: '#A78BFA', color: '#1a1530', boxShadow: '0 8px 24px rgba(167,139,250,0.3)' }}
           >
             {pickedList.length}개 관심종목 추가
           </button>

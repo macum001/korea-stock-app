@@ -1,6 +1,6 @@
 // jp: 관심종목 기반 공시 피드 - 기존 캐시/동기화를 그대로 재사용하고 "구독 필터"만 추가
 import { query } from '../../config/db';
-import { getLatestDisclosures, getDisclosuresByStockCode } from './disclosureSync.service';
+import { getStockDisclosurePage } from './disclosureSync.service';
 import { Disclosure } from '../../types/disclosure';
 
 // jp: 내 관심종목(watchlists) 코드 목록 (= 공시 구독 종목)
@@ -17,12 +17,12 @@ export async function getMyWatchlistCodes(userId: string): Promise<string[]> {
 export async function getMyDisclosureFeed(userId: string, limit = 50, categoryType?: string): Promise<Disclosure[]> {
   const codes = await getMyWatchlistCodes(userId);
   if (codes.length === 0) return [];
-  // jp: 관심종목 각각 DB에서 공시 조회 후 합쳐서 최신순 (캐시 latest 500 필터로는 종목별 누락 발생)
+  // jp: getStockDisclosurePage는 캐시를 우회하고 categoryType을 DB 쿼리에 직접 전달함 (캐시 래퍼 getDisclosuresByStockCode는 categoryType을 무시하므로 사용 불가)
+  // jp: 과거 버그: 종목별 최신 20건(전체 카테고리)을 가져온 뒤 메모리에서 필터 → 실적재무 등 드문 공시가 최신 20건에 없어서 결과 0건이 되던 문제. DB에서 카테고리별로 직접 조회해 해결.
   const perStock = await Promise.all(
-    codes.map((code) => getDisclosuresByStockCode(code, 20).catch(() => [] as Disclosure[])),
+    codes.map((code) => getStockDisclosurePage(code, 20, 0, categoryType).then((p) => p.items).catch(() => [] as Disclosure[])),
   );
   const merged = perStock.flat();
   merged.sort((a, b) => new Date(b.disclosedAt).getTime() - new Date(a.disclosedAt).getTime());
-  const filtered = categoryType ? merged.filter((d) => d.categoryType === categoryType) : merged;
-  return filtered.slice(0, limit);
+  return merged.slice(0, limit);
 }

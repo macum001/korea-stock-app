@@ -33,6 +33,7 @@ function rowToDisclosure(row: Record<string, unknown>): Disclosure {
     normalizedTitle: row.normalized_title as string,
     category:        row.category as string,
     categoryType:    row.category_type as string,
+    market:          (row.market as string) ?? null,
   };
 }
 

@@ -19,7 +19,7 @@ export function BellButton({ unreadCount = 0, onClick }: BellButtonProps) {
       {hasUnread && (
         <span
           className="absolute -top-[3px] -right-[3px] min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full text-[10px] font-extrabold"
-          style={{ background: 'linear-gradient(135deg,#F87171,#DB2777)', color: '#fff', border: '2px solid var(--bg-primary)' }}
+          style={{ background: 'var(--danger)', color: '#fff', border: '2px solid var(--bg-primary)' }}
         >
           {unreadCount > 99 ? '99+' : unreadCount}
         </span>

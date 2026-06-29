@@ -8,7 +8,7 @@ services:
   # jp: PostgreSQL
   # ─────────────────────────────────────────
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: gongsi_postgres
     restart: unless-stopped
     environment:
@@ -38,7 +38,7 @@ services:
     command: >
       redis-server
       --maxmemory 256mb
-     --maxmemory-policy noeviction
+      --maxmemory-policy noeviction
       --appendonly yes
       --appendfsync everysec
     volumes:

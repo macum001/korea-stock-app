@@ -50,7 +50,9 @@ export async function createDisclosureNotification(disclosure: Disclosure): Prom
       const userIds = [...new Set(targets.map(t => t.userId))];
 
       // jp: 중복 방지 - 이미 이 공시로 알림 받은 user 제외 (★ 일괄 1쿼리)
-      const targetId = String(disclosure.id ?? '');
+      // jp: target_id에는 receiptNo를 저장 (id는 알림 시점에 누락될 수 있어 receiptNo가 안전,
+      // jp:  notification.repository의 조회 JOIN도 n.target_id = d.receipt_no 기준)
+      const targetId = String(disclosure.receiptNo ?? '');
       const newUserIds = await filterNewUserIdsForTarget(userIds, targetId, 'disclosure');
 
       // jp: 모두 이미 받았으면 알림/푸시 건너뛰고 WS만 (아래)
@@ -61,7 +63,7 @@ export async function createDisclosureNotification(disclosure: Disclosure): Prom
           stockCode: disclosure.stockCode,
           title,
           body,
-          targetId:  disclosure.id,
+          targetId:  disclosure.receiptNo,
         });
         console.log(`[Alert] ${newUserIds.length}명에게 공시 알림 생성: ${title}`);
 

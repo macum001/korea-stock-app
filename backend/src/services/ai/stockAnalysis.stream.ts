@@ -7,6 +7,7 @@ import { query } from '../../config/db';
 import { getStockPrice } from '../kis/kisRest.service';
 import { getPrompt } from './promptStore.service';
 import { searchStockNews } from '../naverNews.service';
+import { getFinancials, FinancialsResult } from './dartReportInfo.service';
 import { safeGet, safeSetEx } from '../../config/redis';
 
 const anthropic = new Anthropic();
@@ -14,7 +15,7 @@ const CACHE_PREFIX = 'ai:stock:';
 const CACHE_TTL = 60 * 30;
 
 interface StockRow { code: string; name: string; market: string | null; sector: string | null; }
-interface DiscRow { receipt_no: string; report_name: string; category: string | null; disclosed_at: string; is_capital: boolean; is_bad: boolean; is_good: boolean; is_important: boolean; }
+interface DiscRow { receipt_no: string; report_name: string; category: string | null; disclosed_at: string; is_capital: boolean; is_bad: boolean; is_good: boolean; is_important: boolean; ai_summary: string | null; ai_investor_note: string | null; corp_code: string | null; }
 
 function resolveCategory(d: DiscRow): string {
   if (d.category) return d.category;
@@ -25,19 +26,50 @@ function resolveCategory(d: DiscRow): string {
   return 'general';
 }
 
-function categoryLabel(cat: string): string {
-  switch (cat) {
-    case 'capital':   return '자본변동';
-    case 'good':      return '호재';
-    case 'bad':       return '악재';
-    case 'important': return '중요';
-    default:          return '일반';
+// jp: SSE 헬퍼 함수
+// jp: 원 단위 숫자 문자열 → 한국식 조/억 표기 (258497722389 → "258조 4,978억")
+function formatKRW(raw: string | number | null | undefined): string {
+  if (raw === null || raw === undefined || raw === '') return '';
+  const num = typeof raw === 'number' ? raw : Number(String(raw).replace(/[^\d.-]/g, ''));
+  if (!isFinite(num) || num === 0) return '';
+  const neg = num < 0;
+  let abs = Math.abs(num);
+  const jo = Math.floor(abs / 1_0000_0000_0000); // 조
+  abs = abs % 1_0000_0000_0000;
+  const eok = Math.floor(abs / 1_0000_0000); // 억
+  const parts: string[] = [];
+  if (jo > 0) parts.push(`${jo.toLocaleString()}조`);
+  if (eok > 0) parts.push(`${eok.toLocaleString()}억`);
+  // jp: 조·억 둘 다 0이면 (1억 미만) 원 단위로
+  if (parts.length === 0) {
+    return `${neg ? '-' : ''}${Math.round(num).toLocaleString()}원`;
   }
+  return `${neg ? '-' : ''}${parts.join(' ')}`;
 }
 
-// jp: SSE 헬퍼 함수
 function sendSSE(res: Response, event: string, data: unknown) {
   res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+}
+
+// jp: AI 응답에서 JSON만 견고하게 추출 (백틱·"json" 표기·앞뒤 설명·잘림 모두 대응)
+function extractJson(text: string): any {
+  const raw = (text || '').trim();
+  const start = raw.indexOf('{');
+  const end = raw.lastIndexOf('}');
+  if (start !== -1 && end !== -1 && end > start) {
+    try { return JSON.parse(raw.slice(start, end + 1)); } catch { /* 폴백 */ }
+  }
+  const cleaned = raw.replace(/```json|```/g, '').replace(/^\s*json\s*/i, '').trim();
+  try { return JSON.parse(cleaned); } catch { /* 3차 */ }
+  // jp: 토큰 한계로 잘린 JSON 복구 - 마지막 온전한 "key":"value", 뒤에서 잘라 } 붙임
+  if (start !== -1) {
+    const body = raw.slice(start);
+    const lastComplete = body.lastIndexOf('",');
+    if (lastComplete > 0) {
+      try { return JSON.parse(body.slice(0, lastComplete + 1) + '}'); } catch { /* 포기 */ }
+    }
+  }
+  throw new Error('JSON 추출 실패');
 }
 
 // jp: 타임아웃 래퍼 - ms 안에 안 끝나면 reject (KIS 현재가 지연 방지)
@@ -204,7 +236,8 @@ export async function streamStockAnalysis(q: string, res: Response, userId = 'de
 
     const [discs, price, news] = await Promise.allSettled([
       query<DiscRow>(
-        `SELECT receipt_no, report_name, category, disclosed_at, is_capital, is_bad, is_good, is_important
+        `SELECT receipt_no, report_name, category, disclosed_at, is_capital, is_bad, is_good, is_important,
+                ai_summary, ai_investor_note, corp_code
            FROM disclosures WHERE stock_code = $1
           ORDER BY disclosed_at DESC LIMIT 8`,
         [stock.code]
@@ -224,19 +257,36 @@ export async function streamStockAnalysis(q: string, res: Response, userId = 'de
         const p = await withTimeout(getStockPrice(stock!.code), 3000);
         return { current: p.price, change: p.change, changeRate: p.changeRate };
       })(),
-      // jp: 뉴스 5초 타임아웃
-      withTimeout(searchStockNews(stock.name, 5), 5000),
+      // jp: 뉴스 4초 타임아웃
+      withTimeout(searchStockNews(stock.name, 5), 4000),
     ]);
 
     const discList = discs.status === 'fulfilled' ? discs.value : [];
     const priceData = price.status === 'fulfilled' ? price.value : null;
     const newsList = news.status === 'fulfilled' ? news.value : [];
 
+    // jp: 재무 데이터 (매출·영익·순익) - disclosures의 corp_code로 조회, 캐시됨
+    let financials: FinancialsResult | null = null;
+    try {
+      const corpCode = discList.find(d => d.corp_code)?.corp_code;
+      if (corpCode) financials = await withTimeout(getFinancials(corpCode), 3000);
+    } catch { /* 무시 */ }
+    const finForResult = (() => {
+      const fin = financials?.consolidated || financials?.separate || null;
+      if (!fin) return null;
+      return {
+        revenue: formatKRW(fin.revenue), operatingProfit: formatKRW(fin.operatingProfit), netIncome: formatKRW(fin.netIncome),
+        year: financials?.year ?? null, reportName: financials?.reportName || '',
+        basis: financials?.consolidated ? '연결' : '개별',
+      };
+    })();
+
     // jp: 메타 정보 전송 (종목 기본정보 + 공시목록)
     sendSSE(res, 'meta', {
       stockCode: stock.code,
       stockName: stock.name,
       price: priceData,
+      financials: finForResult,
       recentDisclosures: discList.map(d => ({
         receiptNo: d.receipt_no,
         reportName: d.report_name,
@@ -254,11 +304,28 @@ export async function streamStockAnalysis(q: string, res: Response, userId = 'de
     }
 
     const discText = discList.length > 0
-      ? discList.map((d, i) => `${i + 1}.[${categoryLabel(resolveCategory(d))}] ${d.report_name} (${new Date(d.disclosed_at).toLocaleDateString('ko-KR')})`).join('\n')
+      ? discList.map((d, i) => {
+          const flags: string[] = [];
+          if (d.is_important) flags.push('중요');
+          if (d.is_good) flags.push('호재');
+          if (d.is_bad) flags.push('악재');
+          if (d.is_capital) flags.push('자본변동');
+          const flagStr = flags.length > 0 ? `[${flags.join('·')}] ` : '';
+          const date = new Date(d.disclosed_at).toLocaleDateString('ko-KR');
+          let line = `${i + 1}. ${flagStr}${d.report_name} (${date})`;
+          const note = (d.ai_investor_note || d.ai_summary || '').trim();
+          if (note) line += `\n   → ${note.slice(0, 120)}`;
+          return line;
+        }).join('\n')
       : '최근 공시 없음';
 
+    const fin = financials?.consolidated || financials?.separate || null;
+    const finText = fin
+      ? `\n[재무 현황 (${financials?.reportName || ''} ${financials?.year || ''} · ${financials?.consolidated ? '연결' : '개별'})]\n매출액: ${formatKRW(fin.revenue) || '-'}\n영업이익: ${formatKRW(fin.operatingProfit) || '-'}\n순이익: ${formatKRW(fin.netIncome) || '-'}\n`
+      : '';
+
     const newsText = newsList.length > 0
-      ? newsList.map((n, i) => `${i + 1}. ${n.title} (${n.source})`).join('\n')
+      ? newsList.map((n, i) => `${i + 1}. ${n.title} (${n.source})${n.description ? `\n   → ${n.description.slice(0, 150)}` : ''}`).join('\n')
       : '뉴스 없음';
 
     const priceText = priceData
@@ -274,7 +341,7 @@ export async function streamStockAnalysis(q: string, res: Response, userId = 'de
 ${priceText}
 최근공시:
 ${discText}
-최근뉴스:
+${finText}최근뉴스:
 ${newsText}
 
 질문: ${q}`;
@@ -287,7 +354,7 @@ ${newsText}
 
     const stream = anthropic.messages.stream({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1000,
+      max_tokens: 2500,
       system: systemPrompt,
       messages: [{ role: 'user', content: userMessage }],
     });
@@ -304,33 +371,40 @@ ${newsText}
 
       let analysis = null;
       try {
-        const clean = fullText.replace(/```json|```/g, '').trim();
-        analysis = JSON.parse(clean);
+        analysis = extractJson(fullText);
       } catch {
-        // jp: JSON 파싱 실패 시 텍스트로 summary만 사용
+        // jp: JSON 파싱 실패 시 - 원문(JSON)이 화면에 노출되지 않도록 안전 메시지
+        console.error('[StockAnalysis.stream] JSON 파싱 실패, 응답 앞부분:', (fullText || '').slice(0, 120));
         analysis = {
           companyInfo: '',
-          summary: fullText.slice(0, 100),
-          detail: fullText,
+          summary: '분석 결과를 정리하지 못했어요. 다시 시도해주세요.',
+          detail: '',
           recentMoves: '',
           impact: 'unknown',
           impactLabel: '판단 불가',
           notes: [],
+          cautions: [],
+          watchPoints: [],
         };
       }
 
-      // jp: impact 라벨 변환
+      // jp: impact 라벨 변환 + 필드 정규화
       const impactMap: Record<string, string> = {
         positive: '긍정적', negative: '부정적', neutral: '중립', unknown: '판단 불가'
       };
       if (analysis) {
         analysis.impactLabel = impactMap[analysis.impact] ?? '판단 불가';
+        analysis.companyInfo = String(analysis.companyInfo || '');
+        analysis.notes = Array.isArray(analysis.notes) ? analysis.notes : [];
+        analysis.cautions = Array.isArray(analysis.cautions) ? analysis.cautions : [];
+        analysis.watchPoints = Array.isArray(analysis.watchPoints) ? analysis.watchPoints : [];
       }
 
       const result = {
         stockCode: stock!.code,
         stockName: stock!.name,
         price: priceData,
+        financials: finForResult,
         recentDisclosures: discList.map(d => ({
           receiptNo: d.receipt_no,
           reportName: d.report_name,

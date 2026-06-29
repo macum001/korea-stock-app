@@ -66,3 +66,31 @@ backend/prompts_export.json
 # DB 백업 파일 (대용량, git 제외)
 backup_before_*.sql
 *.dump
+
+# 시크릿성 (혹시 모를 키 하드코딩)
+backend/gen_token.ts
+
+# 임시/작업 파일
+backend/prompt.txt
+backend/test_fix.ts
+backend/test_tables.ts
+backend/test_store_tables.ts
+patch_routes.cjs
+backend_tree.txt
+frontend_tree.txt
+tree.txt
+ops_queries.sql
+
+# 시크릿성 (혹시 모를 키 하드코딩)
+backend/gen_token.ts
+
+# 임시/작업 파일
+backend/prompt.txt
+backend/test_fix.ts
+backend/test_tables.ts
+backend/test_store_tables.ts
+patch_routes.cjs
+backend_tree.txt
+frontend_tree.txt
+tree.txt
+ops_queries.sql

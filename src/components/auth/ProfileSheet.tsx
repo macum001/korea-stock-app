@@ -65,13 +65,13 @@ function ViewMode({ profile, nickname, onEditNickname, onEditPassword, onLogout 
       {/* jp: 그라데이션 프로필 헤더 - 아바타 없이 닉네임 중심, 얇은 폰트 */}
       <div
         className="rounded-2xl p-5 mb-4"
-        style={{ background: 'radial-gradient(circle at 18% 0%, #6D28D9 0%, transparent 55%), radial-gradient(circle at 92% 120%, #DB2777 0%, transparent 55%), var(--bg-elevated)' }}
+        style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
       >
-        <p className="text-[19px] font-medium" style={{ color: '#fff' }}>{nickname}</p>
-        <p className="text-xs font-light mt-1" style={{ color: 'rgba(255,255,255,0.65)' }}>{profile?.email || ''}</p>
+        <p className="text-[19px] font-medium" style={{ color: 'var(--text-primary)' }}>{nickname}</p>
+        <p className="text-xs font-light mt-1" style={{ color: 'var(--text-tertiary)' }}>{profile?.email || ''}</p>
         <span className="inline-flex items-center gap-1.5 text-[10px] font-normal px-2.5 py-1 rounded-full mt-3"
-          style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}>
-          <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#4ADE80' }} />활동 중
+          style={{ background: 'var(--accent-bg)', color: 'var(--accent)' }}>
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--success)' }} />활동 중
         </span>
       </div>
 
@@ -87,7 +87,7 @@ function ViewMode({ profile, nickname, onEditNickname, onEditPassword, onLogout 
         className="w-full flex items-center gap-3 p-3.5 rounded-xl mb-2 active:opacity-70 transition-all"
         style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
         <span className="w-8 h-8 rounded-[10px] flex items-center justify-center flex-shrink-0"
-          style={{ background: 'rgba(127,119,221,0.16)' }}>
+          style={{ background: 'var(--accent-bg)' }}>
           <Pencil size={16} style={{ color: 'var(--purple2, #A78BFA)' }} />
         </span>
         <span className="text-sm font-normal flex-1 text-left" style={{ color: 'var(--text-primary)' }}>닉네임 변경</span>
@@ -97,7 +97,7 @@ function ViewMode({ profile, nickname, onEditNickname, onEditPassword, onLogout 
         className="w-full flex items-center gap-3 p-3.5 rounded-xl mb-2 active:opacity-70 transition-all"
         style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
         <span className="w-8 h-8 rounded-[10px] flex items-center justify-center flex-shrink-0"
-          style={{ background: 'rgba(127,119,221,0.16)' }}>
+          style={{ background: 'var(--accent-bg)' }}>
           <KeyRound size={16} style={{ color: 'var(--purple2, #A78BFA)' }} />
         </span>
         <span className="text-sm font-normal flex-1 text-left" style={{ color: 'var(--text-primary)' }}>비밀번호 변경</span>
@@ -159,7 +159,7 @@ function NicknameMode({ current, onDone, onCancel }: { current: string; onDone: 
       <div className="flex gap-2">
         <button onClick={onCancel} className="flex-1 p-3 rounded-xl text-sm font-normal" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>취소</button>
         <button onClick={save} disabled={busy} className="flex-1 p-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5"
-          style={{ background: 'linear-gradient(135deg,#7F77DD,#DB2777)', color: '#fff' }}>
+          style={{ background: '#A78BFA', color: '#1a1530' }}>
           {busy ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} 저장
         </button>
       </div>
@@ -196,8 +196,8 @@ function PasswordMode({ onDone, onCancel }: { onDone: () => void; onCancel: () =
   if (done) {
     return (
       <div className="flex flex-col items-center py-8 gap-3">
-        <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7F77DD,#DB2777)' }}>
-          <Check size={28} color="#fff" />
+        <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: '#A78BFA' }}>
+          <Check size={28} color="#1a1530" />
         </div>
         <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>비밀번호가 변경됐어요</p>
       </div>
@@ -227,7 +227,7 @@ function PasswordMode({ onDone, onCancel }: { onDone: () => void; onCancel: () =
       <div className="flex gap-2 mt-1">
         <button onClick={onCancel} className="flex-1 p-3 rounded-xl text-sm font-normal" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>취소</button>
         <button onClick={save} disabled={busy} className="flex-1 p-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5"
-          style={{ background: 'linear-gradient(135deg,#7F77DD,#DB2777)', color: '#fff' }}>
+          style={{ background: '#A78BFA', color: '#1a1530' }}>
           {busy ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} 변경
         </button>
       </div>

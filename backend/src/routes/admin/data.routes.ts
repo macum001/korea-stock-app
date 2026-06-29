@@ -487,5 +487,33 @@ router.post('/impact/recompute', async (_req: AdminRequest, res: Response) => {
     res.status(500).json({ success: false, error: '재계산 실패' } as ApiResponse);
   }
 });
+// jp: DELETE /api/admin/data/ai-cache - 공시 AI 분석 캐시 초기화 (DB의 분석 컬럼 NULL)
+// jp: disclosures 테이블의 AI 분석 결과만 비움 → 다음 요청 시 새로 분석.
+// jp: 주의: ai_analysis_history(사용자 분석 기록)는 건드리지 않음. 공시 캐시만 초기화.
+// jp: Redis 캐시(ai:disclosure:*)는 TTL로 자동 만료되고, DB가 NULL이면 캐시 미스로 재분석되므로 DB만 비우면 충분.
+router.delete('/ai-cache', async (_req: AdminRequest, res: Response) => {
+  try {
+    // jp: 먼저 초기화 대상 건수 확인 (이 코드베이스 query는 rows 배열 반환)
+    const countRows = await query<{ cnt: string }>(
+      `SELECT COUNT(*)::text AS cnt FROM disclosures WHERE ai_summary IS NOT NULL`
+    );
+    const cleared = parseInt(countRows[0]?.cnt || '0');
+
+    // jp: 분석 결과 컬럼만 NULL로 (공시 자체/상태/통계 컬럼은 보존)
+    await query(
+      `UPDATE disclosures
+          SET ai_summary = NULL, ai_key_points = NULL, ai_investor_note = NULL,
+              ai_risk_note = NULL, impact_level = NULL
+        WHERE ai_summary IS NOT NULL`
+    );
+
+    console.log(`[Admin] AI 분석 캐시 초기화: ${cleared}건`);
+    res.json({ success: true, data: { cleared } } as ApiResponse);
+  } catch (err) {
+    console.error('[Admin] AI 캐시 초기화 실패:', err instanceof Error ? err.message : err);
+    res.status(500).json({ success: false, error: 'AI 캐시 초기화에 실패했어요.' } as ApiResponse);
+  }
+});
+
 export default router;
 

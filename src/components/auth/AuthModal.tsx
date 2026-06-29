@@ -149,9 +149,9 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
   // jp: 글래스 입력 필드 스타일 (포커스 시 핑크 글로우)
   const fieldStyle = (name: string): React.CSSProperties => ({
-    background: focused === name ? 'rgba(219,39,119,0.05)' : 'rgba(255,255,255,0.04)',
-    border: `1px solid ${focused === name ? 'rgba(219,39,119,0.5)' : 'var(--border)'}`,
-    boxShadow: focused === name ? '0 0 0 3px rgba(219,39,119,0.12)' : 'none',
+    background: focused === name ? 'var(--accent-bg)' : 'var(--bg-elevated)',
+    border: `1px solid ${focused === name ? 'var(--accent-border)' : 'var(--border)'}`,
+    boxShadow: focused === name ? '0 0 0 3px var(--accent-bg)' : 'none',
     transition: 'all 0.18s',
   });
 
@@ -169,14 +169,14 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
         {/* jp: ★ 그라데이션 헤더 */}
         <div
           className="relative px-6 pt-6 pb-5"
-          style={{ background: 'radial-gradient(circle at 20% 0%, #6D28D9 0%, transparent 55%), radial-gradient(circle at 95% 100%, #DB2777 0%, transparent 55%), var(--bg-card)' }}
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
         >
           <button onClick={handleClose} className="absolute top-[18px] right-[18px] w-[30px] h-[30px] rounded-full flex items-center justify-center"
             style={{ background: 'rgba(255,255,255,0.1)' }} aria-label="닫기">
             <X size={16} color="#fff" />
           </button>
           <div className="w-[38px] h-[38px] rounded-xl flex items-center justify-center mb-3"
-            style={{ background: 'linear-gradient(135deg,#7F77DD,#DB2777)', boxShadow: '0 6px 16px rgba(219,39,119,0.4)' }}>
+            style={{ background: '#A78BFA', boxShadow: '0 6px 16px rgba(167,139,250,0.35)' }}>
             <Sparkles size={20} color="#fff" />
           </div>
           <h2 className="text-xl font-extrabold" style={{ color: '#fff' }}>
@@ -260,7 +260,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
             onClick={handleSubmit}
             disabled={loading}
             className="w-full py-[15px] rounded-[15px] text-sm font-extrabold flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.99] transition-all mt-1"
-            style={{ background: 'linear-gradient(135deg,#7F77DD,#DB2777)', color: '#fff', boxShadow: '0 10px 26px rgba(219,39,119,0.4)' }}
+            style={{ background: '#A78BFA', color: '#1a1530', boxShadow: '0 10px 26px rgba(167,139,250,0.35)' }}
           >
             {loading && <Loader2 size={16} className="animate-spin" />}
             {mode === 'login' ? '로그인' : '회원가입'}
@@ -312,7 +312,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
             <button
               onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}
               className="w-full py-[11px] rounded-[11px] text-sm font-bold active:scale-[0.99] transition-all"
-              style={{ background: 'transparent', border: '1px solid #DB2777', color: '#F9A8D4' }}
+              style={{ background: 'transparent', border: '1px solid var(--accent-border)', color: '#A78BFA' }}
             >
               {mode === 'login' ? '회원가입하기' : '로그인하기'}
             </button>

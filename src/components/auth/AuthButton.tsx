@@ -17,8 +17,8 @@ function HeartbeatLine() {
     <svg width="36" height="14" viewBox="0 0 36 14" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="hbGrad" x1="0" y1="0" x2="36" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#7F77DD" />
-          <stop offset="100%" stopColor="#DB2877" />
+          <stop offset="0%" stopColor="#A78BFA" />
+          <stop offset="100%" stopColor="#A78BFA" />
         </linearGradient>
       </defs>
       <path
@@ -57,10 +57,10 @@ export function AuthButton({ size = 'md' }: AuthButtonProps) {
         <button
           onClick={() => setModalOpen(true)}
           className="w-[42px] h-[42px] rounded-[14px] flex items-center justify-center active:scale-95 transition-all"
-          style={{ background: 'linear-gradient(135deg,#7F77DD,#DB2877)', boxShadow: '0 6px 18px rgba(219,39,119,0.36)' }}
+          style={{ background: '#A78BFA', boxShadow: '0 6px 18px rgba(167,139,250,0.32)' }}
           aria-label="로그인 또는 회원가입"
         >
-          <UserPlus size={22} color="#fff" strokeWidth={2.1} />
+          <UserPlus size={22} color="#1a1530" strokeWidth={2.1} />
         </button>
         <AuthModal open={modalOpen} onClose={() => setModalOpen(false)} />
       </>
@@ -79,9 +79,9 @@ export function AuthButton({ size = 'md' }: AuthButtonProps) {
         {/* jp: 유저 아이콘 박스 */}
         <div
           className="w-[34px] h-[34px] rounded-[11px] flex items-center justify-center"
-          style={{ background: 'linear-gradient(135deg,#7F77DD,#DB2877)' }}
+          style={{ background: '#A78BFA' }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a1530" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
@@ -101,7 +101,7 @@ export function AuthButton({ size = 'md' }: AuthButtonProps) {
             <div className="flex items-center gap-2.5 px-3 py-2.5 mb-1">
               <span
                 className="rounded-full flex items-center justify-center flex-shrink-0 text-sm font-extrabold"
-                style={{ width: 36, height: 36, background: 'linear-gradient(135deg,#7F77DD,#DB2877)', color: '#fff' }}
+                style={{ width: 36, height: 36, background: '#A78BFA', color: '#1a1530' }}
               >
                 {(user?.nickname || '?').trim().charAt(0)}
               </span>

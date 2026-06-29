@@ -95,6 +95,7 @@ function Overview({ adminName }: { adminName: string }) {
   // jp: 캐시 초기화 상태
   const [cacheClearing, setCacheClearing] = useState(false);
   const [cacheDone, setCacheDone] = useState(false);
+  const [cacheCleared, setCacheCleared] = useState(0);
   const [cacheError, setCacheError] = useState('');
 
   // jp: 공시 가격영향 재계산 상태
@@ -123,13 +124,15 @@ function Overview({ adminName }: { adminName: string }) {
     setCacheClearing(true); setCacheError(''); setCacheDone(false);
     try {
       const token = localStorage.getItem('admin_token') || '';
-      const res = await fetch(`${API_URL}/api/ai/cache`, {
+      const res = await fetch(`${API_URL}/api/admin/data/ai-cache`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error(`${res.status}`);
+      const json = await res.json() as { data?: { cleared?: number } };
+      setCacheCleared(json.data?.cleared ?? 0);
       setCacheDone(true);
-      setTimeout(() => setCacheDone(false), 3000);
+      setTimeout(() => setCacheDone(false), 4000);
     } catch {
       setCacheError('초기화 실패. 다시 시도해주세요.');
     } finally {
@@ -143,14 +146,19 @@ function Overview({ adminName }: { adminName: string }) {
     setImpactRunning(true); setImpactError(''); setImpactDone(false); setImpactResult('');
     try {
       const token = localStorage.getItem('admin_token') || '';
-      const res = await fetch(`${API_URL}/api/admin/impact/recompute`, {
+      const res = await fetch(`${API_URL}/api/admin/data/impact/recompute`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       });
       if (!res.ok) throw new Error(`${res.status}`);
-      const data = await res.json() as { processed?: number; completed?: number; pending_left?: number };
+      // jp: 백엔드 응답 형태: { success, data: { processed, recovered, ... } }
+      const json = await res.json() as { data?: { processed?: number; recovered?: number; pending_left?: number } };
+      const d = json.data ?? {};
       setImpactDone(true);
-      setImpactResult(`처리 ${data.processed ?? 0}개 완료 · 남은 pending ${(data.pending_left ?? 0).toLocaleString()}개`);
+      const parts: string[] = [`처리 ${(d.processed ?? 0).toLocaleString()}개`];
+      if (d.recovered != null) parts.push(`복구 ${d.recovered.toLocaleString()}개`);
+      if (d.pending_left != null) parts.push(`남은 pending ${d.pending_left.toLocaleString()}개`);
+      setImpactResult(parts.join(' · '));
       setTimeout(() => { setImpactDone(false); setImpactResult(''); }, 5000);
     } catch {
       setImpactError('실행 실패. 백엔드 로그를 확인해주세요.');
@@ -201,6 +209,7 @@ function Overview({ adminName }: { adminName: string }) {
               {cacheClearing ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : cacheDone ? <Check size={14} /> : <Trash2 size={14} />}
               {cacheDone ? '초기화 완료' : 'AI 캐시 초기화'}
             </button>
+            {cacheDone && cacheCleared > 0 && <span style={{ fontSize: 12, color: '#10b981' }}>{cacheCleared.toLocaleString()}건 초기화됨</span>}
             {cacheError && <span style={{ fontSize: 12, color: '#ef4444' }}>{cacheError}</span>}
           </div>
         </div>

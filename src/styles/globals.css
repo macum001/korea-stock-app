@@ -1,40 +1,95 @@
 @import "tailwindcss";
+
+/* ============================================================
+   공시인사이트 색상 시스템 — 옵션 C (전면 재설계)
+   - 배경: 더 깊은 네이비 (#0D1117 계열)
+   - 강조: 보라 1종 통일 (#A78BFA)
+   - 시맨틱 토큰: 정보/성공/경고/위험 역할 분리
+   - 한국 증시 관습: 상승=빨강, 하락=파랑
+   ============================================================ */
+
 :root {
+  /* ===== 라이트 모드 ===== */
+  /* 배경 계층 */
   --bg-primary: #ffffff;
-  --bg-secondary: #f4f2f8;
+  --bg-secondary: #f4f6f8;
   --bg-card: #ffffff;
-  --bg-elevated: #f7f5fb;
-  --text-primary: #15131a;
-  --text-secondary: #3d3850;
-  --text-tertiary: #6b6580;
-  --border: #e6e2ee;
-  --border-subtle: #efedf4;
+  --bg-elevated: #f7f9fb;
+
+  /* 텍스트 */
+  --text-primary: #16191d;
+  --text-secondary: #4a5158;
+  --text-tertiary: #8b929b;
+
+  /* 테두리 */
+  --border: #e4e7eb;
+  --border-subtle: #eef0f3;
+
+  /* 강조색 (보라 단일) */
   --accent: #6d5bd0;
+  --accent-bg: rgba(109, 91, 208, 0.1);
+  --accent-border: rgba(109, 91, 208, 0.25);
+
+  /* 상승/하락 (한국식) */
   --rise: #e8342f;
   --fall: #1a56db;
   --rise-bg: #fff0f0;
   --fall-bg: #f0f4ff;
   --rise-subtle: #ffd7d7;
   --fall-subtle: #d7e4ff;
+
+  /* 시맨틱 (역할별 — 라이트) */
+  --info: #1a8f9e;        /* 정보 (시안/틸) */
+  --info-bg: rgba(26, 143, 158, 0.1);
+  --success: #1d9e75;     /* 성공/긍정 (초록 단일) */
+  --success-bg: rgba(29, 158, 117, 0.1);
+  --warning: #c98a14;     /* 경고 (노랑/앰버) */
+  --warning-bg: rgba(201, 138, 20, 0.1);
+  --danger: #e8342f;      /* 위험 (= rise와 같은 빨강 계열) */
+  --danger-bg: rgba(232, 52, 47, 0.1);
 }
+
 .dark {
-  --bg-primary: #100D20;
-  --bg-secondary: #1C1730;
-  --bg-card: #1C1730;
-  --bg-elevated: #221E35;
-  --text-primary: #F0EEF8;
-  --text-secondary: #A898C8;
-  --text-tertiary: #7868A8;
-  --border: #302848;
-  --border-subtle: #241E38;
+  /* ===== 다크 모드 (옵션 C 메인) ===== */
+  /* 배경 계층 — 더 깊은 네이비 */
+  --bg-primary: #0D1117;
+  --bg-secondary: #161B22;
+  --bg-card: #161B22;
+  --bg-elevated: #1C222B;
+
+  /* 텍스트 */
+  --text-primary: #E6EDF3;
+  --text-secondary: #9DA7B3;
+  --text-tertiary: #6E7681;
+
+  /* 테두리 */
+  --border: #30363D;
+  --border-subtle: #21262D;
+
+  /* 강조색 (보라 단일) */
   --accent: #A78BFA;
+  --accent-bg: rgba(167, 139, 250, 0.12);
+  --accent-border: rgba(167, 139, 250, 0.28);
+
+  /* 상승/하락 (한국식) */
   --rise: #ff5252;
   --fall: #5c8aff;
   --rise-bg: rgba(255, 82, 82, 0.08);
   --fall-bg: rgba(92, 138, 255, 0.08);
   --rise-subtle: rgba(255, 82, 82, 0.15);
   --fall-subtle: rgba(92, 138, 255, 0.15);
+
+  /* 시맨틱 (역할별 — 다크) */
+  --info: #4ECDC4;        /* 정보 (시안/틸) — 주석 검색 등 */
+  --info-bg: rgba(78, 205, 196, 0.14);
+  --success: #3DD68C;     /* 성공/긍정 (초록 단일) */
+  --success-bg: rgba(61, 214, 140, 0.14);
+  --warning: #F5C451;     /* 경고 (노랑) */
+  --warning-bg: rgba(245, 196, 81, 0.14);
+  --danger: #ff5252;      /* 위험 (= rise와 같은 빨강) */
+  --danger-bg: rgba(255, 82, 82, 0.14);
 }
+
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;

@@ -1,4 +1,4 @@
-﻿// jp: 환경변수 관리 - 모든 설정값은 여기서만 읽음 (API 키는 절대 코드에 하드코딩 금지)
+// jp: 환경변수 관리 - 모든 설정값은 여기서만 읽음 (API 키는 절대 코드에 하드코딩 금지)
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -39,8 +39,13 @@ export const ENV = {
     API_KEY:  requireEnv('DART_API_KEY'),
     BASE_URL: 'https://opendart.fss.or.kr/api',
   },
+  // jp: Voyage AI 임베딩 (RAG 주석 검색용)
+  VOYAGE: {
+    API_KEY: process.env.VOYAGE_API_KEY || '',
+    MODEL: process.env.VOYAGE_MODEL || 'voyage-3.5',
+  },
 
-NAVER: {
+  NAVER: {
     CLIENT_ID:     requireEnv('NAVER_CLIENT_ID'),
     CLIENT_SECRET: requireEnv('NAVER_CLIENT_SECRET'),
     SEARCH_CLIENT_ID:     process.env.NAVER_SEARCH_CLIENT_ID || process.env.NAVER_CLIENT_ID || '',

@@ -18,11 +18,22 @@ interface StockHistoryResult {
     category: string;
     disclosedAt: string;
   }>;
+  financials?: {
+    revenue: string;
+    operatingProfit: string;
+    netIncome: string;
+    year: number | null;
+    reportName: string;
+    basis: string;
+  } | null;
   analysis?: {
+    companyInfo?: string;
     summary?: string;
     detail?: string;
     recentMoves?: string;
     notes?: string[];
+    cautions?: string[];
+    watchPoints?: string[];
   };
 }
 
@@ -41,6 +52,9 @@ export function StockHistoryCard({ result, onOpenDisclosure }: Props) {
   }
 
   const { stockCode = '', stockName = '', price, recentDisclosures = [], analysis } = result;
+  const financials = result.financials;
+  const cautions = analysis.cautions ?? [];
+  const watchPoints = analysis.watchPoints ?? [];
   const up = price ? price.change > 0 : false;
   const down = price ? price.change < 0 : false;
   const priceColor = up ? 'var(--rise)' : down ? 'var(--fall)' : 'var(--text-tertiary)';
@@ -93,6 +107,64 @@ export function StockHistoryCard({ result, onOpenDisclosure }: Props) {
             <div key={i} className="flex gap-2 items-start mb-1.5">
               <span className="w-1 h-1 rounded-full mt-2 flex-shrink-0" style={{ background: 'var(--text-tertiary)' }} />
               <p className="text-[11px] leading-[1.5]" style={{ color: 'var(--text-secondary)' }}>{note}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 재무 현황 */}
+      {financials && (financials.revenue || financials.operatingProfit || financials.netIncome) && (
+        <div className="rounded-xl p-3 mb-3" style={{ background: 'var(--bg-secondary)' }}>
+          <p className="text-[11px] mb-2 font-semibold flex items-center gap-1" style={{ color: 'var(--text-primary)' }}>
+            📊 재무 현황
+            <span className="text-[10px] font-normal" style={{ color: 'var(--text-tertiary)' }}>
+              {financials.reportName} {financials.year ?? ''} · {financials.basis}
+            </span>
+          </p>
+          <div className="flex flex-col gap-0.5">
+            {financials.revenue && (
+              <div className="flex items-center justify-between py-1.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>매출액</span>
+                <span className="text-[12px] font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>{financials.revenue}</span>
+              </div>
+            )}
+            {financials.operatingProfit && (
+              <div className="flex items-center justify-between py-1.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>영업이익</span>
+                <span className="text-[12px] font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>{financials.operatingProfit}</span>
+              </div>
+            )}
+            {financials.netIncome && (
+              <div className="flex items-center justify-between py-1.5">
+                <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>순이익</span>
+                <span className="text-[12px] font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>{financials.netIncome}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 조심할 것 */}
+      {cautions.length > 0 && (
+        <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(255,82,82,0.08)', border: '1px solid rgba(255,82,82,0.2)' }}>
+          <p className="text-[11px] mb-2 font-semibold" style={{ color: '#ff5252' }}>⚠️ 조심할 것</p>
+          {cautions.map((c, i) => (
+            <div key={i} className="flex items-start gap-1.5 mb-1 last:mb-0">
+              <span style={{ color: '#ff5252', marginTop: 2 }}>·</span>
+              <p className="text-[11px] leading-[1.5]" style={{ color: 'var(--text-secondary)' }}>{c}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 지켜볼 사항 */}
+      {watchPoints.length > 0 && (
+        <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)' }}>
+          <p className="text-[11px] mb-2 font-semibold" style={{ color: '#A78BFA' }}>👀 지켜볼 사항</p>
+          {watchPoints.map((w, i) => (
+            <div key={i} className="flex items-start gap-1.5 mb-1 last:mb-0">
+              <span style={{ color: '#A78BFA', marginTop: 2 }}>·</span>
+              <p className="text-[11px] leading-[1.5]" style={{ color: 'var(--text-secondary)' }}>{w}</p>
             </div>
           ))}
         </div>

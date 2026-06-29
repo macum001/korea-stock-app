@@ -91,7 +91,7 @@ export function MarketBriefingCard({ briefing }: Props) {
 
   return (
     <div className="brief-grad mx-4 mb-4 rounded-2xl px-4 py-4"
-      style={{ background: 'linear-gradient(160deg, rgba(127,119,221,0.18), rgba(219,39,119,0.06)), var(--bg-card)', border: '1px solid rgba(127,119,221,0.3)' }}>
+      style={{ background: '#000000', border: '1px solid rgba(127,119,221,0.3)' }}>
 
       <div className="flex items-center gap-2 mb-1">
         <Sparkles size={15} style={{ color: '#A78BFA' }} />

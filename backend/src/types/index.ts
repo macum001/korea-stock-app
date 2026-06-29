@@ -60,6 +60,7 @@ export interface Disclosure {
   originalUrl: string;
   disclosedAt: string;
   createdAt: string;
+  market?: string | null;
 }
 
 // jp: KIS API 토큰

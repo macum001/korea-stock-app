@@ -1,5 +1,6 @@
-// jp: AI인사이트 탭 - 상단 서브탭 4개
+﻿// jp: AI인사이트 탭 - 상단 서브탭 4개
 // jp: AI종목분석 / AI시황분석(BriefingCurrent+BriefingHistoryList 직접) / AI공시분석(FeedPage 내부 직접) / 종목뉴스
+// jp: onGoToDisclosures 제거 — 공시 클릭은 분석 시트로 통일 (App.tsx와 동일 방향)
 import { useState, useEffect, useRef } from 'react';
 import {
   Info, X, TrendingUp, TrendingDown, FileText,
@@ -24,19 +25,20 @@ import { stockService } from '@/services/stockService';
 import { useWatchlistStore, WATCHLIST_DEFAULT_GROUP_ID } from '@/store/watchlistStore';
 import { disclosureAlertService } from '@/services/disclosureAlertService';
 import { enablePushNotifications } from '@/services/fcm/fcmService';
-import { Star, Plus, ChevronRight, BellRing, Trash2 } from 'lucide-react';
+import { Star, Plus, ChevronRight, BellRing, Trash2, ArrowUp } from 'lucide-react';
 import { AlertBell } from '@/components/common/AlertBell';
 import { disclosureService } from '@/services/disclosureService';
 import { Disclosure } from '@/types/disclosure';
+import { getDisclosureClassification, ISSUER_LABEL, ISSUER_STYLE } from '@/utils/disclosureClassify';
 import { ChevronDown } from 'lucide-react';
 
 const C = {
-  purple: '#7F77DD',
-  pink: '#DB2777',
-  green: '#4ADE80',
-  amber: '#FBBF24',
-  heroGrad: 'linear-gradient(135deg, #7F77DD, #DB2777)',
-  btnGrad: 'linear-gradient(135deg,#7F77DD,#DB2777)',
+  purple: '#A78BFA',
+  pink: '#A78BFA',
+  green: '#A78BFA',
+  amber: '#A78BFA',
+  heroGrad: '#161B22',
+  btnGrad: '#A78BFA',
 };
 
 type SubTab = 'stock' | 'market' | 'disclosure' | 'news';
@@ -49,18 +51,17 @@ const SUB_TABS: { id: SubTab; label: string }[] = [
 ];
 
 interface AiAnalysisPageProps {
-  onOpenDisclosure?: (receiptNo: string, stockCode: string, stockName?: string) => void;
-  // jp: 공시분석 탭 종목 클릭 시 해당 종목 공시 목록 화면으로 이동
-  onGoToDisclosures?: (code: string, name: string) => void;
+  onOpenDisclosure?: (arg: Disclosure | string, stockCode?: string, stockName?: string) => void;
+  // jp: onGoToDisclosures 제거 — 호출처 없는 죽은 prop이었음 (App.tsx handleGoToDisclosures와 함께 제거)
 }
 
-export function AiAnalysisPage({ onOpenDisclosure, onGoToDisclosures }: AiAnalysisPageProps) {
+export function AiAnalysisPage({ onOpenDisclosure }: AiAnalysisPageProps) {
   const [subTab, setSubTab] = useState<SubTab>('stock');
 
   return (
     <div style={{ minHeight: 'calc(100dvh - 60px - env(safe-area-inset-bottom))', background: 'var(--bg-primary)' }}>
       {/* jp: 서브탭만 — 타이틀 제거, 한 줄 컴팩트 */}
-      <div style={{ background: C.heroGrad, padding: '8px 10px' }}>
+      <div style={{ background: C.heroGrad, padding: '8px 10px', borderBottom: '0.5px solid var(--border)' }}>
         <div className="flex gap-[5px]">
           {SUB_TABS.map(({ id, label }) => {
             const on = subTab === id;
@@ -68,9 +69,9 @@ export function AiAnalysisPage({ onOpenDisclosure, onGoToDisclosures }: AiAnalys
               <button key={id} onClick={() => setSubTab(id)}
                 className="flex-1 text-[10px] font-bold py-[9px] rounded-[10px] transition-all"
                 style={{
-                  color: on ? '#fff' : 'rgba(255,255,255,0.5)',
-                  background: on ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)',
-                  border: on ? '1px solid rgba(255,255,255,0.55)' : '1px solid rgba(255,255,255,0.12)',
+                  color: on ? '#1a1530' : 'var(--text-tertiary)',
+                  background: on ? '#A78BFA' : 'transparent',
+                  border: on ? '1px solid #A78BFA' : '1px solid var(--border)',
                 }}>
                 {label}
               </button>
@@ -82,7 +83,7 @@ export function AiAnalysisPage({ onOpenDisclosure, onGoToDisclosures }: AiAnalys
       {/* jp: 서브탭 콘텐츠 */}
       {subTab === 'stock'      && <StreamingStockTab onOpenDisclosure={onOpenDisclosure} />}
       {subTab === 'market'     && <MarketTab />}
-      {subTab === 'disclosure' && <DisclosureTab onGoToDisclosures={onGoToDisclosures} onOpenDisclosure={onOpenDisclosure} />}
+      {subTab === 'disclosure' && <DisclosureTab onOpenDisclosure={onOpenDisclosure} />}
       {subTab === 'news'       && <NewsTab />}
     </div>
   );
@@ -91,11 +92,11 @@ export function AiAnalysisPage({ onOpenDisclosure, onGoToDisclosures }: AiAnalys
 // ===== AI종목분석 =====
 // jp: 예시 색상 풀 - 순환 사용
 const EXAMPLE_STYLES = [
-  { bg: 'rgba(127,119,221,0.12)', border: 'rgba(127,119,221,0.25)', iconColor: C.purple, subColor: C.purple },
-  { bg: 'rgba(74,222,128,0.1)',   border: 'rgba(74,222,128,0.22)',  iconColor: C.green,  subColor: C.green  },
-  { bg: 'rgba(251,191,36,0.1)',   border: 'rgba(251,191,36,0.22)',  iconColor: C.amber,  subColor: C.amber  },
-  { bg: 'rgba(219,39,119,0.1)',   border: 'rgba(219,39,119,0.22)',  iconColor: C.pink,   subColor: C.pink   },
-  { bg: 'rgba(127,119,221,0.08)', border: 'rgba(127,119,221,0.18)', iconColor: C.purple, subColor: '#9898a8' },
+  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#A78BFA', subColor: 'var(--text-tertiary)' },
+  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#A78BFA', subColor: 'var(--text-tertiary)' },
+  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#A78BFA', subColor: 'var(--text-tertiary)' },
+  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#A78BFA', subColor: 'var(--text-tertiary)' },
+  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#A78BFA', subColor: 'var(--text-tertiary)' },
 ];
 
 // jp: 폴백 예시 (API 실패 시)
@@ -107,7 +108,7 @@ const FALLBACK_EXAMPLES = [
   { text: '삼성바이오로직스 최근 뉴스랑 공시 종합해줘', sub: '뉴스 + 공시 종합' },
 ];
 
-function StockTab({ onOpenDisclosure }: { onOpenDisclosure?: (r: string, c: string, n?: string) => void }) {
+function StockTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosure | string, c?: string, n?: string) => void }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -204,8 +205,8 @@ function MarketTab() {
             <button key={t} onClick={() => setTab(t)}
               className="flex-1 text-center py-2.5 rounded-[11px] text-[13px] font-extrabold transition-all"
               style={{
-                background: tab === t ? 'linear-gradient(135deg,#7F77DD,#DB2777)' : 'transparent',
-                color: tab === t ? '#fff' : 'var(--text-secondary)',
+                background: tab === t ? '#A78BFA' : 'transparent',
+                color: tab === t ? '#1a1530' : 'var(--text-secondary)',
               }}>
               {t === 'current' ? '현재 시황' : '과거 기록'}
             </button>
@@ -255,16 +256,16 @@ type DiscCategory = typeof DISCLOSURE_CATEGORIES[number]['key'];
 // jp: 위험 카테고리 (알림 카드로 강조)
 const RISK_KEYWORDS = ['상장폐지', '관리종목', '부도', '당좌거래정지', '회생', '파산', '거래정지', '감사의견', '자본잠식', '불성실공시', '투자주의', '투자경고', '투자위험'];
 
-// jp: 공시 종류 분류는 백엔드 category_type 사용 (프론트 자체 분류 제거)
-
 // jp: 위험 공시 여부 (빨간 알림 카드용)
 function isRiskDisclosure(reportName: string): boolean {
   return RISK_KEYWORDS.some((k) => (reportName || '').includes(k));
 }
 
-function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosures?: (code: string, name: string) => void; onOpenDisclosure?: (receiptNo: string, stockCode: string, stockName?: string) => void }) {
+// jp: onGoToDisclosures prop 제거 — 공시 클릭은 onOpenDisclosure(분석 시트)로 통일
+function DisclosureTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosure | string, stockCode?: string, stockName?: string) => void }) {
   const [search, setSearch] = useState('');
-  const searchInputRef = useRef<HTMLInputElement>(null);  // +추가 버튼 → 검색창 포커스용
+  const [showTopBtn, setShowTopBtn] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [stockResults, setStockResults] = useState<Stock[]>([]);
   const [stockSearching, setStockSearching] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -276,16 +277,16 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
   const [category, setCategory] = useState<DiscCategory>('all');
   const [feed, setFeed] = useState<Disclosure[]>([]);
   const [feedLoading, setFeedLoading] = useState(false);
-  const [selectedStock, setSelectedStock] = useState<string | null>(null);  // 칩으로 종목 필터
+  const [selectedStock, setSelectedStock] = useState<string | null>(null);
   const [chipPage, setChipPage] = useState(0);
   const touchStartX = useRef(0);
-  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);  // long-press 타이머
-  const lpFired = useRef(false);                            // long-press 발동 플래그
-  const [pressingCode, setPressingCode] = useState<string | null>(null);  // 꾹 누르는 중인 칸
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lpFired = useRef(false);
+  const [pressingCode, setPressingCode] = useState<string | null>(null);
   const [undoData, setUndoData] = useState<{ code: string; name: string; groupId?: string } | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [feedOffset, setFeedOffset] = useState(0);          // 무한스크롤 offset
-  const [feedHasMore, setFeedHasMore] = useState(false);    // 더 불러올 게 있나
+  const [feedOffset, setFeedOffset] = useState(0);
+  const [feedHasMore, setFeedHasMore] = useState(false);
   const [feedMoreLoading, setFeedMoreLoading] = useState(false);
 
   const isLoggedIn = useAuthStore((s) => s.isAuthenticated);
@@ -294,7 +295,6 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
   const myStocks = items.filter((i) => i.assetType !== 'index' && /^\d{6}$/.test(i.code));
   const displayStocks = isLoggedIn ? myStocks : GUEST_DEFAULT_STOCKS;
 
-  // jp: AI공시 첫 진입 시 — 제일 먼저 등록한 관심종목 1개를 디폴트로 활성화 (없거나 비로그인이면 전체종목)
   const didInitDefaultRef = useRef(false);
   useEffect(() => {
     if (didInitDefaultRef.current) return;
@@ -303,7 +303,6 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
       const firstStock = [...myStocks].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))[0];
       if (firstStock) { setSelectedStock(firstStock.code); didInitDefaultRef.current = true; }
     }
-    // jp: 로그인했지만 myStocks가 아직 비어있으면(로딩 중) 다음 렌더에서 재시도
   }, [isLoggedIn, myStocks]);
 
   useEffect(() => {
@@ -352,7 +351,6 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
     e.stopPropagation(); removeItem(code); setToast(`${name} 제거됨`);
   };
 
-  // jp: 관심종목 삭제 + 실행취소 (진동 → 즉시삭제 → 5초 복구 가능)
   const removeWithUndo = (code: string, name: string) => {
     const item = items.find((i) => i.code === code);
     if (navigator.vibrate) navigator.vibrate(50);
@@ -395,20 +393,16 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
     }
   };
 
-  // jp: 피드 로딩 — 선택 종목은 페이지네이션(무한스크롤), 아니면 관심/전체
-  useEffect(() => {  // 피드 로딩
+  useEffect(() => {
     let active = true;
     setFeedLoading(true);
     setFeedOffset(0);
-    // jp: 범위(칩/관심/전체) ∩ 카테고리 교차 필터
     if (selectedStock) {
-      // jp: 종목 칩 + 카테고리 → 그 종목의 그 카테고리 (무한스크롤)
       disclosureService.getStockDisclosurePage(selectedStock, 50, 0, category)
         .then((res) => { if (active) { setFeed(res.items); setFeedHasMore(res.hasMore); setFeedOffset(res.items.length); } })
         .catch(() => { if (active) { setFeed([]); setFeedHasMore(false); } })
         .finally(() => { if (active) setFeedLoading(false); });
     } else if (feedMode === 'all') {
-      // jp: 전체종목 + 카테고리 → 전체의 그 카테고리 (무한스크롤)
       const first = category !== 'all'
         ? disclosureService.getCategoryPage(category, 50, 0)
         : disclosureService.getLatestPage(50, 0);
@@ -417,7 +411,6 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
         .catch(() => { if (active) { setFeed([]); setFeedHasMore(false); } })
         .finally(() => { if (active) setFeedLoading(false); });
     } else {
-      // jp: 관심종목 + 카테고리 → 내 종목들의 그 카테고리 (한 번 로드)
       setFeedHasMore(false);
       disclosureService.getMyFeed(undefined, category)
         .then((list) => { if (active) setFeed(list || []); })
@@ -427,10 +420,9 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
     return () => { active = false; };
   }, [feedMode, isLoggedIn, selectedStock, category]);
 
-  // jp: 더보기 — 다음 페이지 추가 로드
   const loadMoreFeed = () => {
     if (feedMoreLoading || !feedHasMore) return;
-    if (!selectedStock && feedMode !== 'all') return;  // jp: 관심모드는 한번 로드(더보기 X)
+    if (!selectedStock && feedMode !== 'all') return;
     setFeedMoreLoading(true);
     let next;
     if (selectedStock) {
@@ -450,16 +442,15 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
       .finally(() => setFeedMoreLoading(false));
   };
 
-  // jp: observer가 항상 최신 loadMoreFeed를 호출하도록 ref 동기화
   const loadMoreRef = useRef(loadMoreFeed);
   loadMoreRef.current = loadMoreFeed;
 
-  // jp: 무한스크롤 — 스크롤이 바닥 근처면 다음 페이지 (폭주 방지 가드)
   const feedSentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if ((!selectedStock && feedMode !== 'all') || !feedHasMore) return;
     let ticking = false;
     const onScroll = () => {
+      setShowTopBtn(window.scrollY > 400);
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
@@ -524,16 +515,16 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
       {permAsk && (
         <div className="px-4 mt-3">
           <div className="rounded-2xl p-4 text-center"
-            style={{ background: 'linear-gradient(135deg, rgba(127,119,221,0.14), rgba(219,39,119,0.12))', border: '1px solid rgba(219,39,119,0.28)' }}>
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-border)' }}>
             <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2.5"
-              style={{ background: 'linear-gradient(135deg,#7F77DD,#DB2777)' }}>
+              style={{ background: '#A78BFA' }}>
               <BellRing size={22} color="#fff" />
             </div>
             <p className="text-sm font-extrabold mb-1" style={{ color: 'var(--text-primary)' }}>공시 알림을 허용할까요?</p>
             <p className="text-[11px] mb-3" style={{ color: 'var(--text-tertiary)' }}>{permAsk.name} 새 공시가 오면 바로 알려드릴게요</p>
             <button onClick={async () => { const p = { ...permAsk }; setPermAsk(null); await enableAlert(p.code, p.name); }}
               className="w-full py-3 rounded-xl text-sm font-extrabold mb-1.5"
-              style={{ background: 'linear-gradient(135deg,#7F77DD,#DB2777)', color: '#fff' }}>
+              style={{ background: '#A78BFA', color: '#1a1530' }}>
               알림 허용하기
             </button>
             <button onClick={() => setPermAsk(null)} className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>나중에</button>
@@ -562,7 +553,7 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
                         <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{stock.code}</p>
                       </div>
                       <span className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0 text-[11px] font-bold"
-                        style={{ background: already ? 'var(--bg-elevated)' : 'linear-gradient(135deg,#7F77DD,#DB2777)', color: already ? 'var(--text-tertiary)' : '#fff' }}>
+                        style={{ background: already ? 'var(--bg-elevated)' : '#A78BFA', color: already ? 'var(--text-tertiary)' : '#1a1530' }}>
                         {already ? '추가됨' : <Plus size={16} />}
                       </span>
                     </button>
@@ -583,13 +574,13 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
               <>
                 {!isLoggedIn && (
                   <div className="flex items-center gap-2.5 p-3 rounded-xl mb-3"
-                    style={{ background: 'linear-gradient(135deg, rgba(127,119,221,0.14), rgba(219,39,119,0.12))', border: '1px solid rgba(219,39,119,0.25)' }}>
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-border)' }}>
                     <p className="flex-1 text-[11px] leading-snug" style={{ color: 'var(--text-primary)' }}>
                       <b style={{ color: '#F9A8D4' }}>미리보기</b>로 보고 있어요. 로그인하면 내 종목으로 알림 받을 수 있어요
                     </p>
                     <button onClick={() => setShowLogin(true)}
                       className="flex-shrink-0 text-[11px] font-extrabold px-3 py-2 rounded-lg"
-                      style={{ background: 'linear-gradient(135deg,#7F77DD,#DB2777)', color: '#fff' }}>
+                      style={{ background: '#A78BFA', color: '#1a1530' }}>
                       로그인
                     </button>
                   </div>
@@ -610,7 +601,6 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
                   if (pages.length === 0) pages.push([]);
                   const pg = Math.min(chipPage, pages.length - 1);
                   const cur = pages[pg] || [];
-                  const isLast = pg === pages.length - 1;
                   return (
                     <div>
                       <div
@@ -632,12 +622,12 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
                               onPointerUp={() => { if (pressTimer.current) clearTimeout(pressTimer.current); setPressingCode(null); }}
                               onPointerLeave={() => { if (pressTimer.current) clearTimeout(pressTimer.current); setPressingCode(null); }}
                               className="relative flex flex-col items-start justify-center px-2.5 py-2 rounded-xl active:scale-[0.97] transition-all"
-                              style={{ minHeight: 46, background: pressingCode === it.code ? 'rgba(255,82,82,0.18)' : (sel ? 'rgba(127,119,221,0.16)' : 'var(--bg-card)'), border: `1px solid ${pressingCode === it.code ? '#ff5252' : (sel ? '#7F77DD' : 'var(--border)')}` }}>
+                              style={{ minHeight: 46, background: pressingCode === it.code ? 'rgba(255,82,82,0.18)' : (sel ? 'rgba(167,139,250,0.16)' : 'var(--bg-card)'), border: `1px solid ${pressingCode === it.code ? '#ff5252' : (sel ? '#A78BFA' : 'var(--border)')}` }}>
                               <span className="text-[12px] font-bold leading-tight truncate w-full text-left" style={{ color: sel ? '#A78BFA' : 'var(--text-primary)', paddingRight: 16 }}>{it.name}</span>
                               <span className="text-[9px] leading-tight" style={{ color: 'var(--text-tertiary)' }}>{it.code}</span>
                               <span onClick={(e) => handleToggleAlert(e, it.code, it.name)} className="absolute top-1.5 right-1.5 flex items-center justify-center" aria-label={on ? `${it.name} 알림 끄기` : `${it.name} 알림 켜기`}>
                                 <AlertBell on={!!on} size={15} />
-                                {on && <span className="absolute -top-0.5 -right-0.5 w-[6px] h-[6px] rounded-full" style={{ background: '#4ADE80' }} />}
+                                {on && <span className="absolute -top-0.5 -right-0.5 w-[6px] h-[6px] rounded-full" style={{ background: 'var(--success)' }} />}
                               </span>
                             </button>
                           );
@@ -701,7 +691,7 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
           {feedLoading ? (
             <p className="text-center text-xs py-10" style={{ color: 'var(--text-tertiary)' }}>공시 불러오는 중…</p>
           ) : (() => {
-            const seen = new Set<string>(); const filtered = feed.filter((d) => { if (seen.has(d.receiptNo)) return false; seen.add(d.receiptNo); return category === 'all' || d.categoryType === category; });
+            const seen = new Set<string>(); const filtered = feed.filter((d) => { if (seen.has(d.receiptNo)) return false; seen.add(d.receiptNo); return true; });
             if (filtered.length === 0) {
               return <p className="text-center text-xs py-10" style={{ color: 'var(--text-tertiary)' }}>{feedMode === 'watch' ? '관심종목의 공시가 없어요' : '해당 공시가 없어요'}</p>;
             }
@@ -710,14 +700,33 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
                 {filtered.map((d) => {
                   const catType = d.categoryType || '';
                   const catColor = CATEGORY_COLORS[catType];
+                  // jp: 주석검색 가능 공시 — 사업/분기/반기보고서로 시작하는 정기보고서 (한글 깨짐 방지: 유니코드 이스케이프)
+                  const hasNotes = /^(\uC0AC\uC5C5\uBCF4\uACE0\uC11C|\uBD84\uAE30\uBCF4\uACE0\uC11C|\uBC18\uAE30\uBCF4\uACE0\uC11C)/.test((d.reportName || '').trim());
+                  const cls = getDisclosureClassification(d);
                   return (
-                    <div key={d.receiptNo} onClick={() => onOpenDisclosure?.(d.receiptNo, d.stockCode, d.stockName)}
+                    <div key={d.receiptNo} onClick={() => onOpenDisclosure?.(d)}
                       className="rounded-xl overflow-hidden cursor-pointer active:scale-[0.99] transition-all"
                       style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderLeft: catColor ? `3px solid ${catColor}` : '1px solid var(--border)' }}>
                       <div className="px-3 py-2.5">
+                        {/* jp: 시장 배지 (코스피/코스닥) — 회사명 위 좌측 고정 */}
+                        {cls && (cls.issuerType === 'kospi' || cls.issuerType === 'kosdaq' || cls.issuerType === 'konex') && (
+                          <div className="mb-1">
+                            <span className="inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded"
+                              style={{ background: ISSUER_STYLE[cls.issuerType].bg, color: ISSUER_STYLE[cls.issuerType].color }}>
+                              {ISSUER_LABEL[cls.issuerType]}
+                            </span>
+                          </div>
+                        )}
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <span className="text-[13px] font-bold truncate" style={{ color: 'var(--text-primary)' }}>{d.stockName}</span>
                           <span className="flex items-center gap-1.5 flex-shrink-0">
+                            {/* jp: 주석검색 가능 배지 — 실적재무 배지 좌측 고정 */}
+                            {hasNotes && (
+                              <span className="inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded"
+                                style={{ background: 'rgba(176,94,124,0.14)', color: '#B05E7C', border: '0.5px solid rgba(176,94,124,0.4)' }}>
+                                {'\uD83D\uDCC4 \uC8FC\uC11D\uAC80\uC0C9'}
+                              </span>
+                            )}
                             {catColor && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${catColor}29`, color: catColor }}>{catType}</span>}
                             <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{d.disclosedAt?.slice(0, 10).replace(/-/g, '.')}</span>
                           </span>
@@ -738,14 +747,29 @@ function DisclosureTab({ onGoToDisclosures, onOpenDisclosure }: { onGoToDisclosu
         </div>
       )}
 
-
       <AuthModal open={showLogin} onClose={() => setShowLogin(false)} />
+      {showTopBtn && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label="맨 위로"
+          style={{
+            position: 'fixed', right: 16,
+            bottom: 'calc(72px + env(safe-area-inset-bottom))',
+            width: 44, height: 44, borderRadius: '50%',
+            background: 'var(--accent, #A78BFA)', border: 'none',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 14px rgba(167,139,250,0.45)',
+            cursor: 'pointer', zIndex: 40,
+          }}
+        >
+          <ArrowUp size={20} color="#fff" strokeWidth={2.6} />
+        </button>
+      )}
     </div>
   );
 }
 
 // ===== 종목뉴스 =====
-// jp: 뉴스 제목 키워드 기반으로 카테고리 자동 매칭
 const CATEGORY_RULES: { label: string; bg: string; color: string; keywords: string[] }[] = [
   { label: '반도체', bg: 'rgba(219,39,119,0.15)', color: '#F9A8D4', keywords: ['반도체','HBM','파운드리','D램','낸드','TSMC','삼성전자','SK하이닉스','마이크론','엔비디아'] },
   { label: '바이오', bg: 'rgba(127,119,221,0.15)', color: '#A78BFA', keywords: ['바이오','제약','임상','허가','FDA','항암','신약','셀트리온','삼성바이오','에이치엘비'] },
@@ -877,7 +901,7 @@ function NewsTab() {
 }
 
 // ===== 공통 =====
-function StockResultCard({ result, onOpenDisclosure }: { result: StockAnalysisResult; onOpenDisclosure?: (r: string, c: string, n?: string) => void }) {
+function StockResultCard({ result, onOpenDisclosure }: { result: StockAnalysisResult; onOpenDisclosure?: (arg: Disclosure | string, c?: string, n?: string) => void }) {
   const { stockName, stockCode, price, recentDisclosures, analysis } = result;
   const up = price ? price.change > 0 : false;
   const down = price ? price.change < 0 : false;

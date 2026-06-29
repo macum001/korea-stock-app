@@ -7,19 +7,20 @@ import { AiAnalysisPage } from '@/pages/AiAnalysisPage';
 import { NotificationPage } from '@/pages/NotificationPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { StockDetailPage } from '@/pages/StockDetailPage';
-import { StockDisclosurePage } from '@/pages/StockDisclosurePage';
 import { DisclosureSummarySheet } from '@/components/disclosure/DisclosureSummarySheet';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useStockStore } from '@/store/stockStore';
 import { Stock } from '@/types/stock';
 import { Disclosure } from '@/types/disclosure';
 
+// jp: StockDisclosurePage, handleGoToDisclosures 제거 — 공시 클릭은 분석 시트로 통일
+// jp: 호출처 없는 죽은 코드였음 (handleGoToDisclosures → setScreen stockDisclosure)
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 type AppScreen =
   | { type: 'home' }
-  | { type: 'stockDetail'; stock: Stock }
-  | { type: 'stockDisclosure'; code: string; name: string };
+  | { type: 'stockDetail'; stock: Stock };
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavTab>('stocks');
@@ -51,23 +52,32 @@ export default function App() {
     setScreen({ type: 'stockDetail', stock });
   };
 
-  const handleGoToDisclosures = (code: string, name?: string) =>
-    setScreen({ type: 'stockDisclosure', code, name: name || code });
+  // jp: 공시 AI분석 시트 열기 — 공시 객체를 직접 받으면 바로 열고(권장), receiptNo 문자열이면 API로 1건 조회
+  const handleOpenDisclosure = async (
+    arg: Disclosure | string,
+    stockCode?: string,
+    _stockName?: string,
+  ) => {
+    // jp: 공시 객체를 통째로 받은 경우 — 재조회 없이 바로 시트 열기
+    if (typeof arg !== 'string') {
+      setOpenedDisclosure(arg);
+      return;
+    }
+    // jp: receiptNo만 받은 경우(알림 등) — 종목 공시 목록에서 receiptNo 매칭
+    const receiptNo = (arg || '').trim();
+    if (!receiptNo) return;
+    if (!stockCode) return;
+    if (!/^\d{6}$/.test(stockCode)) return;
 
-  // jp: receiptNo로 그 공시 1건 찾아 AI분석 시트 열기
-  const handleOpenDisclosure = async (receiptNo: string, stockCode: string, stockName?: string) => {
     try {
-      const res = await fetch(`${API_URL}/api/disclosures/stock/${stockCode}?limit=100`);
+      const url = `${API_URL}/api/disclosures/stock/${stockCode}?limit=200`;
+      const res = await fetch(url);
       const json = await res.json();
       const list: Disclosure[] = (json?.data ?? json ?? []) as Disclosure[];
-      const found = list.find((d) => d.receiptNo === receiptNo);
-      if (found) {
-        setOpenedDisclosure(found);
-      } else {
-        handleGoToDisclosures(stockCode, stockName);
-      }
+      const found = Array.isArray(list) ? list.find((d) => d.receiptNo === receiptNo) : null;
+      if (found) setOpenedDisclosure(found);
     } catch {
-      handleGoToDisclosures(stockCode, stockName);
+      /* noop */
     }
   };
 
@@ -80,22 +90,12 @@ export default function App() {
     );
   }
 
-  // jp: 종목 공시 화면
-  if (screen.type === 'stockDisclosure') {
-    return (
-      <AppShell showHeader={false}>
-        <StockDisclosurePage stockCode={screen.code} stockName={screen.name} onBack={handleBack} />
-      </AppShell>
-    );
-  }
-
   return (
     <AppShell showHeader={activeTab === 'stocks'}>
       <main style={{ paddingBottom: 'calc(60px + env(safe-area-inset-bottom))' }}>
         {activeTab === 'stocks' && (
           <AiAnalysisPage
             onOpenDisclosure={handleOpenDisclosure}
-            onGoToDisclosures={handleGoToDisclosures}
           />
         )}
         {activeTab === 'notifications' && (

@@ -39,13 +39,24 @@ export interface StockAnalysisResult {
     category: string;
     disclosedAt: string;
   }>;
+  financials?: {
+    revenue: string;
+    operatingProfit: string;
+    netIncome: string;
+    year: number | null;
+    reportName: string;
+    basis: string;
+  } | null;
   analysis: {
+    companyInfo?: string;
     summary: string;
     detail: string;
     recentMoves: string;
     impact: string;
     impactLabel: string;
     notes: string[];
+    cautions?: string[];
+    watchPoints?: string[];
   };
   cached?: boolean;
 }

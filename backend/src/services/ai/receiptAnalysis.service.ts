@@ -7,6 +7,7 @@ import { query } from '../../config/db';
 import { safeGet, safeSetEx } from '../../config/redis';
 import { extractDisclosureCore } from './dartDocument.service';
 import { getPrompt } from './promptStore.service';
+import { embedAndStoreNotes } from './notesEmbedding.service';
 
 // ─────────────────────────────────────────────
 // 타입 정의
@@ -66,6 +67,9 @@ interface DisclosureRow {
   ai_investor_note: string | null;
   ai_risk_note: string | null;
   impact_level: string | null;
+  // jp: ai_status — 'completed' | 'failed' | 'partial' | null
+  // jp: 컬럼이 없는 구버전 DB에서는 undefined로 오므로 optional 처리
+  ai_status?: string | null;
 }
 
 // ─────────────────────────────────────────────
@@ -126,7 +130,9 @@ export const DISCLOSURE_SUBTYPES = [
   '기업설명회IR',
   '기타',] as const;
 
-const CACHE_PREFIX = 'ai:disclosure:';
+// jp: v2: 캐시 버전 bump — 배포 시 기존 v1 키(ai:disclosure:*)는 건드리지 않음
+// jp: v1 키는 TTL(7일) 후 자연 만료. 롤백 시 'ai:disclosure:'로 되돌리면 v1 캐시 복원 가능
+const CACHE_PREFIX = 'ai:disclosure:v2:';
 const CACHE_TTL = 60 * 60 * 24 * 7;  // jp: 7일 (공시는 안 바뀜)
 
 // ─────────────────────────────────────────────
@@ -486,16 +492,14 @@ function getSubtypeChecklist(subtype: string | null | undefined, reportName: str
 function buildDocContext(docText: string): string {
   if (!docText) return '';
 
-  // jp: 이미 핵심 섹션 추출이 된 짧은 텍스트면 그대로 사용
-  if (docText.length <= 6000) return docText;
+  if (docText.length <= 16000) return docText;
 
   // jp: 긴 원문: 앞 2500자(표지·결의 내용) + 마지막 1500자(세부 조건·일정) 조합
-  // jp: 중간부 잘림으로 핵심 숫자가 누락되는 것을 방지
-  const head = docText.slice(0, 2500);
-  const tail = docText.slice(-1500);
-  const mid  = docText.length > 8000
-    ? `\n...(중략 ${Math.round((docText.length - 4000) / 1000)}k자)...\n`
-    : docText.slice(2500, docText.length - 1500);
+  const head = docText.slice(0, 8000);
+  const tail = docText.slice(-5000);
+  const mid  = docText.length > 20000
+    ? `\n...(중략 ${Math.round((docText.length - 13000) / 1000)}k자)...\n`
+    : docText.slice(8000, docText.length - 5000);
 
   return head + mid + tail;
 }
@@ -704,6 +708,41 @@ function fallbackAnalysis(row: DisclosureRow): ReceiptAnalysis {
 }
 
 // ─────────────────────────────────────────────
+// 분석 완전성 검증
+// ─────────────────────────────────────────────
+
+// jp: DB에 저장된 분석 결과가 완전한지 검증
+// jp: ai_summary만 보면 partial 저장 결과를 완성본으로 오인할 수 있음
+// jp: ai_status가 명시적으로 'completed'이고 summary/detail이 모두 있어야 재사용
+function isCompleteDbAnalysis(row: DisclosureRow): boolean {
+  // jp: [1] ai_status가 명시적으로 'completed'여야 함
+  //     failed/partial/null/undefined 상태는 재분석 필요
+  // jp: undefined = 컬럼 없는 구버전 DB → status 체크 스킵하고 summary로만 판단
+  const status = row.ai_status;
+  if (status && status !== 'completed') return false;
+
+  // jp: [2] 필수 필드가 실질적으로 채워져 있어야 함
+  //     빈 문자열, null, 공시 제목만 복사된 경우 불완전
+  const summary = (row.ai_summary || '').trim();
+  if (summary.length < 10) return false;
+
+  // jp: [3] summary가 단순히 report_name과 같으면 Claude가 실제로 분석 안 한 것
+  //     fallbackAnalysis가 report_name을 summary로 쓰고 캐시된 경우
+  if (summary === (row.report_name || '').trim()) return false;
+
+  return true;
+}
+
+// jp: Claude 반환 결과의 필수 필드가 실질적으로 채워졌는지 검증
+// jp: 빈 문자열 summary로 분석 성공 처리하는 것을 차단
+function isValidAiResult(ai: Partial<ReceiptAnalysis>): boolean {
+  const summary = (ai.summary || '').trim();
+  const detail = (ai.detail || '').trim();
+  // jp: summary 최소 10자, detail 최소 20자 — 실질적 분석 여부 기준
+  return summary.length >= 10 && detail.length >= 20;
+}
+
+// ─────────────────────────────────────────────
 // 메인 분석 함수
 // ─────────────────────────────────────────────
 
@@ -721,29 +760,60 @@ export async function analyzeByReceiptNo(receiptNo: string): Promise<ReceiptAnal
   } catch { /* 캐시 실패 무시 */ }
 
   // 2. DB 조회
+  // jp: ai_status 컬럼이 없는 구버전 DB에서는 쿼리 자체가 실패할 수 있음
+  // jp: 그 경우 ai_status 없이 재시도 → 서버가 죽지 않고 기존 동작 유지
+  // jp: 단, 배포 전 마이그레이션(ALTER TABLE ... ADD COLUMN IF NOT EXISTS ai_status)을
+  //     반드시 먼저 실행해야 isCompleteDbAnalysis의 status 체크가 실제로 작동함
   let rows: DisclosureRow[];
   try {
     rows = await query<DisclosureRow>(
       `SELECT receipt_no, stock_code, stock_name, corp_code, report_name, disclosure_type,
               category, importance, sentiment, summary, original_url, disclosed_at,
               is_important, is_capital, is_good, is_bad,
-              ai_summary, ai_key_points, ai_investor_note, ai_risk_note, impact_level
+              ai_summary, ai_key_points, ai_investor_note, ai_risk_note, impact_level,
+              ai_status
          FROM disclosures
         WHERE receipt_no = $1
         LIMIT 1`,
       [receiptNo]
     );
   } catch (err) {
-    console.error('[AI분석] DB 조회 실패:', err instanceof Error ? err.message : err);
-    return null;
+    const msg = err instanceof Error ? err.message : String(err);
+    // jp: "column ai_status does not exist" — 마이그레이션 미실행 환경
+    // jp: ai_status 없이 재시도 → 서버 죽지 않고 기존 동작(summary만으로 판단)
+    if (msg.includes('ai_status') && msg.includes('does not exist')) {
+      console.warn('[AI분석] ai_status 컬럼 없음 — 마이그레이션 필요. ai_status 제외하고 재조회.');
+      try {
+        rows = await query<DisclosureRow>(
+          `SELECT receipt_no, stock_code, stock_name, corp_code, report_name, disclosure_type,
+                  category, importance, sentiment, summary, original_url, disclosed_at,
+                  is_important, is_capital, is_good, is_bad,
+                  ai_summary, ai_key_points, ai_investor_note, ai_risk_note, impact_level
+             FROM disclosures
+            WHERE receipt_no = $1
+            LIMIT 1`,
+          [receiptNo]
+        );
+      } catch (err2) {
+        console.error('[AI분석] DB 조회 실패(재시도):', err2 instanceof Error ? err2.message : err2);
+        return null;
+      }
+    } else {
+      console.error('[AI분석] DB 조회 실패:', msg);
+      return null;
+    }
   }
 
   if (!rows || rows.length === 0) return null;
 
   const row = rows[0];
 
-  // 3. DB에 이미 분석 결과 있으면 재사용 (토큰 0)
-  if (row.ai_summary && row.ai_summary.trim().length > 0) {
+  // 3. DB에 이미 완전한 분석 결과 있으면 재사용 (토큰 0)
+  // jp: ai_summary 존재만으로 판단하지 않음
+  // jp: - ai_status가 failed/partial이면 재분석 필요
+  // jp: - summary가 비어있거나 공시 제목과 같으면 fallback이 캐시된 것 → 재분석
+  // jp: - 위 조건을 통과한 경우에만 DB 결과를 완성본으로 신뢰
+  if (isCompleteDbAnalysis(row)) {
     const dbResult: ReceiptAnalysisResponse = {
       receiptNo:   row.receipt_no,
       stockCode:   row.stock_code || '',
@@ -785,7 +855,10 @@ export async function analyzeByReceiptNo(receiptNo: string): Promise<ReceiptAnal
     // 5. Claude 스트리밍 호출
     const ai = await callClaudeStreaming(row, docText, docMode, sysPrompt);
 
-    if (ai) {
+    // jp: [5-1] Claude 결과 유효성 검증
+    // jp: ai !== null이어도 summary/detail이 실질적으로 비어있으면 partial 취급
+    // jp: isValidAiResult 실패 = Claude가 JSON은 반환했지만 내용이 없는 케이스
+    if (ai && isValidAiResult(ai)) {
       const impact = ai.impact && ai.impact !== 'unknown'
         ? ai.impact
         : normalizeImpact(row.impact_level, row.sentiment);
@@ -795,8 +868,9 @@ export async function analyzeByReceiptNo(receiptNo: string): Promise<ReceiptAnal
       const totalTokens = promptTokens + completionTokens;
 
       analysis = {
-        summary:          ai.summary || row.summary || row.report_name,
-        detail:           ai.detail  || row.summary || '',
+        // jp: ai.summary || fallback 순서 유지하되, 빈 문자열은 fallback으로
+        summary:          ai.summary?.trim() || row.summary || row.report_name,
+        detail:           ai.detail?.trim()  || row.summary || '',
         reason:           ai.reason  || '',
         impact,
         impactLabel:      impactLabel(impact),
@@ -809,7 +883,10 @@ export async function analyzeByReceiptNo(receiptNo: string): Promise<ReceiptAnal
         sourceMode:       docMode,
       };
 
-      // 6. DB 저장 — keyNumbers/timeline JSON 컬럼 저장 (컬럼 없으면 무시됨)
+      // jp: [6] DB 저장 — 성공 시에만 ai_status='completed'
+      // jp: 확장 컬럼(ai_key_numbers/ai_timeline) → 기본 컬럼 fallback
+      // jp: 두 번 모두 실패해도 analysis는 메모리에서 응답 가능 (저장 실패 ≠ 분석 실패)
+      let dbSaved = false;
       try {
         await query(
           `UPDATE disclosures
@@ -842,8 +919,9 @@ export async function analyzeByReceiptNo(receiptNo: string): Promise<ReceiptAnal
             receiptNo,
           ]
         );
+        dbSaved = true;
       } catch (e) {
-        // jp: ai_key_numbers / ai_timeline 컬럼이 아직 없는 경우 기존 컬럼만 저장
+        // jp: 확장 컬럼 없는 경우 기본 컬럼만 저장
         console.warn('[AI분석] 확장 컬럼 저장 실패, 기본 컬럼으로 재시도:', (e as Error).message);
         try {
           await query(
@@ -856,15 +934,89 @@ export async function analyzeByReceiptNo(receiptNo: string): Promise<ReceiptAnal
             [analysis.summary, analysis.reason, analysis.risks.join(' / '), analysis.impactLabel, subtype,
              promptTokens, completionTokens, totalTokens, ENV.AI_DISCLOSURE.MODEL, receiptNo]
           );
-        } catch { /* 저장 실패해도 응답은 정상 */ }
+          dbSaved = true;
+        } catch (e2) {
+          // jp: 저장 실패해도 응답은 정상 반환 — 단, Redis 캐시는 하지 않음 (DB 불일치 방지)
+          console.error('[AI분석] DB 저장 완전 실패:', (e2 as Error).message);
+        }
       }
+
+      const result: ReceiptAnalysisResponse = {
+        receiptNo:   row.receipt_no,
+        stockCode:   row.stock_code || '',
+        stockName:   row.stock_name || '',
+        reportName:  row.report_name,
+        originalUrl: row.original_url || '',
+        disclosedAt: row.disclosed_at,
+        analysis,
+        tokens: totalTokens,
+      };
+
+      // jp: DB 저장 성공한 경우에만 Redis 캐시 (저장 실패 시 캐시하면 DB와 불일치 영구화)
+      if (dbSaved) {
+        try { await safeSetEx(cacheKey, CACHE_TTL, JSON.stringify(result)); } catch { /* 무시 */ }
+      }
+
+      // jp: [7] 임베딩 — AI 분석 완전 성공 후에만 호출
+      // jp: 분석 실패/partial 시 임베딩 호출 금지 (불완전 분석 공시의 임베딩 방지)
+      // jp: 백그라운드 실행 (응답 대기 안 함) — 실패해도 분석 결과에 영향 없음
+      // jp: 임베딩 실패 시 notes_embed_status에 failed 기록
+      //     → notesEmbedRetry.job이 10분마다 자동으로 잡아서 재처리
+      if (row.corp_code) {
+        embedAndStoreNotes({
+          corpCode:    row.corp_code,
+          stockCode:   row.stock_code || undefined,
+          stockName:   row.stock_name || undefined,
+          receiptNo:   row.receipt_no,
+          reportName:  row.report_name,
+          disclosedAt: row.disclosed_at,
+        }).then((r) => {
+          if (r.ok && r.chunks > 0) {
+            console.log(`[RAG] 주석 자동 임베딩: ${row.stock_name} ${r.chunks}청크`);
+          } else if (!r.ok && r.skipped !== 'not-periodic' && r.skipped !== 'already-embedded') {
+            // jp: 정기보고서인데 임베딩 실패 — 로그로 남겨서 모니터링 가능하게
+            // jp: notes_embed_status는 embedAndStoreNotes 내부에서 'failed'로 기록됨
+            // jp: notesEmbedRetry.job이 10분 후 자동 재처리
+            console.warn(`[RAG] 주석 임베딩 실패 (${row.receipt_no}): ${r.skipped || 'unknown'} — 재시도 잡이 처리 예정`);
+          }
+        }).catch((err) => {
+          // jp: 예외 발생 시에도 notes_embed_status는 이미 embedAndStoreNotes 내부에서 기록됨
+          console.warn('[RAG] 주석 임베딩 예외 (재시도 잡이 처리 예정):', err instanceof Error ? err.message : err);
+        });
+      }
+
+      return result;
+
     } else {
-      analysis = row.ai_summary ? fromDb(row) : fallbackAnalysis(row);
+      // jp: Claude 호출 실패(ai=null) 또는 내용 불충분(isValidAiResult=false)
+      // jp: ai_status='failed'로 명시적 저장 → 다음 호출 시 재시도 가능
+      // jp: (isCompleteDbAnalysis는 status='failed'를 재사용 대상에서 제외함)
+      const failReason = !ai
+        ? 'claude-null'
+        : `invalid-result:summary=${(ai.summary||'').length}chars,detail=${(ai.detail||'').length}chars`;
+      console.warn(`[AI분석] 분석 실패 (${receiptNo}): ${failReason}`);
+      try {
+        await query(
+          `UPDATE disclosures
+              SET ai_status = 'failed',
+                  ai_analyzed_at = now(),
+                  ai_model = $1
+            WHERE receipt_no = $2`,
+          [ENV.AI_DISCLOSURE.MODEL, receiptNo]
+        );
+      } catch (e) {
+        console.warn('[AI분석] failed 상태 저장 실패:', (e as Error).message);
+      }
+      // jp: fallback 응답 반환 — 단, Redis 캐시하지 않음 (재시도 가능하게 유지)
+      analysis = isCompleteDbAnalysis(row) ? fromDb(row) : fallbackAnalysis(row);
     }
   } else {
-    analysis = row.ai_summary ? fromDb(row) : fallbackAnalysis(row);
+    // jp: AI 비활성화 — fallback 반환, 캐시 안 함
+    analysis = isCompleteDbAnalysis(row) ? fromDb(row) : fallbackAnalysis(row);
   }
 
+  // jp: 여기까지 오면 AI 실패 또는 AI 비활성화 케이스
+  // jp: fallback 결과는 Redis 캐시하지 않음 — 재시도 시 항상 재분석 가능하게
   const result: ReceiptAnalysisResponse = {
     receiptNo:   row.receipt_no,
     stockCode:   row.stock_code || '',
@@ -873,10 +1025,11 @@ export async function analyzeByReceiptNo(receiptNo: string): Promise<ReceiptAnal
     originalUrl: row.original_url || '',
     disclosedAt: row.disclosed_at,
     analysis,
-    tokens: (analysis.promptTokens || 0) + (analysis.completionTokens || 0),
+    tokens: 0,
   };
 
-  try { await safeSetEx(cacheKey, CACHE_TTL, JSON.stringify(result)); } catch { /* 무시 */ }
+  // jp: fallback/failed 결과는 캐시하지 않음
+  // jp: 캐시하면 7일간 실패 결과가 완성본처럼 노출됨
   return result;
 }
 
@@ -896,11 +1049,13 @@ export async function preAnalyzeDisclosure(receiptNo: string): Promise<void> {
   } catch { /* 무시 */ }
 
   try {
-    const rows = await query<Pick<DisclosureRow, 'ai_summary'>>(
-      `SELECT ai_summary FROM disclosures WHERE receipt_no = $1 LIMIT 1`,
+    // jp: ai_summary 단독 체크에서 isCompleteDbAnalysis 기준으로 교체
+    // jp: partial/failed 결과로 스킵되는 문제 방지
+    const rows = await query<Pick<DisclosureRow, 'ai_summary' | 'report_name' | 'ai_status'>>(
+      `SELECT ai_summary, report_name, ai_status FROM disclosures WHERE receipt_no = $1 LIMIT 1`,
       [receiptNo]
     );
-    if (rows?.[0]?.ai_summary) return;
+    if (rows?.[0] && isCompleteDbAnalysis(rows[0] as unknown as DisclosureRow)) return;
   } catch { /* 무시 */ }
 
   // jp: 분석 실행 (결과는 analyzeByReceiptNo 내부에서 캐싱됨)
