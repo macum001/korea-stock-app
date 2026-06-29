@@ -68,9 +68,9 @@ export function DisclosureFilterBar({ filter, onChange }: DisclosureFilterBarPro
               className="px-4 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap flex-shrink-0"
               style={{
                 background: active
-                  ? (isAll ? '#A78BFA' : ACTIVE_BG[id])
+                  ? (isAll ? '#ffffff' : ACTIVE_BG[id])
                   : 'var(--bg-elevated)',
-                color: active ? (isAll ? '#1a1530' : '#ffffff') : 'var(--text-secondary)',
+                color: active ? (isAll ? '#000000' : '#ffffff') : 'var(--text-secondary)',
                 border: active ? '1px solid transparent' : '1px solid var(--border)',
               }}
             >

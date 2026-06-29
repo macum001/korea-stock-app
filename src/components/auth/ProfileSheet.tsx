@@ -88,7 +88,7 @@ function ViewMode({ profile, nickname, onEditNickname, onEditPassword, onLogout 
         style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
         <span className="w-8 h-8 rounded-[10px] flex items-center justify-center flex-shrink-0"
           style={{ background: 'var(--accent-bg)' }}>
-          <Pencil size={16} style={{ color: 'var(--purple2, #A78BFA)' }} />
+          <Pencil size={16} style={{ color: 'var(--purple2, #ffffff)' }} />
         </span>
         <span className="text-sm font-normal flex-1 text-left" style={{ color: 'var(--text-primary)' }}>닉네임 변경</span>
         <ChevronRight size={16} style={{ color: 'var(--text-tertiary)' }} />
@@ -98,7 +98,7 @@ function ViewMode({ profile, nickname, onEditNickname, onEditPassword, onLogout 
         style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
         <span className="w-8 h-8 rounded-[10px] flex items-center justify-center flex-shrink-0"
           style={{ background: 'var(--accent-bg)' }}>
-          <KeyRound size={16} style={{ color: 'var(--purple2, #A78BFA)' }} />
+          <KeyRound size={16} style={{ color: 'var(--purple2, #ffffff)' }} />
         </span>
         <span className="text-sm font-normal flex-1 text-left" style={{ color: 'var(--text-primary)' }}>비밀번호 변경</span>
         <ChevronRight size={16} style={{ color: 'var(--text-tertiary)' }} />
@@ -107,9 +107,9 @@ function ViewMode({ profile, nickname, onEditNickname, onEditPassword, onLogout 
       {/* jp: 로그아웃 */}
       <button onClick={onLogout}
         className="w-full flex items-center justify-center gap-2 p-3.5 rounded-xl mt-2 active:opacity-70 transition-all"
-        style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.3)' }}>
-        <LogOut size={16} style={{ color: 'var(--fall)' }} />
-        <span className="text-sm font-medium" style={{ color: 'var(--fall)' }}>로그아웃</span>
+        style={{ background: 'rgba(194,98,14,0.10)', border: '1px solid rgba(194,98,14,0.4)' }}>
+        <LogOut size={16} style={{ color: '#c2620e' }} />
+        <span className="text-sm font-medium" style={{ color: '#c2620e' }}>로그아웃</span>
       </button>
     </div>
   );
@@ -159,7 +159,7 @@ function NicknameMode({ current, onDone, onCancel }: { current: string; onDone: 
       <div className="flex gap-2">
         <button onClick={onCancel} className="flex-1 p-3 rounded-xl text-sm font-normal" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>취소</button>
         <button onClick={save} disabled={busy} className="flex-1 p-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5"
-          style={{ background: '#A78BFA', color: '#1a1530' }}>
+          style={{ background: '#ffffff', color: '#000000' }}>
           {busy ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} 저장
         </button>
       </div>
@@ -196,8 +196,8 @@ function PasswordMode({ onDone, onCancel }: { onDone: () => void; onCancel: () =
   if (done) {
     return (
       <div className="flex flex-col items-center py-8 gap-3">
-        <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: '#A78BFA' }}>
-          <Check size={28} color="#1a1530" />
+        <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: '#ffffff' }}>
+          <Check size={28} color="#000000" />
         </div>
         <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>비밀번호가 변경됐어요</p>
       </div>
@@ -227,7 +227,7 @@ function PasswordMode({ onDone, onCancel }: { onDone: () => void; onCancel: () =
       <div className="flex gap-2 mt-1">
         <button onClick={onCancel} className="flex-1 p-3 rounded-xl text-sm font-normal" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>취소</button>
         <button onClick={save} disabled={busy} className="flex-1 p-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1.5"
-          style={{ background: '#A78BFA', color: '#1a1530' }}>
+          style={{ background: '#ffffff', color: '#000000' }}>
           {busy ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} 변경
         </button>
       </div>

@@ -94,7 +94,7 @@ export function NotificationPage({ onBack, onGoToStock, onOpenDisclosure }: Noti
         <div className="flex items-center justify-between mb-[7px]">
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
-              <span className="text-[10px] px-2 py-[3px] rounded-full" style={{ background: 'var(--accent-bg)', color: '#A78BFA' }}>
+              <span className="text-[10px] px-2 py-[3px] rounded-full" style={{ background: 'var(--accent-bg)', color: '#ffffff' }}>
                 안읽음 {unreadCount}개
               </span>
             )}
@@ -118,7 +118,7 @@ export function NotificationPage({ onBack, onGoToStock, onOpenDisclosure }: Noti
         </div>
 
         {/* jp: 탭 한 줄 */}
-        <div className="flex gap-[5px]">
+        <div className="flex gap-[9px]">
           {TABS.map(({ key, label }) => {
             const on = tab === key;
             const cnt = tabUnread[key];
@@ -126,17 +126,17 @@ export function NotificationPage({ onBack, onGoToStock, onOpenDisclosure }: Noti
               <button
                 key={key}
                 onClick={() => setTab(key)}
-                className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold py-[9px] rounded-[10px] transition-all"
+                className="flex-1 flex items-center justify-center gap-1 text-[15px] font-bold p-[16px] rounded-[14px] transition-all"
                 style={{
-                  color: on ? '#1a1530' : 'var(--text-tertiary)',
-                  background: on ? '#A78BFA' : 'transparent',
-                  border: on ? '1px solid #A78BFA' : '1px solid var(--border)',
+                  color: on ? '#000000' : 'var(--text-tertiary)',
+                  background: on ? '#ffffff' : 'transparent',
+                  border: on ? '1px solid #ffffff' : '1px solid var(--border)',
                 }}
               >
                 {label}
                 {cnt > 0 && (
                   <span className="inline-flex items-center justify-center min-w-[14px] h-[14px] px-1 rounded-full text-[8px] font-bold"
-                    style={{ background: on ? 'rgba(26,21,48,0.25)' : 'var(--accent-bg)', color: on ? '#1a1530' : '#A78BFA' }}>
+                    style={{ background: on ? 'rgba(26,21,48,0.25)' : 'var(--accent-bg)', color: on ? '#000000' : '#ffffff' }}>
                     {cnt}
                   </span>
                 )}
@@ -217,7 +217,7 @@ export function NotificationPage({ onBack, onGoToStock, onOpenDisclosure }: Noti
                         </p>
                         {/* jp: 공시 알림 — 펼치면 "관련 공시 분석 보기" 버튼, 접혀있으면 힌트 */}
                         {hasDisclosure && !isExpanded && (
-                          <p className="text-[11px] font-bold mt-1.5 flex items-center gap-1" style={{ color: '#A78BFA' }}>
+                          <p className="text-[11px] font-bold mt-1.5 flex items-center gap-1" style={{ color: '#ffffff' }}>
                             <Sparkles size={11} /> 탭하면 펼쳐보기
                           </p>
                         )}
@@ -225,7 +225,7 @@ export function NotificationPage({ onBack, onGoToStock, onOpenDisclosure }: Noti
                           <button
                             onClick={handleOpenDisclosureClick}
                             className="mt-2.5 inline-flex items-center gap-1.5 text-[12px] font-bold rounded-lg px-3.5 py-2"
-                            style={{ background: '#A78BFA', color: '#1a1530', border: 'none' }}
+                            style={{ background: '#ffffff', color: '#000000', border: 'none' }}
                           >
                             📄 관련 공시 분석 보기
                           </button>
@@ -238,7 +238,7 @@ export function NotificationPage({ onBack, onGoToStock, onOpenDisclosure }: Noti
                         )}
                       </div>
                       <div className="flex flex-col items-center gap-2 flex-shrink-0 pt-1">
-                        {!n.isRead && <span className="w-2 h-2 rounded-full" style={{ background: '#A78BFA' }} />}
+                        {!n.isRead && <span className="w-2 h-2 rounded-full" style={{ background: '#ffffff' }} />}
                         <button
                           onClick={(e) => { e.stopPropagation(); deleteNotification(n.id); }}
                           className="w-6 h-6 flex items-center justify-center rounded-full"

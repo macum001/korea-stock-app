@@ -1,16 +1,16 @@
-:root {
+﻿:root {
   --text: #6b6375;
   --text-h: #08060d;
   --bg: #fff;
   --border: #e5e4e7;
   --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
+  --accent: #e8e8e8;
+  --accent-bg: rgba(0, 0, 0, 0.05);
+  --accent-border: rgba(0, 0, 0, 0.2);
   --social-bg: rgba(244, 243, 236, 0.5);
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-  /* jp: 나눔고딕 (네이버 폰트) - 앱 전체 기본 폰트 */
+  /* jp: ?섎닎怨좊뵓 (?ㅼ씠踰??고듃) - ???꾩껜 湲곕낯 ?고듃 */
   --sans: 'Nanum Gothic', system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: 'Nanum Gothic', system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
@@ -34,9 +34,9 @@
     --bg: #16171d;
     --border: #2e303a;
     --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
+    --accent: #ffffff;
+    --accent-bg: rgba(255, 255, 255, 0.08);
+    --accent-border: rgba(255, 255, 255, 0.22);
     --social-bg: rgba(47, 48, 58, 0.5);
     --shadow:
       rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
@@ -58,7 +58,7 @@
 }
 body {
   margin: 0;
-  /* jp: 앱 전체 기본 폰트 (Tailwind 컴포넌트도 상속) */
+  /* jp: ???꾩껜 湲곕낯 ?고듃 (Tailwind 而댄룷?뚰듃???곸냽) */
   font-family: var(--sans);
 }
 h1,

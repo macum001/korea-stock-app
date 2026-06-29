@@ -52,7 +52,7 @@ export function InvestorVolumeSection({ stockCode }: InvestorVolumeSectionProps)
 
   const INVESTOR_TAB_ITEMS = [
     { label: '개인', value: totalIndividual, color: '#f59e0b' },
-    { label: '외국인', value: totalForeign, color: '#8b5cf6' },
+    { label: '외국인', value: totalForeign, color: '#ffffff' },
     { label: '기관', value: totalInstitution, color: '#10b981' },
   ];
 

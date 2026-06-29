@@ -42,22 +42,22 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
               {isActive && (
                 <span
                   className="absolute top-0 w-9 h-[3px] rounded-b-[5px]"
-                  style={{ background: '#A78BFA', boxShadow: '0 0 10px rgba(167,139,250,0.6)' }}
+                  style={{ background: '#ffffff', boxShadow: '0 0 10px rgba(255,255,255,0.6)' }}
                 />
               )}
 
               {id === 'notifications' ? (
                 // jp: 알림 탭 — AlertBell (미읽음 있으면 흔들림 + 그라데이션)
                 <span
-                  className="w-[44px] h-[34px] rounded-[12px] flex items-center justify-center transition-all"
+                  className="w-[60px] h-[46px] rounded-[14px] flex items-center justify-center transition-all"
                   style={{
-                    background: isActive ? '#A78BFA' : 'transparent',
-                    boxShadow: isActive ? '0 4px 14px rgba(167,139,250,0.35)' : 'none',
+                    background: isActive ? '#ffffff' : 'transparent',
+                    boxShadow: isActive ? '0 4px 14px rgba(255,255,255,0.35)' : 'none',
                   }}
                 >
                   <AlertBell
                     on={hasUnread}
-                    size={22}
+                    size={26}
                     shake={hasUnread}
                     tone={isActive ? 'muted' : hasUnread ? 'gradient' : 'muted'}
                   />
@@ -65,17 +65,17 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
               ) : (
                 // jp: 나머지 탭 — 일반 아이콘
                 <span
-                  className="w-[44px] h-[34px] rounded-[12px] flex items-center justify-center transition-all"
+                  className="w-[60px] h-[46px] rounded-[14px] flex items-center justify-center transition-all"
                   style={{
-                    background: isActive ? '#A78BFA' : 'transparent',
-                    boxShadow: isActive ? '0 4px 14px rgba(167,139,250,0.35)' : 'none',
+                    background: isActive ? '#ffffff' : 'transparent',
+                    boxShadow: isActive ? '0 4px 14px rgba(255,255,255,0.35)' : 'none',
                   }}
                 >
                   {id === 'stocks' && (
-                    <Sparkles size={22} strokeWidth={isActive ? 2.4 : 1.9} color={isActive ? '#1a1530' : 'var(--text-tertiary)'} fill="none" />
+                    <Sparkles size={26} strokeWidth={isActive ? 2.4 : 1.9} color={isActive ? '#000000' : 'var(--text-tertiary)'} fill="none" />
                   )}
                   {id === 'settings' && (
-                    <Settings size={22} strokeWidth={isActive ? 2.4 : 1.9} color={isActive ? '#1a1530' : 'var(--text-tertiary)'} fill="none" />
+                    <Settings size={26} strokeWidth={isActive ? 2.4 : 1.9} color={isActive ? '#000000' : 'var(--text-tertiary)'} fill="none" />
                   )}
                 </span>
               )}

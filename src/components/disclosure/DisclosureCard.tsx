@@ -63,7 +63,7 @@ export function DisclosureCard({ disclosure, onClick, showStock = false }: Discl
           )}
           {freshness === 'new' && (
             <span className="text-[9px] font-black px-1.5 py-0.5 rounded"
-              style={{ background: 'var(--accent)', color: '#fff' }}>NEW</span>
+              style={{ background: 'var(--accent)', color: '#000' }}>NEW</span>
           )}
           <ImportantDisclosureBadge
             importance={disclosure.importance}
@@ -117,7 +117,7 @@ export function DisclosureCard({ disclosure, onClick, showStock = false }: Discl
         {catLabel && (
           <span
             className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-            style={{ background: 'rgba(127,119,221,0.18)', color: '#A78BFA' }}
+            style={{ background: 'rgba(255,255,255,0.18)', color: '#ffffff' }}
           >
             {catLabel}
           </span>
@@ -134,8 +134,8 @@ export function DisclosureCard({ disclosure, onClick, showStock = false }: Discl
       {/* jp: AI 遺꾩꽍 蹂닿린 (以묒슂 怨듭떆留? */}
       {isImportant && (
         <div className="flex items-center gap-1.5 mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--border)' }}>
-          <Sparkles size={12} style={{ color: '#A78BFA' }} />
-          <span className="text-[11px] font-semibold" style={{ color: '#A78BFA' }}>AI 遺꾩꽍 蹂닿린</span>
+          <Sparkles size={12} style={{ color: '#ffffff' }} />
+          <span className="text-[11px] font-semibold" style={{ color: '#ffffff' }}>AI 遺꾩꽍 蹂닿린</span>
         </div>
       )}
     </button>

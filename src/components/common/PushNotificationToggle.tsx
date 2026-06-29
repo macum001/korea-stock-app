@@ -76,7 +76,7 @@ export function PushNotificationToggle() {
         {!on ? (
           <button onClick={handleEnable} disabled={loading || denied}
             className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all active:opacity-70 disabled:opacity-50"
-            style={{ background: 'var(--accent)', color: '#fff' }}>
+            style={{ background: 'var(--accent)', color: '#000' }}>
             {loading ? '설정 중..' : '알림 켜기'}
           </button>
         ) : (

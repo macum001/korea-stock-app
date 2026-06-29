@@ -139,7 +139,7 @@ export function StockSearchModal({ open, onClose, groupId }: StockSearchModalPro
               key={s.code}
               onClick={() => toggle(s)}
               className="flex items-center gap-1.5 text-xs font-bold pl-2.5 pr-2 py-1.5 rounded-lg active:scale-95"
-              style={{ background: '#A78BFA', color: '#1a1530' }}
+              style={{ background: '#ffffff', color: '#000000' }}
             >
               {s.name}
               <X size={12} style={{ opacity: 0.85 }} />
@@ -198,8 +198,8 @@ export function StockSearchModal({ open, onClose, groupId }: StockSearchModalPro
                 <span
                   className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0 text-xs font-bold"
                   style={{
-                    background: already ? 'var(--bg-elevated)' : isPicked ? '#A78BFA' : 'var(--bg-elevated)',
-                    color: already ? 'var(--text-tertiary)' : isPicked ? '#1a1530' : 'var(--text-secondary)',
+                    background: already ? 'var(--bg-elevated)' : isPicked ? '#ffffff' : 'var(--bg-elevated)',
+                    color: already ? 'var(--text-tertiary)' : isPicked ? '#000000' : 'var(--text-secondary)',
                     border: isPicked ? 'none' : '1px solid var(--border)',
                   }}
                 >
@@ -217,7 +217,7 @@ export function StockSearchModal({ open, onClose, groupId }: StockSearchModalPro
           <button
             onClick={handleAddAll}
             className="w-full py-3.5 rounded-2xl text-sm font-extrabold active:scale-[0.99] transition-all"
-            style={{ background: '#A78BFA', color: '#1a1530', boxShadow: '0 8px 24px rgba(167,139,250,0.3)' }}
+            style={{ background: '#ffffff', color: '#000000', boxShadow: '0 8px 24px rgba(255,255,255,0.3)' }}
           >
             {pickedList.length}개 관심종목 추가
           </button>

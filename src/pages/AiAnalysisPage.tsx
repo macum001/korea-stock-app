@@ -33,12 +33,12 @@ import { getDisclosureClassification, ISSUER_LABEL, ISSUER_STYLE } from '@/utils
 import { ChevronDown } from 'lucide-react';
 
 const C = {
-  purple: '#A78BFA',
-  pink: '#A78BFA',
-  green: '#A78BFA',
-  amber: '#A78BFA',
+  purple: '#ffffff',
+  pink: '#ffffff',
+  green: '#ffffff',
+  amber: '#ffffff',
   heroGrad: '#161B22',
-  btnGrad: '#A78BFA',
+  btnGrad: '#ffffff',
 };
 
 type SubTab = 'stock' | 'market' | 'disclosure' | 'news';
@@ -62,16 +62,16 @@ export function AiAnalysisPage({ onOpenDisclosure }: AiAnalysisPageProps) {
     <div style={{ minHeight: 'calc(100dvh - 60px - env(safe-area-inset-bottom))', background: 'var(--bg-primary)' }}>
       {/* jp: 서브탭만 — 타이틀 제거, 한 줄 컴팩트 */}
       <div style={{ background: C.heroGrad, padding: '8px 10px', borderBottom: '0.5px solid var(--border)' }}>
-        <div className="flex gap-[5px]">
+        <div className="flex gap-[9px]">
           {SUB_TABS.map(({ id, label }) => {
             const on = subTab === id;
             return (
               <button key={id} onClick={() => setSubTab(id)}
-                className="flex-1 text-[10px] font-bold py-[9px] rounded-[10px] transition-all"
+                className="flex-1 text-[15px] font-bold p-[16px] rounded-[14px] transition-all"
                 style={{
-                  color: on ? '#1a1530' : 'var(--text-tertiary)',
-                  background: on ? '#A78BFA' : 'transparent',
-                  border: on ? '1px solid #A78BFA' : '1px solid var(--border)',
+                  color: on ? '#000000' : 'var(--text-tertiary)',
+                  background: on ? '#ffffff' : 'transparent',
+                  border: on ? '1px solid #ffffff' : '1px solid var(--border)',
                 }}>
                 {label}
               </button>
@@ -92,11 +92,11 @@ export function AiAnalysisPage({ onOpenDisclosure }: AiAnalysisPageProps) {
 // ===== AI종목분석 =====
 // jp: 예시 색상 풀 - 순환 사용
 const EXAMPLE_STYLES = [
-  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#A78BFA', subColor: 'var(--text-tertiary)' },
-  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#A78BFA', subColor: 'var(--text-tertiary)' },
-  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#A78BFA', subColor: 'var(--text-tertiary)' },
-  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#A78BFA', subColor: 'var(--text-tertiary)' },
-  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#A78BFA', subColor: 'var(--text-tertiary)' },
+  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#ffffff', subColor: 'var(--text-tertiary)' },
+  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#ffffff', subColor: 'var(--text-tertiary)' },
+  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#ffffff', subColor: 'var(--text-tertiary)' },
+  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#ffffff', subColor: 'var(--text-tertiary)' },
+  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#ffffff', subColor: 'var(--text-tertiary)' },
 ];
 
 // jp: 폴백 예시 (API 실패 시)
@@ -155,7 +155,7 @@ function StockTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosure | 
         <button onClick={() => void analyze(input)} disabled={!input.trim() || busy}
           className="w-[50px] rounded-[14px] flex items-center justify-center disabled:opacity-50"
           style={{ background: C.btnGrad }}>
-          <ArrowRight size={16} color="#fff" />
+          <ArrowRight size={16} color="#000" />
         </button>
       </div>
       <p className="text-[10px] flex items-center gap-1 mb-[18px]" style={{ color: 'var(--text-tertiary)' }}>
@@ -205,8 +205,8 @@ function MarketTab() {
             <button key={t} onClick={() => setTab(t)}
               className="flex-1 text-center py-2.5 rounded-[11px] text-[13px] font-extrabold transition-all"
               style={{
-                background: tab === t ? '#A78BFA' : 'transparent',
-                color: tab === t ? '#1a1530' : 'var(--text-secondary)',
+                background: tab === t ? '#ffffff' : 'transparent',
+                color: tab === t ? '#000000' : 'var(--text-secondary)',
               }}>
               {t === 'current' ? '현재 시황' : '과거 기록'}
             </button>
@@ -245,10 +245,10 @@ const CATEGORY_COLORS: Record<string, string> = {
   '투자위험': '#ff5252',
   '지분변동': '#5DCAA5',
   '합병분할': '#5c8aff',
-  '증자감자': '#A78BFA',
+  '증자감자': '#ffffff',
   '실적재무': '#97C459',
   '계약소송': '#e08a5a',
-  '배당주총': '#F472B6',
+  '배당주총': '#9DA7B3',
   '기타': '#888888',
 };
 type DiscCategory = typeof DISCLOSURE_CATEGORIES[number]['key'];
@@ -504,10 +504,10 @@ function DisclosureTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosu
           <div className="px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-between"
             style={{ background: '#2a2640', color: '#fff', border: '1px solid rgba(255,255,255,0.12)' }}>
             <span className="flex items-center gap-2">
-              <Trash2 size={13} style={{ color: '#F472B6' }} />
+              <Trash2 size={13} style={{ color: '#9DA7B3' }} />
               <span>{undoData.name} 삭제됨</span>
             </span>
-            <button onClick={undoRemove} className="font-bold" style={{ color: '#A78BFA' }}>실행취소</button>
+            <button onClick={undoRemove} className="font-bold" style={{ color: '#ffffff' }}>실행취소</button>
           </div>
         </div>
       )}
@@ -517,14 +517,14 @@ function DisclosureTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosu
           <div className="rounded-2xl p-4 text-center"
             style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-border)' }}>
             <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2.5"
-              style={{ background: '#A78BFA' }}>
-              <BellRing size={22} color="#fff" />
+              style={{ background: '#ffffff' }}>
+              <BellRing size={22} color="#000" />
             </div>
             <p className="text-sm font-extrabold mb-1" style={{ color: 'var(--text-primary)' }}>공시 알림을 허용할까요?</p>
             <p className="text-[11px] mb-3" style={{ color: 'var(--text-tertiary)' }}>{permAsk.name} 새 공시가 오면 바로 알려드릴게요</p>
             <button onClick={async () => { const p = { ...permAsk }; setPermAsk(null); await enableAlert(p.code, p.name); }}
               className="w-full py-3 rounded-xl text-sm font-extrabold mb-1.5"
-              style={{ background: '#A78BFA', color: '#1a1530' }}>
+              style={{ background: '#ffffff', color: '#000000' }}>
               알림 허용하기
             </button>
             <button onClick={() => setPermAsk(null)} className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>나중에</button>
@@ -553,7 +553,7 @@ function DisclosureTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosu
                         <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{stock.code}</p>
                       </div>
                       <span className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0 text-[11px] font-bold"
-                        style={{ background: already ? 'var(--bg-elevated)' : '#A78BFA', color: already ? 'var(--text-tertiary)' : '#1a1530' }}>
+                        style={{ background: already ? 'var(--bg-elevated)' : '#ffffff', color: already ? 'var(--text-tertiary)' : '#000000' }}>
                         {already ? '추가됨' : <Plus size={16} />}
                       </span>
                     </button>
@@ -576,11 +576,11 @@ function DisclosureTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosu
                   <div className="flex items-center gap-2.5 p-3 rounded-xl mb-3"
                     style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-border)' }}>
                     <p className="flex-1 text-[11px] leading-snug" style={{ color: 'var(--text-primary)' }}>
-                      <b style={{ color: '#F9A8D4' }}>미리보기</b>로 보고 있어요. 로그인하면 내 종목으로 알림 받을 수 있어요
+                      <b style={{ color: '#ffffff' }}>미리보기</b>로 보고 있어요. 로그인하면 내 종목으로 알림 받을 수 있어요
                     </p>
                     <button onClick={() => setShowLogin(true)}
                       className="flex-shrink-0 text-[11px] font-extrabold px-3 py-2 rounded-lg"
-                      style={{ background: '#A78BFA', color: '#1a1530' }}>
+                      style={{ background: '#ffffff', color: '#000000' }}>
                       로그인
                     </button>
                   </div>
@@ -589,8 +589,8 @@ function DisclosureTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosu
                   {isLoggedIn ? `내 관심종목 ${myStocks.length}개` : '종목별 최신 공시를 AI로 분석해드려요'}
                 </p>
                 {isLoggedIn && myStocks.length > 0 && (
-                  <div className="flex items-center gap-1.5 mb-2 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(167,139,250,0.08)' }}>
-                    <Info size={11} style={{ color: '#A78BFA', flexShrink: 0 }} />
+                  <div className="flex items-center gap-1.5 mb-2 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                    <Info size={11} style={{ color: '#ffffff', flexShrink: 0 }} />
                     <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>종목을 길게 누르면 삭제할 수 있어요</span>
                   </div>
                 )}
@@ -622,8 +622,8 @@ function DisclosureTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosu
                               onPointerUp={() => { if (pressTimer.current) clearTimeout(pressTimer.current); setPressingCode(null); }}
                               onPointerLeave={() => { if (pressTimer.current) clearTimeout(pressTimer.current); setPressingCode(null); }}
                               className="relative flex flex-col items-start justify-center px-2.5 py-2 rounded-xl active:scale-[0.97] transition-all"
-                              style={{ minHeight: 46, background: pressingCode === it.code ? 'rgba(255,82,82,0.18)' : (sel ? 'rgba(167,139,250,0.16)' : 'var(--bg-card)'), border: `1px solid ${pressingCode === it.code ? '#ff5252' : (sel ? '#A78BFA' : 'var(--border)')}` }}>
-                              <span className="text-[12px] font-bold leading-tight truncate w-full text-left" style={{ color: sel ? '#A78BFA' : 'var(--text-primary)', paddingRight: 16 }}>{it.name}</span>
+                              style={{ minHeight: 46, background: pressingCode === it.code ? 'rgba(255,82,82,0.18)' : (sel ? 'rgba(255,255,255,0.16)' : 'var(--bg-card)'), border: `1px solid ${pressingCode === it.code ? '#ff5252' : (sel ? '#ffffff' : 'var(--border)')}` }}>
+                              <span className="text-[14px] font-bold leading-tight truncate w-full text-left" style={{ color: sel ? '#ffffff' : 'var(--text-primary)', paddingRight: 16 }}>{it.name}</span>
                               <span className="text-[9px] leading-tight" style={{ color: 'var(--text-tertiary)' }}>{it.code}</span>
                               <span onClick={(e) => handleToggleAlert(e, it.code, it.name)} className="absolute top-1.5 right-1.5 flex items-center justify-center" aria-label={on ? `${it.name} 알림 끄기` : `${it.name} 알림 켜기`}>
                                 <AlertBell on={!!on} size={15} />
@@ -636,7 +636,7 @@ function DisclosureTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosu
                       {pages.length > 1 && (
                         <div className="flex items-center justify-center gap-1.5 mt-2.5">
                           {pages.map((_, i) => (
-                            <button key={i} onClick={() => setChipPage(i)} aria-label={`${i + 1}페이지`} className="transition-all" style={{ height: 6, width: i === pg ? 16 : 6, borderRadius: 3, background: i === pg ? '#A78BFA' : 'var(--border)', border: 'none', padding: 0 }} />
+                            <button key={i} onClick={() => setChipPage(i)} aria-label={`${i + 1}페이지`} className="transition-all" style={{ height: 6, width: i === pg ? 16 : 6, borderRadius: 3, background: i === pg ? '#ffffff' : 'var(--border)', border: 'none', padding: 0 }} />
                           ))}
                           <span className="text-[9px] ml-1" style={{ color: 'var(--text-tertiary)' }}>{pg + 1}/{pages.length}</span>
                         </div>
@@ -660,7 +660,7 @@ function DisclosureTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosu
               return (
                 <button key={k} onClick={() => { setFeedMode(k); setSelectedStock(null); }}
                   className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[12px] font-bold active:scale-[0.99] transition-all"
-                  style={{ color: on ? '#A78BFA' : 'var(--text-tertiary)', background: on ? 'rgba(127,119,221,0.14)' : 'transparent', border: on ? '1px solid rgba(127,119,221,0.4)' : '1px solid var(--border)' }}>
+                  style={{ color: on ? '#ffffff' : 'var(--text-tertiary)', background: on ? 'rgba(255,255,255,0.14)' : 'transparent', border: on ? '1px solid rgba(255,255,255,0.4)' : '1px solid var(--border)' }}>
                   <Icon size={13} /> {label}
                 </button>
               );
@@ -672,7 +672,7 @@ function DisclosureTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosu
             {DISCLOSURE_CATEGORIES.map((c) => {
               const on = category === c.key;
               const isRisk = c.key === '투자위험';
-              const catColor = CATEGORY_COLORS[c.key] || '#A78BFA';
+              const catColor = CATEGORY_COLORS[c.key] || '#ffffff';
               return (
                 <button key={c.key} onClick={() => setCategory(c.key)}
                   className="flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold active:scale-95 transition-all whitespace-nowrap"
@@ -709,7 +709,7 @@ function DisclosureTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosu
                       style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderLeft: catColor ? `3px solid ${catColor}` : '1px solid var(--border)' }}>
                       <div className="px-3 py-2.5">
                         {/* jp: 시장 배지 (코스피/코스닥) — 회사명 위 좌측 고정 */}
-                        {cls && (cls.issuerType === 'kospi' || cls.issuerType === 'kosdaq' || cls.issuerType === 'konex') && (
+                        {cls && (cls.issuerType === 'kospi' || cls.issuerType === 'kosdaq' || cls.issuerType === 'konex' || cls.issuerType === 'unlisted') && (
                           <div className="mb-1">
                             <span className="inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded"
                               style={{ background: ISSUER_STYLE[cls.issuerType].bg, color: ISSUER_STYLE[cls.issuerType].color }}>
@@ -718,7 +718,7 @@ function DisclosureTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosu
                           </div>
                         )}
                         <div className="flex items-center justify-between gap-2 mb-1">
-                          <span className="text-[13px] font-bold truncate" style={{ color: 'var(--text-primary)' }}>{d.stockName}</span>
+                          <span className="text-[14px] font-bold truncate" style={{ color: 'var(--text-primary)' }}>{d.stockName}</span>
                           <span className="flex items-center gap-1.5 flex-shrink-0">
                             {/* jp: 주석검색 가능 배지 — 실적재무 배지 좌측 고정 */}
                             {hasNotes && (
@@ -727,7 +727,6 @@ function DisclosureTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosu
                                 {'\uD83D\uDCC4 \uC8FC\uC11D\uAC80\uC0C9'}
                               </span>
                             )}
-                            {catColor && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${catColor}29`, color: catColor }}>{catType}</span>}
                             <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{d.disclosedAt?.slice(0, 10).replace(/-/g, '.')}</span>
                           </span>
                         </div>
@@ -756,13 +755,13 @@ function DisclosureTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosu
             position: 'fixed', right: 16,
             bottom: 'calc(72px + env(safe-area-inset-bottom))',
             width: 44, height: 44, borderRadius: '50%',
-            background: 'var(--accent, #A78BFA)', border: 'none',
+            background: 'var(--accent, #ffffff)', border: 'none',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 14px rgba(167,139,250,0.45)',
+            boxShadow: '0 4px 14px rgba(255,255,255,0.45)',
             cursor: 'pointer', zIndex: 40,
           }}
         >
-          <ArrowUp size={20} color="#fff" strokeWidth={2.6} />
+          <ArrowUp size={20} color="#000" strokeWidth={2.6} />
         </button>
       )}
     </div>
@@ -771,12 +770,12 @@ function DisclosureTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosu
 
 // ===== 종목뉴스 =====
 const CATEGORY_RULES: { label: string; bg: string; color: string; keywords: string[] }[] = [
-  { label: '반도체', bg: 'rgba(219,39,119,0.15)', color: '#F9A8D4', keywords: ['반도체','HBM','파운드리','D램','낸드','TSMC','삼성전자','SK하이닉스','마이크론','엔비디아'] },
-  { label: '바이오', bg: 'rgba(127,119,221,0.15)', color: '#A78BFA', keywords: ['바이오','제약','임상','허가','FDA','항암','신약','셀트리온','삼성바이오','에이치엘비'] },
-  { label: '2차전지', bg: 'rgba(74,222,128,0.13)', color: '#4ADE80', keywords: ['2차전지','배터리','IRA','LG에너지','삼성SDI','SK온','양극재','음극재','전고체'] },
-  { label: '자동차', bg: 'rgba(251,191,36,0.13)', color: '#FBBF24', keywords: ['자동차','현대차','기아','전기차','EV','완성차','모빌리티','IPO','자율주행'] },
-  { label: 'AI·플랫폼', bg: 'rgba(127,119,221,0.1)', color: '#A78BFA', keywords: ['AI','인공지능','플랫폼','카카오','네이버','광고','데이터','클라우드','소프트웨어'] },
-  { label: '에너지', bg: 'rgba(251,191,36,0.1)', color: '#FBBF24', keywords: ['에너지','태양광','풍력','원전','수소','LS','한화','두산'] },
+  { label: '반도체', bg: 'rgba(219,39,119,0.15)', color: '#ffffff', keywords: ['반도체','HBM','파운드리','D램','낸드','TSMC','삼성전자','SK하이닉스','마이크론','엔비디아'] },
+  { label: '바이오', bg: 'rgba(255,255,255,0.15)', color: '#ffffff', keywords: ['바이오','제약','임상','허가','FDA','항암','신약','셀트리온','삼성바이오','에이치엘비'] },
+  { label: '2차전지', bg: 'rgba(74,222,128,0.13)', color: '#9DA7B3', keywords: ['2차전지','배터리','IRA','LG에너지','삼성SDI','SK온','양극재','음극재','전고체'] },
+  { label: '자동차', bg: 'rgba(194,98,14,0.13)', color: '#e8893f', keywords: ['자동차','현대차','기아','전기차','EV','완성차','모빌리티','IPO','자율주행'] },
+  { label: 'AI·플랫폼', bg: 'rgba(255,255,255,0.1)', color: '#ffffff', keywords: ['AI','인공지능','플랫폼','카카오','네이버','광고','데이터','클라우드','소프트웨어'] },
+  { label: '에너지', bg: 'rgba(194,98,14,0.1)', color: '#e8893f', keywords: ['에너지','태양광','풍력','원전','수소','LS','한화','두산'] },
   { label: '금융', bg: 'rgba(59,130,246,0.13)', color: '#93C5FD', keywords: ['금융','은행','증권','보험','카드','금리','채권','주가'] },
 ];
 
@@ -857,7 +856,7 @@ function NewsTab() {
         <button onClick={() => void search(query)} disabled={!query.trim() || busy}
           className="w-[50px] rounded-[14px] flex items-center justify-center disabled:opacity-50"
           style={{ background: C.btnGrad }}>
-          <Search size={16} color="#fff" />
+          <Search size={16} color="#000" />
         </button>
       </div>
       <p className="text-[10px] flex items-center gap-1 mb-[18px]" style={{ color: 'var(--text-tertiary)' }}>
@@ -924,7 +923,7 @@ function StockResultCard({ result, onOpenDisclosure }: { result: StockAnalysisRe
           </div>
         )}
       </div>
-      <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(127,119,221,0.12)', border: '1px solid rgba(127,119,221,0.25)' }}>
+      <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)' }}>
         <p className="text-[13px] leading-[1.6]" style={{ color: 'var(--text-primary)' }}>{analysis.summary}</p>
       </div>
       {analysis.detail && <p className="text-[12px] leading-[1.6] mb-3" style={{ color: 'var(--text-secondary)' }}>{analysis.detail}</p>}
@@ -979,8 +978,8 @@ function LoadingDots({ text }: { text: string }) {
 
 function ErrorBox({ msg, onClose }: { msg: string; onClose: () => void }) {
   return (
-    <div className="rounded-[16px] p-3.5 mb-3 flex items-start gap-2" style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.25)' }}>
-      <Info size={16} color="#F87171" style={{ flexShrink: 0, marginTop: 1 }} />
+    <div className="rounded-[16px] p-3.5 mb-3 flex items-start gap-2" style={{ background: 'rgba(194,98,14,0.12)', border: '1px solid rgba(194,98,14,0.25)' }}>
+      <Info size={16} color="#e8893f" style={{ flexShrink: 0, marginTop: 1 }} />
       <span className="text-[13px] flex-1" style={{ color: 'var(--text-primary)' }}>{msg}</span>
       <button onClick={onClose}><X size={15} color="var(--text-tertiary)" /></button>
     </div>

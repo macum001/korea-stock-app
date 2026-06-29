@@ -82,7 +82,7 @@ export function StockHistoryCard({ result, onOpenDisclosure }: Props) {
 
       {/* 요약 */}
       {analysis.summary && (
-        <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(127,119,221,0.12)', border: '1px solid rgba(127,119,221,0.25)' }}>
+        <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)' }}>
           <p className="text-[13px] leading-[1.6]" style={{ color: 'var(--text-primary)' }}>{analysis.summary}</p>
         </div>
       )}
@@ -159,11 +159,11 @@ export function StockHistoryCard({ result, onOpenDisclosure }: Props) {
 
       {/* 지켜볼 사항 */}
       {watchPoints.length > 0 && (
-        <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)' }}>
-          <p className="text-[11px] mb-2 font-semibold" style={{ color: '#A78BFA' }}>👀 지켜볼 사항</p>
+        <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)' }}>
+          <p className="text-[11px] mb-2 font-semibold" style={{ color: '#ffffff' }}>👀 지켜볼 사항</p>
           {watchPoints.map((w, i) => (
             <div key={i} className="flex items-start gap-1.5 mb-1 last:mb-0">
-              <span style={{ color: '#A78BFA', marginTop: 2 }}>·</span>
+              <span style={{ color: '#ffffff', marginTop: 2 }}>·</span>
               <p className="text-[11px] leading-[1.5]" style={{ color: 'var(--text-secondary)' }}>{w}</p>
             </div>
           ))}

@@ -82,15 +82,15 @@ export function GuestLockedCard({ briefing, onSignupClick }: Props) {
           {/* jp: 자물쇠 + 가입 버튼 오버레이 - ★ 이색적으로 */}
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5">
             <div className="w-12 h-12 rounded-[14px] flex items-center justify-center"
-              style={{ background: '#A78BFA', boxShadow: '0 8px 24px rgba(167,139,250,0.35)' }}>
-              <Lock size={20} style={{ color: '#1a1530' }} />
+              style={{ background: '#ffffff', boxShadow: '0 8px 24px rgba(255,255,255,0.35)' }}>
+              <Lock size={20} style={{ color: '#000000' }} />
             </div>
             <p className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>
               전체 분석은 회원만 볼 수 있어요
             </p>
             <button onClick={onSignupClick}
               className="text-[13px] font-extrabold px-5 py-2.5 rounded-[14px] active:scale-95 transition-transform"
-              style={{ background: '#A78BFA', color: '#1a1530', boxShadow: '0 10px 28px rgba(167,139,250,0.32)' }}>
+              style={{ background: '#ffffff', color: '#000000', boxShadow: '0 10px 28px rgba(255,255,255,0.32)' }}>
               ✦ 회원가입하고 전체 보기
             </button>
           </div>

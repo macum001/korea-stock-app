@@ -16,7 +16,7 @@ interface ToggleProps { on: boolean }
 function ToggleUI({ on }: ToggleProps) {
   return (
     <span className="relative inline-block w-[42px] h-[24px] rounded-full transition-all"
-      style={{ background: on ? '#A78BFA' : 'var(--border)', flexShrink: 0 }}>
+      style={{ background: 'var(--border)', flexShrink: 0 }}>
       <span className="absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white transition-all"
         style={{ left: on ? '21px' : '3px' }} />
     </span>
@@ -38,13 +38,13 @@ function SettingRow({ icon, label, right, onClick, danger = false, noBorder = fa
       style={{
         background: 'var(--bg-elevated)',
         borderBottom: noBorder ? 'none' : '1px solid var(--border-subtle)',
-        color: danger ? 'var(--fall)' : 'var(--text-primary)',
+        color: danger ? '#c2620e' : 'var(--text-primary)',
         cursor: onClick ? 'pointer' : 'default',
         width: '100%',
       }}
       onClick={onClick}
     >
-      <span style={{ color: danger ? 'var(--fall)' : 'var(--text-tertiary)', flexShrink: 0 }}>{icon}</span>
+      <span style={{ color: danger ? '#c2620e' : 'var(--text-tertiary)', flexShrink: 0 }}>{icon}</span>
       <span className="flex-1 text-[14px]">{label}</span>
       {right}
     </button>
@@ -121,7 +121,7 @@ function NicknameForm({ currentNickname, onCancel, onSuccess }: NicknameFormProp
           취소
         </button>
         <button onClick={submit} disabled={!ok || busy}
-          style={{ flex: 1, padding: '10px 0', borderRadius: 10, fontSize: 13, fontWeight: 700, background: '#A78BFA', color: '#1a1530', border: 'none', opacity: !ok || busy ? 0.5 : 1, cursor: !ok || busy ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+          style={{ flex: 1, padding: '10px 0', borderRadius: 10, fontSize: 13, fontWeight: 700, background: '#ffffff', color: '#000000', border: 'none', opacity: !ok || busy ? 0.5 : 1, cursor: !ok || busy ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
           {busy ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={14} />}
           변경
         </button>
@@ -203,7 +203,7 @@ function PasswordForm({ onCancel, onSuccess }: PasswordFormProps) {
           취소
         </button>
         <button onClick={submit} disabled={!ok || busy}
-          style={{ flex: 1, padding: '10px 0', borderRadius: 10, fontSize: 13, fontWeight: 700, background: '#A78BFA', color: '#1a1530', border: 'none', opacity: !ok || busy ? 0.5 : 1, cursor: !ok || busy ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+          style={{ flex: 1, padding: '10px 0', borderRadius: 10, fontSize: 13, fontWeight: 700, background: '#ffffff', color: '#000000', border: 'none', opacity: !ok || busy ? 0.5 : 1, cursor: !ok || busy ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
           {busy ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={14} />}
           변경
         </button>

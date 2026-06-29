@@ -8,7 +8,7 @@ import { AnalysisResultCard } from '@/components/ai/AnalysisResultCard';
 
 // jp: 분류 색상
 const CATEGORY_COLOR: Record<string, string> = {
-  capital: '#8b5cf6', good: '#10b981', bad: '#ff5252', important: '#f59e0b', general: '#9898a8',
+  capital: '#ffffff', good: '#10b981', bad: '#ff5252', important: '#f59e0b', general: '#9898a8',
 };
 
 function relativeTime(iso: string): string {

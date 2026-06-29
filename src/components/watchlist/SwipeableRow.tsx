@@ -122,7 +122,7 @@ export function SwipeableRow({
         <button
           onClick={() => act(onMemo)}
           className="flex flex-col items-center justify-center gap-1"
-          style={{ width: ACTION_WIDTH, background: '#8b5cf6', color: '#fff' }}
+          style={{ width: ACTION_WIDTH, background: '#ffffff', color: '#000' }}
         >
           <Pencil size={18} />
           <span className="text-[11px] font-bold">메모</span>

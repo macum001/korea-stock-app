@@ -21,7 +21,7 @@ export const DEFAULT_CHART_CONFIG: ChartConfig = {
   colorScheme: 'korea',
 };
 
-const MA_COLORS: Record<number, string> = { 5: '#f59e0b', 20: '#8b5cf6', 60: '#10b981', 120: '#3b82f6' };
+const MA_COLORS: Record<number, string> = { 5: '#f59e0b', 20: '#ffffff', 60: '#10b981', 120: '#3b82f6' };
 
 interface Props {
   config: ChartConfig;

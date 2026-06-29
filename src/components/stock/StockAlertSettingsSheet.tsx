@@ -21,7 +21,7 @@ const DISCLOSURE_TYPES: {
 }[] = [
   { key: 'alertAll',       label: '모든 공시',   desc: '해당 종목의 모든 공시 알림',                    icon: FileText,      color: 'var(--text-secondary)' },
   { key: 'alertImportant', label: '중요 공시',   desc: '투자 판단에 영향이 큰 공시',                     icon: Star,          color: '#f59e0b' },
-  { key: 'alertCapital',   label: '자본조달 공시', desc: '유상증자, CB, BW, EB, RCPS 등 자금조달 관련',    icon: Coins,         color: '#8b5cf6' },
+  { key: 'alertCapital',   label: '자본조달 공시', desc: '유상증자, CB, BW, EB, RCPS 등 자금조달 관련',    icon: Coins,         color: '#ffffff' },
   { key: 'alertGood',      label: '호재 공시',   desc: '자사주, 수주, 계약, 배당, 실적개선 등 긍정 공시', icon: TrendingUp,    color: '#10b981' },
   { key: 'alertBad',       label: '악재 공시',   desc: '횡령, 배임, 감사의견, 상장폐지, 거래정지 등',     icon: AlertTriangle, color: 'var(--fall)' },
 ];

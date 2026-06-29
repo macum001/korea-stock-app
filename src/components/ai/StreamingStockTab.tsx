@@ -14,12 +14,12 @@ import { useAuthStore } from '@/store/authStore';
 import { apiClient } from '@/services/apiClient';
 
 const C = {
-  purple: '#A78BFA',
-  pink: '#A78BFA',
-  green: '#A78BFA',
-  amber: '#A78BFA',
+  purple: '#ffffff',
+  pink: '#ffffff',
+  green: '#ffffff',
+  amber: '#ffffff',
   heroGrad: '#161B22',
-  btnGrad: '#A78BFA',
+  btnGrad: '#ffffff',
 };
 
 const FALLBACK_EXAMPLES = [
@@ -70,19 +70,19 @@ function StreamingCard({
       {!isDone && (
         <div
           className="relative overflow-hidden rounded-[14px] mb-2 px-4 py-5 flex flex-col items-center text-center"
-          style={{ background: 'rgba(127,119,221,0.08)', border: `1px solid ${C.purple}4d` }}
+          style={{ background: 'rgba(255,255,255,0.08)', border: `1px solid ${C.purple}4d` }}
         >
           {/* 빛 스윕 */}
           <div
             className="absolute top-0 h-full"
-            style={{ left: '-40%', width: '40%', background: 'linear-gradient(90deg,transparent,rgba(167,139,250,0.18),transparent)', animation: 'aiSweep 1.8s linear infinite' }}
+            style={{ left: '-40%', width: '40%', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)', animation: 'aiSweep 1.8s linear infinite' }}
           />
           {/* 확산 링 + 코어 */}
           <div className="relative mb-3" style={{ width: 50, height: 50 }}>
             <div className="absolute inset-0 rounded-full" style={{ border: `2px solid ${C.purple}`, animation: 'aiRing 1.6s ease-out infinite' }} />
-            <div className="absolute inset-0 rounded-full" style={{ border: '2px solid rgba(167,139,250,0.4)', animation: 'aiRing 1.6s ease-out infinite', animationDelay: '0.8s' }} />
-            <div className="absolute rounded-full flex items-center justify-center" style={{ inset: 14, background: '#A78BFA' }}>
-              <Sparkles size={16} color="#fff" />
+            <div className="absolute inset-0 rounded-full" style={{ border: '2px solid rgba(255,255,255,0.4)', animation: 'aiRing 1.6s ease-out infinite', animationDelay: '0.8s' }} />
+            <div className="absolute rounded-full flex items-center justify-center" style={{ inset: 14, background: '#ffffff' }}>
+              <Sparkles size={16} color="#000" />
             </div>
           </div>
           <p className="relative text-[14px] font-bold" style={{ color: 'var(--text-primary)' }}>AI 분석 진행 중</p>
@@ -195,11 +195,11 @@ export function StreamingStockTab({
         <button
           onClick={() => isLoading ? reset() : void handleAnalyze(input)}
           className="w-[50px] rounded-[14px] flex items-center justify-center"
-          style={{ background: isLoading ? 'rgba(127,119,221,0.3)' : C.btnGrad }}
+          style={{ background: isLoading ? 'rgba(255,255,255,0.3)' : C.btnGrad }}
         >
           {isLoading
             ? <X size={16} color={C.purple} />
-            : <ArrowRight size={16} color="#fff" />
+            : <ArrowRight size={16} color="#000" />
           }
         </button>
       </div>
@@ -226,10 +226,10 @@ export function StreamingStockTab({
               { emoji: '⚠️', title: '조심할 것', sub: '리스크 요인' },
               { emoji: '👀', title: '지켜볼 사항', sub: '주목 포인트' },
             ].map((f) => (
-              <div key={f.title} className="rounded-[10px] p-3" style={{ background: 'var(--bg-secondary)' }}>
+              <div key={f.title} className="rounded-[10px] p-3" style={{ background: '#c2620e' }}>
                 <p className="text-[15px] mb-1">{f.emoji}</p>
-                <p className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>{f.title}</p>
-                <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{f.sub}</p>
+                <p className="text-[13px] font-semibold" style={{ color: '#ffffff' }}>{f.title}</p>
+                <p className="text-[11px] mt-0.5" style={{ color: '#ffe0bf' }}>{f.sub}</p>
               </div>
             ))}
           </div>
@@ -247,7 +247,7 @@ export function StreamingStockTab({
               ].map((step, i) => (
                 <div key={i} className="flex gap-2.5 items-start">
                   <span className="flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-white"
-                    style={{ width: 20, height: 20, borderRadius: '50%', background: C.purple }}>{i + 1}</span>
+                    style={{ width: 20, height: 20, borderRadius: '50%', background: '#c2620e' }}>{i + 1}</span>
                   <p className="text-[13px] leading-[1.6]" style={{ color: 'var(--text-secondary)' }}>{step}</p>
                 </div>
               ))}
@@ -262,7 +262,7 @@ export function StreamingStockTab({
                 key={ex.text}
                 onClick={() => setInput(ex.text)}
                 className="rounded-[10px] px-3.5 py-3 flex items-center justify-between text-left active:opacity-70"
-                style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.3)' }}
+                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)' }}
               >
                 <div>
                   <p className="text-[13px]" style={{ color: 'var(--text-primary)' }}>{ex.text}</p>
@@ -289,8 +289,8 @@ export function StreamingStockTab({
 
       {/* jp: 오류 */}
       {state.status === 'error' && (
-        <div className="rounded-[16px] p-3.5 mb-3 flex items-start gap-2" style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.25)' }}>
-          <Info size={16} color="#F87171" style={{ flexShrink: 0, marginTop: 1 }} />
+        <div className="rounded-[16px] p-3.5 mb-3 flex items-start gap-2" style={{ background: 'rgba(194,98,14,0.12)', border: '1px solid rgba(194,98,14,0.25)' }}>
+          <Info size={16} color="#e8893f" style={{ flexShrink: 0, marginTop: 1 }} />
           <span className="text-[13px] flex-1" style={{ color: 'var(--text-primary)' }}>{state.error}</span>
           <button onClick={reset}><X size={15} color="var(--text-tertiary)" /></button>
         </div>
@@ -299,7 +299,7 @@ export function StreamingStockTab({
       {/* jp: 멀티턴 맥락 표시 */}
       {conversationContext && state.status === 'idle' && (
         <div className="flex items-center justify-between rounded-xl px-3 py-2 mb-3"
-          style={{ background: 'rgba(127,119,221,0.1)', border: '1px solid rgba(127,119,221,0.2)' }}>
+          style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
           <p className="text-[11px]" style={{ color: C.purple }}>
             💬 이전 대화 이어서 질문할 수 있어요
           </p>
@@ -371,7 +371,7 @@ function StockResultCard({
   const up = price ? price.change > 0 : false;
   const down = price ? price.change < 0 : false;
   const priceColor = up ? 'var(--rise)' : down ? 'var(--fall)' : 'var(--text-tertiary)';
-  const impactColor = analysis.impact === 'positive' ? '#4ADE80' : analysis.impact === 'negative' ? '#F87171' : 'var(--text-tertiary)';
+  const impactColor = analysis.impact === 'positive' ? '#9DA7B3' : analysis.impact === 'negative' ? '#e8893f' : 'var(--text-tertiary)';
 
   return (
     <div className="rounded-[16px] p-4 mb-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
@@ -413,7 +413,7 @@ function StockResultCard({
 
       {/* jp: 요약 */}
       {safe(analysis.summary) && (
-        <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(127,119,221,0.12)', border: '1px solid rgba(127,119,221,0.25)' }}>
+        <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)' }}>
           <p className="text-[14px] leading-[1.7] font-semibold" style={{ color: 'var(--text-primary)' }}>{safe(analysis.summary)}</p>
         </div>
       )}
@@ -496,7 +496,7 @@ function StockResultCard({
 
       {/* jp: 지켜볼 사항 */}
       {watchPoints.length > 0 && (
-        <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)' }}>
+        <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)' }}>
           <p className="text-[14px] mb-2 font-semibold flex items-center gap-1" style={{ color: C.purple }}>
             👀 지켜볼 사항
           </p>
@@ -537,7 +537,7 @@ function StockResultCard({
           <button
             onClick={onFollowUp}
             className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold"
-            style={{ background: C.btnGrad, color: '#fff' }}
+            style={{ background: C.btnGrad, color: '#000' }}
           >
             💬 이어서 질문하기
           </button>

@@ -28,7 +28,7 @@ export const NOTIFICATION_CONFIG: Record<
   price_down:           { emoji: '📉', color: '#5c8aff' },
   change_rate:          { emoji: '⚡', color: '#f59e0b' },
   volume_surge:         { emoji: '🔥', color: '#f97316' },
-  disclosure:           { emoji: '📋', color: '#8b5cf6' },
+  disclosure:           { emoji: '📋', color: '#ffffff' },
   important_disclosure: { emoji: '🚨', color: '#ff5252' },
   system:               { emoji: '🔔', color: '#9898a8' },
 };
@@ -43,7 +43,7 @@ export const DISCLOSURE_BADGE: Record<
   DisclosureCategory,
   { label: string; color: string; bg: string }
 > = {
-  capital:   { label: '자본조달', color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)' },
+  capital:   { label: '자본조달', color: '#ffffff', bg: 'rgba(255,255,255,0.15)' },
   good:      { label: '호재',     color: '#10b981', bg: 'rgba(16,185,129,0.15)' },
   bad:       { label: '악재',     color: '#ff5252', bg: 'rgba(255,82,82,0.15)' },
   important: { label: '중요',     color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },

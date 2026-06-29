@@ -239,8 +239,8 @@ function splitParagraphs(text: string): string[] {
 
 // jp: 자본금 방향 스타일
 function directionStyle(direction: 'up' | 'down' | 'neutral'): { color: string; bg: string } {
-  if (direction === 'up')   return { color: '#A78BFA', bg: 'rgba(255,255,255,0.04)' };
-  if (direction === 'down') return { color: '#A78BFA', bg: 'rgba(255,255,255,0.04)' };
+  if (direction === 'up')   return { color: '#ffffff', bg: 'rgba(255,255,255,0.04)' };
+  if (direction === 'down') return { color: '#ffffff', bg: 'rgba(255,255,255,0.04)' };
   return { color: 'var(--text-secondary)', bg: 'rgba(255,255,255,0.05)' };
 }
 
@@ -264,7 +264,7 @@ function normalize(r: AiResultRaw) {
 function impactStyle(level: string): { bg: string; color: string } {
   if (level.includes('긍정') || level.includes('호재')) return { bg: 'var(--rise-bg)', color: 'var(--rise)' };
   if (level.includes('부정') || level.includes('악재')) return { bg: 'var(--fall-bg)', color: 'var(--fall)' };
-  return { bg: 'rgba(127,119,221,0.15)', color: '#A78BFA' };
+  return { bg: 'rgba(255,255,255,0.15)', color: '#ffffff' };
 }
 
 function EmptyTab({ text }: { text: string }) {
@@ -283,10 +283,10 @@ function SectionCard({ icon, title, year, children }: {
   return (
     <div className="mt-3 rounded-2xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
       <div className="flex items-center gap-2 px-3.5 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
-        <span style={{ color: '#A78BFA' }}>{icon}</span>
+        <span style={{ color: '#ffffff' }}>{icon}</span>
         <span className="text-[12px] font-bold" style={{ color: 'var(--text-primary)' }}>{title}</span>
         {year && (
-          <span className="text-[9px] px-1.5 py-0.5 rounded ml-auto" style={{ background: 'rgba(127,119,221,0.12)', color: 'var(--text-tertiary)' }}>{year}년</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded ml-auto" style={{ background: 'rgba(255,255,255,0.12)', color: 'var(--text-tertiary)' }}>{year}년</span>
         )}
       </div>
       {children}
@@ -324,24 +324,24 @@ function FinancialsVisual({ fin, summary, creditRating, segments, extras }: {
     if (cNet < 0 && sNet > 0) note = fsTab === 'cfs' ? '연결 적자 — 종속회사 손실이 반영됐어요. 개별 탭에선 흑자예요.' : '개별 흑자 — 본사 기준 이익이에요. 연결 탭에선 종속회사 손실이 반영돼요.';
     else if (cNet > 0 && sNet < 0) note = fsTab === 'cfs' ? '연결 흑자 — 종속회사 이익이 반영됐어요. 개별 탭에선 적자예요.' : '개별 적자 — 본사 기준 손실이에요. 연결 탭에선 흑자예요.';
   }
-  const SEG_COLORS = ['#A78BFA', '#8B7BE0', '#6E62C0', '#9D8AE8', '#7A6DCC'];
+  const SEG_COLORS = ['#ffffff', '#c0c0c0', '#777777', '#e0e0e0', '#999999'];
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
       <div className="flex items-center gap-2 px-3.5 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
-        <TrendingUp size={13} style={{ color: '#A78BFA' }} />
+        <TrendingUp size={13} style={{ color: '#ffffff' }} />
         <span className="text-[12px] font-extrabold" style={{ color: 'var(--text-primary)' }}>재무 핵심</span>
         {fin.year && <span className="text-[9px] px-1.5 py-0.5 rounded ml-auto" style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text-tertiary)' }}>{fin.year} {fin.reportName}</span>}
       </div>
       {summary && (
-        <div className="mx-3.5 mt-3 mb-2 px-3 py-2.5 rounded-xl" style={{ background: 'rgba(127,119,221,0.10)', border: '1px solid rgba(127,119,221,0.25)' }}>
+        <div className="mx-3.5 mt-3 mb-2 px-3 py-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.25)' }}>
           <span className="text-[12px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            <span className="font-bold" style={{ color: '#A78BFA' }}>핵심</span> · {summary}
+            <span className="font-bold" style={{ color: '#ffffff' }}>핵심</span> · {summary}
           </span>
         </div>
       )}
       {creditRating && creditRating.grade && (
         <div className="mx-3.5 mb-2 px-3 py-2.5 rounded-xl flex items-center gap-2.5" style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}>
-          <div className="rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 38, height: 38, background: 'rgba(167,139,250,0.18)', fontSize: 14, fontWeight: 800, color: '#A78BFA' }}>{creditRating.grade}</div>
+          <div className="rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 38, height: 38, background: 'rgba(255,255,255,0.18)', fontSize: 14, fontWeight: 800, color: '#ffffff' }}>{creditRating.grade}</div>
           <div className="flex-1 min-w-0">
             <div className="text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>신용등급 {creditRating.grade}</div>
             {creditRating.agency && <div className="text-[9px] truncate" style={{ color: 'var(--text-tertiary)' }}>{creditRating.agency}</div>}
@@ -351,9 +351,9 @@ function FinancialsVisual({ fin, summary, creditRating, segments, extras }: {
       {hasBoth && (
         <div className="mx-3.5 mt-1 mb-2.5 p-[3px] rounded-xl flex gap-[3px]" style={{ background: 'rgba(255,255,255,0.04)' }}>
           <button onClick={() => setFsTab('cfs')} className="flex-1 py-1.5 rounded-lg text-[11px] font-bold active:scale-95 transition-all"
-            style={{ background: fsTab === 'cfs' ? '#A78BFA' : 'transparent', color: fsTab === 'cfs' ? '#1a1530' : 'var(--text-tertiary)' }}>연결</button>
+            style={{ background: fsTab === 'cfs' ? '#ffffff' : 'transparent', color: fsTab === 'cfs' ? '#000000' : 'var(--text-tertiary)' }}>연결</button>
           <button onClick={() => setFsTab('ofs')} className="flex-1 py-1.5 rounded-lg text-[11px] font-bold active:scale-95 transition-all"
-            style={{ background: fsTab === 'ofs' ? '#A78BFA' : 'transparent', color: fsTab === 'ofs' ? '#1a1530' : 'var(--text-tertiary)' }}>개별</button>
+            style={{ background: fsTab === 'ofs' ? '#ffffff' : 'transparent', color: fsTab === 'ofs' ? '#000000' : 'var(--text-tertiary)' }}>개별</button>
         </div>
       )}
       {active && (
@@ -423,8 +423,8 @@ function BondsVisual({ items, details }: { items: UnredeemedBondItem[]; details:
             <div key={i} className="rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
               <div className="flex items-center gap-1.5 px-3 py-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                 <span className="text-[12px] font-extrabold" style={{ color: 'var(--text-primary)' }}>{b.type}</span>
-                {b.round && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(167,139,250,0.18)', color: '#A78BFA' }}>{b.round}회차</span>}
-                {b.amount && <span className="text-[12px] font-bold ml-auto" style={{ color: '#A78BFA' }}>{formatKRW(b.amount)}</span>}
+                {b.round && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.18)', color: '#ffffff' }}>{b.round}회차</span>}
+                {b.amount && <span className="text-[12px] font-bold ml-auto" style={{ color: '#ffffff' }}>{formatKRW(b.amount)}</span>}
               </div>
               <div className="grid grid-cols-2 gap-px" style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <div className="px-3 py-2" style={{ background: 'var(--bg-elevated)' }}>
@@ -483,7 +483,7 @@ function BondsVisual({ items, details }: { items: UnredeemedBondItem[]; details:
           <div className="flex gap-3">
             <div className="flex-1">
               <div className="text-[9px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>미상환 잔액</div>
-              <div className="text-[15px] font-extrabold" style={{ color: '#A78BFA' }}>{formatKRW(b.total)}</div>
+              <div className="text-[15px] font-extrabold" style={{ color: '#ffffff' }}>{formatKRW(b.total)}</div>
             </div>
             {b.within1y && b.within1y !== '-' && (
               <div className="flex-1">
@@ -538,7 +538,7 @@ function CapitalChangeVisual({ items, embedded }: { items: CapitalChangeItem[]; 
     <div>
       <div className="flex items-center justify-between px-3.5 pt-3 pb-1">
         <span className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>자본금 변동사항</span>
-        <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(249,168,212,0.12)', color: 'rgba(249,168,212,0.7)' }}>최근 5년 변동</span>
+        <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' }}>최근 5년 변동</span>
       </div>
       {content}
     </div>
@@ -555,7 +555,7 @@ function InvestmentVisual({ items, year, embedded }: { items: InvestmentItem[]; 
   const parseRatio = (r: string) => parseFloat((r || '').replace(/[^0-9.]/g, '')) || 0;
   const mainItems = items.filter((it) => !isSummaryRow(it.corpName));
   const maxRatio = Math.max(...mainItems.map((it) => parseRatio(it.ratio)), 1);
-  const COLORS = ['#A78BFA', '#8B7BE0', '#9D8AE8', '#6E62C0', '#B19DF0', '#7A6DCC', '#A78BFA', '#8B7BE0', '#9D8AE8', '#6E62C0'];
+  const COLORS = ['#ffffff', '#c0c0c0', '#e0e0e0', '#777777', '#d0d0d0', '#999999', '#ffffff', '#c0c0c0', '#e0e0e0', '#777777'];
   const content = (
     <div className="flex flex-col" style={{ paddingTop: 4, paddingBottom: 4 }}>
       {mainItems.map((it, i) => {
@@ -614,8 +614,8 @@ function MajorShareholderVisual({ items, year, embedded }: { items: ShareholderI
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[13px] font-bold truncate" style={{ color: isTop ? '#8aa8ff' : 'var(--text-primary)' }}>{clean(it.name)}</span>
-                <span className="text-[15px] font-extrabold flex-shrink-0" style={{ color: isTop ? '#A78BFA' : 'var(--text-secondary)' }}>{it.ratio}%</span>
+                <span className="text-[13px] font-bold truncate" style={{ color: isTop ? '#5c8aff' : 'var(--text-primary)' }}>{clean(it.name)}</span>
+                <span className="text-[15px] font-extrabold flex-shrink-0" style={{ color: isTop ? '#ffffff' : 'var(--text-secondary)' }}>{it.ratio}%</span>
               </div>
               <div className="flex gap-2 mt-0.5 flex-wrap">
                 {it.relate && <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{clean(it.relate)}</span>}
@@ -628,9 +628,9 @@ function MajorShareholderVisual({ items, year, embedded }: { items: ShareholderI
       })}
       {summaryItem && (
         <div className="flex items-center justify-between px-3 py-2 rounded-xl mt-1"
-          style={{ background: 'rgba(167,139,250,0.08)', borderTop: '1px solid var(--border)' }}>
+          style={{ background: 'rgba(255,255,255,0.08)', borderTop: '1px solid var(--border)' }}>
           <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>합계 지분율</span>
-          <span className="text-[14px] font-extrabold" style={{ color: '#A78BFA' }}>{summaryItem.ratio}%</span>
+          <span className="text-[14px] font-extrabold" style={{ color: '#ffffff' }}>{summaryItem.ratio}%</span>
         </div>
       )}
     </div>
@@ -659,13 +659,13 @@ function StockTotalVisual({ items, year }: { items: StockTotalItem[]; year: numb
     const distRatio = issued > 0 ? ((distributed / issued) * 100).toFixed(1) : null;
     return [
       { label: '발행 주식 총수', value: item.issuedTotal || '-', color },
-      { label: '자기주식',       value: item.treasury || '-',     color: '#A78BFA' },
-      { label: '유통 주식수',    value: item.distributed || (distributed > 0 ? distributed.toLocaleString() : '-'), color: '#A78BFA' },
-      { label: '유통 비율',      value: distRatio ? `${distRatio}%` : '-', color: '#A78BFA' },
+      { label: '자기주식',       value: item.treasury || '-',     color: '#ffffff' },
+      { label: '유통 주식수',    value: item.distributed || (distributed > 0 ? distributed.toLocaleString() : '-'), color: '#ffffff' },
+      { label: '유통 비율',      value: distRatio ? `${distRatio}%` : '-', color: '#ffffff' },
     ];
   };
-  const commonStats = makeStats(commonItem, '#A78BFA');
-  const preferStats = makeStats(preferItem, '#A78BFA');
+  const commonStats = makeStats(commonItem, '#ffffff');
+  const preferStats = makeStats(preferItem, '#ffffff');
   const StatGrid = ({ stats }: { stats: { label: string; value: string; color: string }[] }) => (
     <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(2, minmax(0,1fr))' }}>
       {stats.map((s, i) => (
@@ -683,7 +683,7 @@ function StockTotalVisual({ items, year }: { items: StockTotalItem[]; year: numb
         {commonStats && (
           <div>
             <div className="flex items-center gap-1.5 mb-2.5">
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#A78BFA', display: 'inline-block', flexShrink: 0 }} />
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ffffff', display: 'inline-block', flexShrink: 0 }} />
               <span className="text-[10px] font-bold" style={{ color: 'var(--text-tertiary)' }}>보통주</span>
             </div>
             <StatGrid stats={commonStats} />
@@ -694,7 +694,7 @@ function StockTotalVisual({ items, year }: { items: StockTotalItem[]; year: numb
             <div style={{ height: 1, background: 'var(--border)' }} />
             <div>
               <div className="flex items-center gap-1.5 mb-2.5">
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#A78BFA', display: 'inline-block', flexShrink: 0 }} />
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ffffff', display: 'inline-block', flexShrink: 0 }} />
                 <span className="text-[10px] font-bold" style={{ color: 'var(--text-tertiary)' }}>의결권 없는 주식 (우선주)</span>
               </div>
               <StatGrid stats={preferStats} />
@@ -739,7 +739,7 @@ function StockTotalVisual({ items, year }: { items: StockTotalItem[]; year: numb
           </>
         )}
         {!commonItem && !preferItem && !summaryItem && items.length > 0 && (
-          <StatGrid stats={makeStats(items[0], '#A78BFA') ?? []} />
+          <StatGrid stats={makeStats(items[0], '#ffffff') ?? []} />
         )}
       </div>
     </SectionCard>
@@ -767,10 +767,10 @@ function DividendVisual({ items, year, embedded }: { items: DividendItem[]; year
               const isLatest = i === 2;
               return (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
-                  <span className="text-[10px] font-bold" style={{ color: isLatest ? '#A78BFA' : 'var(--text-secondary)' }}>
+                  <span className="text-[10px] font-bold" style={{ color: isLatest ? '#ffffff' : 'var(--text-secondary)' }}>
                     {v > 0 ? v.toLocaleString() : '-'}
                   </span>
-                  <div style={{ width: '100%', height: h, background: isLatest ? '#A78BFA' : 'rgba(167,139,250,0.35)', borderRadius: '4px 4px 0 0', minHeight: v > 0 ? 4 : 0 }} />
+                  <div style={{ width: '100%', height: h, background: isLatest ? '#ffffff' : 'rgba(255,255,255,0.35)', borderRadius: '4px 4px 0 0', minHeight: v > 0 ? 4 : 0 }} />
                   <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{years[i]}</span>
                 </div>
               );
@@ -822,11 +822,11 @@ function MinorityVisual({ items, year, embedded }: { items: MinorityItem[]; year
         <div className="relative flex-shrink-0" style={{ width: 72, height: 72 }}>
           <svg width="72" height="72" viewBox="0 0 72 72" style={{ transform: 'rotate(-90deg)' }}>
             <circle cx={C} cy={C} r={R} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={10} />
-            <circle cx={C} cy={C} r={R} fill="none" stroke="#A78BFA" strokeWidth={10}
+            <circle cx={C} cy={C} r={R} fill="none" stroke="#ffffff" strokeWidth={10}
               strokeDasharray={`${dash} ${CIRC}`} strokeLinecap="round" />
           </svg>
           <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', textAlign: 'center' }}>
-            <div className="text-[13px] font-extrabold" style={{ color: '#A78BFA' }}>
+            <div className="text-[13px] font-extrabold" style={{ color: '#ffffff' }}>
               {ratio > 0 ? `${ratio}%` : '-'}
             </div>
           </div>
@@ -841,7 +841,7 @@ function MinorityVisual({ items, year, embedded }: { items: MinorityItem[]; year
           {ratioItem && (
             <div className="flex items-center justify-between">
               <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>소액주주 지분</span>
-              <span className="text-[12px] font-bold" style={{ color: '#A78BFA' }}>{ratioItem.ratio}</span>
+              <span className="text-[12px] font-bold" style={{ color: '#ffffff' }}>{ratioItem.ratio}</span>
             </div>
           )}
           {quantityItem && (
@@ -859,7 +859,7 @@ function MinorityVisual({ items, year, embedded }: { items: MinorityItem[]; year
               style={{ borderTop: i === 0 ? 'none' : '1px solid var(--border)' }}>
               <span className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>{clean(it.label)}</span>
               <div className="flex gap-2">
-                {it.ratio && <span className="text-[11px] font-bold" style={{ color: '#A78BFA' }}>{it.ratio}</span>}
+                {it.ratio && <span className="text-[11px] font-bold" style={{ color: '#ffffff' }}>{it.ratio}</span>}
                 {it.shareholders && <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>{it.shareholders}명</span>}
                 {it.quantity && <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>{it.quantity}주</span>}
               </div>
@@ -1123,7 +1123,7 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
               background: 'var(--bg-elevated)',
               border: '0.5px solid var(--border)',
             }}>
-            <ChevronLeft size={19} style={{ color: '#A78BFA' }} />
+            <ChevronLeft size={19} style={{ color: '#ffffff' }} />
           </button>
         </header>
 
@@ -1155,12 +1155,12 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
             <div className="mb-5 flex flex-col gap-2.5">
               <button onClick={runAi}
                 className="flex items-center justify-center gap-2 py-3.5 rounded-2xl text-[13px] font-bold active:scale-[0.98] transition-all"
-                style={{ background: '#A78BFA', color: '#1a1530' }}>
+                style={{ background: '#ffffff', color: '#000000' }}>
                 <Sparkles size={16} /> AI 공시분석 시작
               </button>
               <button onClick={() => window.open(`https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${disclosure.receiptNo}`, '_blank', 'noopener')}
                 className="flex items-center justify-center gap-2 py-3.5 rounded-2xl text-[13px] font-bold active:scale-[0.98] transition-all"
-                style={{ background: 'rgba(92,138,255,0.14)', border: '1px solid rgba(92,138,255,0.5)', color: '#8aa8ff' }}>
+                style={{ background: 'rgba(92,138,255,0.14)', border: '1px solid rgba(92,138,255,0.5)', color: '#5c8aff' }}>
                 <ExternalLink size={15} /> DART 원문 보기
               </button>
             </div>
@@ -1169,16 +1169,16 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
           {/* AI 로딩 */}
           {loading && !ai && (
             <div className="mb-5 relative overflow-hidden p-5 rounded-2xl text-center flex flex-col items-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-border)' }}>
-              <div className="absolute top-0 h-full" style={{ left: '-40%', width: '40%', background: 'linear-gradient(90deg,transparent,rgba(167,139,250,0.18),transparent)', animation: 'dssSweep 1.8s linear infinite' }} />
+              <div className="absolute top-0 h-full" style={{ left: '-40%', width: '40%', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)', animation: 'dssSweep 1.8s linear infinite' }} />
               <div className="relative mb-3" style={{ width: 52, height: 52 }}>
-                <div className="absolute inset-0 rounded-full" style={{ border: '2px solid #A78BFA', animation: 'dssRing 1.6s ease-out infinite' }} />
-                <div className="absolute inset-0 rounded-full" style={{ border: '2px solid rgba(167,139,250,0.4)', animation: 'dssRing 1.6s ease-out infinite', animationDelay: '0.8s' }} />
-                <div className="absolute rounded-full flex items-center justify-center" style={{ inset: 15, background: '#A78BFA' }}>
-                  <Sparkles size={17} color="#fff" />
+                <div className="absolute inset-0 rounded-full" style={{ border: '2px solid #ffffff', animation: 'dssRing 1.6s ease-out infinite' }} />
+                <div className="absolute inset-0 rounded-full" style={{ border: '2px solid rgba(255,255,255,0.4)', animation: 'dssRing 1.6s ease-out infinite', animationDelay: '0.8s' }} />
+                <div className="absolute rounded-full flex items-center justify-center" style={{ inset: 15, background: '#ffffff' }}>
+                  <Sparkles size={17} color="#000" />
                 </div>
               </div>
               <p className="relative text-[14px] font-extrabold" style={{ color: 'var(--text-primary)' }}>AI가 공시를 분석하고 있어요</p>
-              <p className="relative text-[11px] mt-1" style={{ color: '#A78BFA' }}>잠시만 기다려주세요</p>
+              <p className="relative text-[11px] mt-1" style={{ color: '#ffffff' }}>잠시만 기다려주세요</p>
               <style>{`@keyframes dssRing{0%{transform:scale(0.7);opacity:0.8}100%{transform:scale(1.8);opacity:0}}@keyframes dssSweep{0%{left:-40%}100%{left:100%}}`}</style>
             </div>
           )}
@@ -1186,14 +1186,14 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
           {/* AI 결과 */}
           {ai && (
             <div className="mb-5 rounded-2xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-border)' }}>
-              <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: '1px solid rgba(127,119,221,0.18)' }}>
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#A78BFA' }}>
-                  <Sparkles size={14} color="#fff" />
+              <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.18)' }}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#ffffff' }}>
+                  <Sparkles size={14} color="#000" />
                 </div>
                 <span className="text-[12px] font-extrabold" style={{ color: 'var(--text-primary)' }}>AI 공시 분석</span>
                 <button onClick={() => window.open(`https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${disclosure.receiptNo}`, '_blank', 'noopener')}
                   className="ml-auto flex items-center gap-1 px-2.5 py-1.5 rounded-lg active:scale-95 transition-all"
-                  style={{ background: 'rgba(92,138,255,0.14)', border: '1px solid rgba(92,138,255,0.4)', color: '#8aa8ff' }}>
+                  style={{ background: 'rgba(92,138,255,0.14)', border: '1px solid rgba(92,138,255,0.4)', color: '#5c8aff' }}>
                   <ExternalLink size={12} />
                   <span style={{ fontSize: 10, fontWeight: 700 }}>DART</span>
                 </button>
@@ -1303,7 +1303,7 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                       );
                       if (yoyRow) used.add(yoyRow);
                       const SEG_RE = /\(([\d.]+)\s*%\)/;
-                      const SEG_COLORS = ['#A78BFA', '#8B7BE0', '#6E62C0', '#9D8AE8', '#7A6DCC'];
+                      const SEG_COLORS = ['#ffffff', '#c0c0c0', '#777777', '#e0e0e0', '#999999'];
                       const segs = nums
                         .filter((n) => !used.has(n) && SEG_RE.test(n.value))
                         .map((n) => {
@@ -1330,9 +1330,9 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                       return (
                         <div className="mt-3 flex flex-col gap-2.5">
                           <div className="px-3.5 py-3.5 rounded-xl"
-                            style={{ background: heroWarn ? 'rgba(255,82,82,0.08)' : 'rgba(127,119,221,0.12)', border: heroWarn ? '1px solid rgba(255,82,82,0.25)' : '1px solid rgba(127,119,221,0.3)' }}>
-                            <div className="text-[10px] mb-1" style={{ color: heroWarn ? 'var(--warning)' : '#A78BFA' }}>{hero.label}</div>
-                            <div className="text-[22px] font-extrabold leading-tight" style={{ color: heroWarn ? '#f87171' : 'var(--text-primary)' }}>{hero.value}</div>
+                            style={{ background: heroWarn ? 'rgba(255,82,82,0.08)' : 'rgba(255,255,255,0.12)', border: heroWarn ? '1px solid rgba(255,82,82,0.25)' : '1px solid rgba(255,255,255,0.3)' }}>
+                            <div className="text-[10px] mb-1" style={{ color: heroWarn ? 'var(--warning)' : '#ffffff' }}>{hero.label}</div>
+                            <div className="text-[22px] font-extrabold leading-tight" style={{ color: heroWarn ? '#e8893f' : 'var(--text-primary)' }}>{hero.value}</div>
                             {yoyRow && (
                               <div className="text-[12px] font-bold mt-1.5" style={{ color: numColor(yoyRow.value) }}>
                                 {yoyRow.label} {yoyRow.value}
@@ -1399,8 +1399,8 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                                   <div className="mt-2.5 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
                                     style={{ background: isControl ? 'rgba(255,82,82,0.10)' : 'rgba(255,255,255,0.04)' }}>
                                     <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>변동 목적</span>
-                                    <span className="text-[11px] font-bold" style={{ color: isControl ? '#ff7a7a' : 'var(--text-secondary)' }}>{purposeRow.value}</span>
-                                    {isControl && <span className="text-[9px] ml-auto" style={{ color: '#ff7a7a' }}>경영권참여 의심</span>}
+                                    <span className="text-[11px] font-bold" style={{ color: isControl ? '#e8893f' : 'var(--text-secondary)' }}>{purposeRow.value}</span>
+                                    {isControl && <span className="text-[9px] ml-auto" style={{ color: '#e8893f' }}>경영권참여 의심</span>}
                                   </div>
                                 )}
                               </div>
@@ -1419,7 +1419,7 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                                   <span className="text-[12px] font-extrabold" style={{ color: 'var(--warning)' }}>희석 {dil}%</span>
                                 </div>
                                 <div className="flex rounded-md overflow-hidden mb-1.5" style={{ height: 10 }}>
-                                  <div style={{ width: `${existing}%`, background: '#A78BFA' }} />
+                                  <div style={{ width: `${existing}%`, background: '#ffffff' }} />
                                   <div style={{ width: `${dil}%`, background: 'var(--warning)' }} />
                                 </div>
                                 <div className="flex justify-between text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
@@ -1436,7 +1436,7 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                             if (!(dy >= 0 && dy <= 50)) return null;
                             const tiers = ['낮음', '보통', '양호', '고배당'];
                             const ti = dy < 1 ? 0 : dy < 2.5 ? 1 : dy < 4 ? 2 : 3;
-                            const C = '#A78BFA';
+                            const C = '#ffffff';
                             return (
                               <div className="px-3.5 py-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                                 <div className="flex items-center justify-between mb-2">
@@ -1475,16 +1475,16 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                   </>
                   {ai.investorNote && (
                     <div className="mt-5">
-                      <div className="text-[11px] font-bold mb-2" style={{ color: '#A78BFA' }}>투자 포인트</div>
+                      <div className="text-[11px] font-bold mb-2" style={{ color: '#ffffff' }}>투자 포인트</div>
                       <p className="text-[12px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{ai.investorNote}</p>
                     </div>
                   )}
                   {ai.riskSignals && ai.riskSignals.length > 0 && (
                     <div className="mt-5">
-                      <div className="text-[11px] font-bold mb-2" style={{ color: '#ff7a7a' }}>리스크</div>
+                      <div className="text-[11px] font-bold mb-2" style={{ color: '#e8893f' }}>리스크</div>
                       <div className="flex flex-col gap-2">
                         {ai.riskSignals.map((rs: { level: string; text: string }, i: number) => {
-                          const c = rs.level === 'red' ? { dot: '#F87171', bg: 'rgba(248,113,113,0.10)' } : rs.level === 'yellow' ? { dot: '#FBBF24', bg: 'rgba(251,191,36,0.10)' } : { dot: '#34D399', bg: 'rgba(52,211,153,0.10)' };
+                          const c = rs.level === 'red' ? { dot: '#e8893f', bg: 'rgba(194,98,14,0.10)' } : rs.level === 'yellow' ? { dot: '#e8893f', bg: 'rgba(194,98,14,0.10)' } : { dot: '#9DA7B3', bg: 'rgba(255,255,255,0.10)' };
                           return (
                             <div key={i} className="flex gap-2 items-start p-2.5 rounded-lg" style={{ background: c.bg }}>
                               <span style={{ width: 8, height: 8, borderRadius: 99, background: c.dot, marginTop: 5, flexShrink: 0 }} />
@@ -1497,9 +1497,9 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                   )}
                   {ai.timeline && (
                     <div className="mt-5">
-                      <div className="text-[11px] font-bold mb-2" style={{ color: '#A78BFA' }}>일정 확인</div>
+                      <div className="text-[11px] font-bold mb-2" style={{ color: '#ffffff' }}>일정 확인</div>
                       <div className="flex gap-2 p-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                        <FileText size={14} style={{ color: '#A78BFA', marginTop: 2, flexShrink: 0 }} />
+                        <FileText size={14} style={{ color: '#ffffff', marginTop: 2, flexShrink: 0 }} />
                         <span className="text-[12px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{ai.timeline}</span>
                       </div>
                     </div>
@@ -1511,11 +1511,11 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
 
           {!ai && !loading && !isLoggedIn && (
             <div className="mb-5 p-5 rounded-2xl text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-border)' }}>
-              <div className="w-11 h-11 rounded-full flex items-center justify-center mx-auto mb-2.5" style={{ background: '#A78BFA' }}>
-                <Sparkles size={18} color="#fff" />
+              <div className="w-11 h-11 rounded-full flex items-center justify-center mx-auto mb-2.5" style={{ background: '#ffffff' }}>
+                <Sparkles size={18} color="#000" />
               </div>
               <p className="text-[13px] font-extrabold mb-1.5" style={{ color: 'var(--text-primary)' }}>로그인하면 AI 분석을 볼 수 있어요</p>
-              <button onClick={() => setShowLogin(true)} className="mt-2 px-5 py-2 rounded-xl text-[12px] font-bold active:scale-95 transition-all" style={{ background: '#A78BFA', color: '#1a1530' }}>
+              <button onClick={() => setShowLogin(true)} className="mt-2 px-5 py-2 rounded-xl text-[12px] font-bold active:scale-95 transition-all" style={{ background: '#ffffff', color: '#000000' }}>
                 로그인하기
               </button>
             </div>
@@ -1525,10 +1525,10 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
           {finRisk && finRisk.signals && finRisk.signals.length > 0 && (() => {
             const lv = finRisk.overallLevel;
             const head = lv === 'red'
-              ? { color: '#F87171', bg: 'rgba(248,113,113,0.10)', border: 'rgba(248,113,113,0.30)', label: '감사의견·재무위험 주의' }
+              ? { color: '#e8893f', bg: 'rgba(194,98,14,0.10)', border: 'rgba(194,98,14,0.30)', label: '감사의견·재무위험 주의' }
               : lv === 'yellow'
-              ? { color: '#FBBF24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.25)', label: '재무 주의 신호' }
-              : { color: '#34D399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.20)', label: '재무 전반적 양호' };
+              ? { color: '#e8893f', bg: 'rgba(194,98,14,0.08)', border: 'rgba(194,98,14,0.25)', label: '재무 주의 신호' }
+              : { color: '#9DA7B3', bg: 'rgba(255,255,255,0.08)', border: 'rgba(255,255,255,0.20)', label: '재무 전반적 양호' };
             return (
               <div className="mb-5 rounded-2xl overflow-hidden" style={{ background: head.bg, border: `1px solid ${head.border}` }}>
                 <div className="flex items-center gap-2 px-3.5 py-2.5" style={{ borderBottom: `1px solid ${head.border}` }}>
@@ -1538,7 +1538,7 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                 </div>
                 <div className="px-3.5 py-2.5 flex flex-col gap-2">
                   {finRisk.signals.map((s, i) => {
-                    const c = s.level === 'red' ? '#F87171' : s.level === 'yellow' ? '#FBBF24' : '#34D399';
+                    const c = s.level === 'red' ? '#e8893f' : s.level === 'yellow' ? '#e8893f' : '#9DA7B3';
                     return (
                       <div key={i} className="flex gap-2 items-start">
                         <span style={{ width: 8, height: 8, borderRadius: 99, background: c, marginTop: 5, flexShrink: 0 }} />
@@ -1549,7 +1549,7 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                   {reportInfo.auditOpinion && reportInfo.auditOpinion.opinion && (() => {
                     const op = reportInfo.auditOpinion.opinion;
                     const isClean = /적정/.test(op);
-                    const c = isClean ? '#34D399' : '#F87171';
+                    const c = isClean ? '#9DA7B3' : '#e8893f';
                     return (
                       <div className="flex gap-2 items-center">
                         <span style={{ width: 8, height: 8, borderRadius: 99, background: c, marginTop: 0, flexShrink: 0 }} />
@@ -1618,13 +1618,13 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
           )}
           {!reportInfo.loading && hasReportData && (() => {
             const TABS = [
-              { key: 'capital' as const,     icon: <TrendingUp size={14} />, label: '자본금',   color: '#A78BFA', hasData: !!(capItems && capItems.length > 0) },
-              { key: 'investment' as const,  icon: <Building2 size={14} />, label: '출자현황', color: '#A78BFA', hasData: reportInfo.investments.filter((it) => !isSummaryRow(it.corpName)).length > 0 },
-              { key: 'bonds' as const,       icon: <FileText size={14} />,  label: '미상환사채', color: '#A78BFA', hasData: reportInfo.bonds.length > 0 || reportInfo.bondDetails.length > 0 },
-              { key: 'shareholder' as const, icon: <Users size={14} />,     label: '최대주주', color: '#A78BFA', hasData: reportInfo.majorShareholders.filter((it) => !isSummaryRow(it.name)).length > 0 },
-              { key: 'stock' as const,       icon: <PieChart size={14} />,  label: '주식총수', color: '#A78BFA', hasData: reportInfo.stockTotal.length > 0 },
-              { key: 'dividend' as const,    icon: <Coins size={14} />,     label: '배당이력', color: '#A78BFA', hasData: reportInfo.dividends.filter((d) => d.thisYear || d.prevYear || d.prev2Year).length > 0 },
-              { key: 'minority' as const,    icon: <Users size={14} />,     label: '소액주주', color: '#A78BFA', hasData: reportInfo.minority.length > 0 },
+              { key: 'capital' as const,     icon: <TrendingUp size={14} />, label: '자본금',   color: '#ffffff', hasData: !!(capItems && capItems.length > 0) },
+              { key: 'investment' as const,  icon: <Building2 size={14} />, label: '출자현황', color: '#ffffff', hasData: reportInfo.investments.filter((it) => !isSummaryRow(it.corpName)).length > 0 },
+              { key: 'bonds' as const,       icon: <FileText size={14} />,  label: '미상환사채', color: '#ffffff', hasData: reportInfo.bonds.length > 0 || reportInfo.bondDetails.length > 0 },
+              { key: 'shareholder' as const, icon: <Users size={14} />,     label: '최대주주', color: '#ffffff', hasData: reportInfo.majorShareholders.filter((it) => !isSummaryRow(it.name)).length > 0 },
+              { key: 'stock' as const,       icon: <PieChart size={14} />,  label: '주식총수', color: '#ffffff', hasData: reportInfo.stockTotal.length > 0 },
+              { key: 'dividend' as const,    icon: <Coins size={14} />,     label: '배당이력', color: '#ffffff', hasData: reportInfo.dividends.filter((d) => d.thisYear || d.prevYear || d.prev2Year).length > 0 },
+              { key: 'minority' as const,    icon: <Users size={14} />,     label: '소액주주', color: '#ffffff', hasData: reportInfo.minority.length > 0 },
             ].filter((t) => t.hasData);
 
             if (TABS.length === 0) return null;
@@ -1676,10 +1676,10 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                     if (!badgeText) return null;
                     return (
                       <div className="mx-3.5 mt-3 px-3 py-2 rounded-lg flex items-center gap-1.5"
-                        style={{ background: 'rgba(251,191,36,0.10)', border: '1px solid rgba(251,191,36,0.25)' }}>
-                        <AlertTriangle size={12} style={{ color: '#FBBF24', flexShrink: 0 }} />
+                        style={{ background: 'rgba(194,98,14,0.10)', border: '1px solid rgba(194,98,14,0.25)' }}>
+                        <AlertTriangle size={12} style={{ color: '#e8893f', flexShrink: 0 }} />
                         <span className="text-[10.5px] leading-snug" style={{ color: 'var(--text-secondary)' }}>
-                          이 공시에는 해당 정보가 없어 <span style={{ color: '#FBBF24', fontWeight: 700 }}>{badgeText}</span> 데이터를 보여드려요
+                          이 공시에는 해당 정보가 없어 <span style={{ color: '#e8893f', fontWeight: 700 }}>{badgeText}</span> 데이터를 보여드려요
                         </span>
                       </div>
                     );
@@ -1744,7 +1744,7 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
         style={{ background: 'linear-gradient(to top, var(--bg-primary) 78%, transparent)' }}>
         <a href={disclosure.originalUrl} target="_blank" rel="noopener noreferrer"
           className="w-full py-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 active:scale-[0.99] transition-all"
-          style={{ background: 'rgba(92,138,255,0.14)', border: '1px solid rgba(92,138,255,0.5)', color: '#8aa8ff' }}>
+          style={{ background: 'rgba(92,138,255,0.14)', border: '1px solid rgba(92,138,255,0.5)', color: '#5c8aff' }}>
           <ExternalLink size={16} /> DART 원문 보기
         </a>
       </div>

@@ -49,7 +49,7 @@ export function ImportantDisclosureBadge({
               ? { backgroundColor: 'var(--fall-bg)', color: 'var(--fall)' }
               : sentiment === 'caution'
               ? { backgroundColor: 'rgba(249,115,22,0.12)', color: '#f97316' }
-              : { backgroundColor: 'rgba(127,119,221,0.15)', color: '#A78BFA' }
+              : { backgroundColor: 'rgba(255,255,255,0.15)', color: '#ffffff' }
           }
         >
           <Icon size={9} />

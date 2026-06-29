@@ -32,8 +32,8 @@ export function AlertBell({ on, size = 22, shake, tone = 'auto' }: AlertBellProp
         {useGradient && (
           <defs>
             <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#A78BFA" />
-              <stop offset="1" stopColor="#F9A8D4" />
+              <stop offset="0" stopColor="#ffffff" />
+              <stop offset="1" stopColor="#ffffff" />
             </linearGradient>
           </defs>
         )}

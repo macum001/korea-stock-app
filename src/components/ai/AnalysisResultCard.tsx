@@ -11,7 +11,7 @@ interface Props {
 
 // jp: 분류 색상
 const CATEGORY_COLOR: Record<string, string> = {
-  capital:   '#8b5cf6',  // 자본조달 보라
+  capital:   '#ffffff',  // 자본조달 보라
   good:      '#10b981',  // 호재 초록
   bad:       '#ff5252',  // 악재 빨강
   important: '#f59e0b',  // 중요 주황

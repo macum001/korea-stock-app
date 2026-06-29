@@ -176,8 +176,8 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
             <X size={16} color="#fff" />
           </button>
           <div className="w-[38px] h-[38px] rounded-xl flex items-center justify-center mb-3"
-            style={{ background: '#A78BFA', boxShadow: '0 6px 16px rgba(167,139,250,0.35)' }}>
-            <Sparkles size={20} color="#fff" />
+            style={{ background: '#ffffff', boxShadow: '0 6px 16px rgba(255,255,255,0.35)' }}>
+            <Sparkles size={20} color="#000" />
           </div>
           <h2 className="text-xl font-extrabold" style={{ color: '#fff' }}>
             {mode === 'login' ? '다시 오셨네요' : '환영해요'}
@@ -192,7 +192,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
           {/* jp: 닉네임 (회원가입만) */}
           {mode === 'register' && (
             <div className="mb-3 flex items-center gap-3 px-4 py-3.5 rounded-[15px]" style={fieldStyle('nickname')}>
-              <User size={18} style={{ color: focused === 'nickname' ? '#F9A8D4' : 'var(--text-tertiary)' }} />
+              <User size={18} style={{ color: focused === 'nickname' ? '#ffffff' : 'var(--text-tertiary)' }} />
               <input
                 type="text"
                 placeholder="닉네임 (선택)"
@@ -209,7 +209,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
           {/* jp: 이메일 */}
           <div className="mb-3 flex items-center gap-3 px-4 py-3.5 rounded-[15px]" style={fieldStyle('email')}>
-            <Mail size={18} style={{ color: focused === 'email' ? '#F9A8D4' : 'var(--text-tertiary)' }} />
+            <Mail size={18} style={{ color: focused === 'email' ? '#ffffff' : 'var(--text-tertiary)' }} />
             <input
               type="email"
               placeholder="이메일"
@@ -227,7 +227,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
           {/* jp: 비밀번호 */}
           <div className="mb-3 flex items-center gap-3 px-4 py-3.5 rounded-[15px]" style={fieldStyle('password')}>
-            <Lock size={18} style={{ color: focused === 'password' ? '#F9A8D4' : 'var(--text-tertiary)' }} />
+            <Lock size={18} style={{ color: focused === 'password' ? '#ffffff' : 'var(--text-tertiary)' }} />
             <input
               type={showPw ? 'text' : 'password'}
               placeholder="비밀번호 (8자 이상)"
@@ -260,7 +260,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
             onClick={handleSubmit}
             disabled={loading}
             className="w-full py-[15px] rounded-[15px] text-sm font-extrabold flex items-center justify-center gap-2 disabled:opacity-60 active:scale-[0.99] transition-all mt-1"
-            style={{ background: '#A78BFA', color: '#1a1530', boxShadow: '0 10px 26px rgba(167,139,250,0.35)' }}
+            style={{ background: '#c2620e', color: '#ffffff', boxShadow: '0 10px 26px rgba(194,98,14,0.35)' }}
           >
             {loading && <Loader2 size={16} className="animate-spin" />}
             {mode === 'login' ? '로그인' : '회원가입'}
@@ -305,14 +305,14 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
           </button>
 
           {/* jp: 모드 전환 - 박스 디자인 */}
-          <div className="mt-4 rounded-[14px] p-[14px] text-center" style={{ background: 'rgba(127,119,221,0.08)', border: '1px solid rgba(127,119,221,0.2)' }}>
+          <div className="mt-4 rounded-[14px] p-[14px] text-center" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)' }}>
             <p className="text-xs mb-[10px]" style={{ color: 'var(--text-tertiary)' }}>
               {mode === 'login' ? '아직 계정이 없으신가요?' : '이미 계정이 있으신가요?'}
             </p>
             <button
               onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}
               className="w-full py-[11px] rounded-[11px] text-sm font-bold active:scale-[0.99] transition-all"
-              style={{ background: 'transparent', border: '1px solid var(--accent-border)', color: '#A78BFA' }}
+              style={{ background: 'transparent', border: '1px solid var(--accent-border)', color: '#ffffff' }}
             >
               {mode === 'login' ? '회원가입하기' : '로그인하기'}
             </button>

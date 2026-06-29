@@ -83,7 +83,7 @@ export function CommunityTab({ stockCode }: CommunityTabProps) {
               onClick={handleSubmit}
               disabled={!draft.trim() || submitting}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold disabled:opacity-40"
-              style={{ background: 'var(--accent)', color: '#fff' }}
+              style={{ background: 'var(--accent)', color: '#000' }}
             >
               <Send size={13} /> 등록
             </button>
@@ -218,7 +218,7 @@ function PostCard({ post, myUserId, onUpdate, onDelete }: {
             <button onClick={() => setEditing(false)} className="flex items-center gap-1 text-xs px-2 py-1" style={{ color: 'var(--text-tertiary)' }}>
               <X size={12} /> 취소
             </button>
-            <button onClick={handleSaveEdit} className="text-xs px-3 py-1 rounded-lg font-bold" style={{ background: 'var(--accent)', color: '#fff' }}>
+            <button onClick={handleSaveEdit} className="text-xs px-3 py-1 rounded-lg font-bold" style={{ background: 'var(--accent)', color: '#000' }}>
               저장
             </button>
           </div>

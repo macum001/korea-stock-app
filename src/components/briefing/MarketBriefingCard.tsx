@@ -91,10 +91,10 @@ export function MarketBriefingCard({ briefing }: Props) {
 
   return (
     <div className="brief-grad mx-4 mb-4 rounded-2xl px-4 py-4"
-      style={{ background: '#000000', border: '1px solid rgba(127,119,221,0.3)' }}>
+      style={{ background: '#000000', border: '1px solid rgba(255,255,255,0.3)' }}>
 
       <div className="flex items-center gap-2 mb-1">
-        <Sparkles size={15} style={{ color: '#A78BFA' }} />
+        <Sparkles size={15} style={{ color: '#ffffff' }} />
         <span className="text-[13px] font-bold" style={{ color: 'var(--text-primary)' }}>AI 시황 브리핑</span>
         <span className="text-[13px] font-bold px-2.5 py-0.5 rounded-full"
           style={{ background: st.bg, color: st.color }}>

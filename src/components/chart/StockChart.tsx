@@ -44,7 +44,7 @@ function calcMA(candles: Candle[], period: number): LineData[] {
 
 const MA_COLORS = {
   5:   '#f59e0b',
-  20:  '#8b5cf6',
+  20:  '#ffffff',
   60:  '#10b981',
   120: '#3b82f6',
 };

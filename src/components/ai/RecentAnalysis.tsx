@@ -171,17 +171,17 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
     <Wrap>
       {showClearConfirm && (
         <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowClearConfirm(false)}>
-          <div className="w-full max-w-md m-3 p-5 rounded-2xl" style={{ background: '#16122a', border: '1px solid rgba(255,255,255,0.12)' }} onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-md m-3 p-5 rounded-2xl" style={{ background: '#0e1118', border: '1px solid rgba(255,255,255,0.12)' }} onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-center mb-3">
-              <span className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 22, background: 'rgba(255,82,82,0.14)' }}>
-                <Trash2 size={20} style={{ color: '#ff5252' }} />
+              <span className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 22, background: 'rgba(194,98,14,0.18)' }}>
+                <Trash2 size={20} style={{ color: '#e8893f' }} />
               </span>
             </div>
             <p className="text-center text-sm font-bold mb-1" style={{ color: '#fff' }}>최근 분석 전체 삭제</p>
             <p className="text-center text-[11px] mb-4 leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>분석 기록 {items.length}개가 모두 삭제돼요.<br />이 작업은 되돌릴 수 없어요.</p>
             <div className="flex gap-2">
               <button onClick={() => setShowClearConfirm(false)} className="flex-1 py-2.5 rounded-xl text-[13px] active:scale-[0.98]" style={{ color: 'var(--text-secondary)', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>취소</button>
-              <button onClick={() => { setShowClearConfirm(false); void handleClearAll(); }} className="flex-1 py-2.5 rounded-xl text-[13px] font-bold active:scale-[0.98]" style={{ color: '#fff', background: '#ff5252' }}>전체 삭제</button>
+              <button onClick={() => { setShowClearConfirm(false); void handleClearAll(); }} className="flex-1 py-2.5 rounded-xl text-[13px] font-bold active:scale-[0.98]" style={{ color: '#fff', background: '#c2620e' }}>전체 삭제</button>
             </div>
           </div>
         </div>
@@ -190,21 +190,21 @@ export function RecentAnalysis({ kind, refreshKey, accent, onOpenDisclosure }: P
         <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>최근 분석</span>
         <button onClick={() => { if (items.length > 0) setShowClearConfirm(true); }}
           className="flex items-center justify-center active:scale-90 transition-all"
-          style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid rgba(255,82,82,0.3)', color: '#ff7a7a', opacity: items.length > 0 ? 1 : 0.3 }}
+          style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid rgba(194,98,14,0.4)', color: '#c2620e', opacity: items.length > 0 ? 1 : 0.3 }}
           aria-label="전체 삭제">
           <Trash2 size={15} />
         </button>
       </div>
       {items.length > 0 && (
-        <div className="flex items-center gap-1.5 mb-2 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(167,139,250,0.08)' }}>
-          <Info size={11} style={{ color: '#A78BFA', flexShrink: 0 }} />
+        <div className="flex items-center gap-1.5 mb-2 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.08)' }}>
+          <Info size={11} style={{ color: '#ffffff', flexShrink: 0 }} />
           <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>항목을 길게 누르면 삭제할 수 있어요</span>
         </div>
       )}
       {undoItem && (
         <div className="px-3 py-2 mb-2 rounded-xl text-xs flex items-center justify-between" style={{ background: '#2a2640', color: '#fff', border: '1px solid rgba(255,255,255,0.12)' }}>
           <span className="flex items-center gap-2"><Trash2 size={13} style={{ color: '#F472B6' }} /><span>{undoItem.title} 삭제됨</span></span>
-          <button onClick={undoDelete} className="font-bold" style={{ color: '#A78BFA' }}>실행취소</button>
+          <button onClick={undoDelete} className="font-bold" style={{ color: '#ffffff' }}>실행취소</button>
         </div>
       )}
 

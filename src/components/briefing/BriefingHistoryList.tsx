@@ -49,7 +49,7 @@ export function BriefingHistoryList() {
             </p>
             <button onClick={() => setShowLogin(true)}
               className="text-[13px] font-bold px-5 py-2 rounded-full mt-1 active:scale-95 transition-transform"
-              style={{ background: 'var(--accent)', color: '#fff' }}>
+              style={{ background: 'var(--accent)', color: '#000' }}>
               회원가입하고 보기
             </button>
           </div>

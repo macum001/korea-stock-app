@@ -66,9 +66,9 @@ function splitIntoNoteLines(text: string): NoteLine[] {
 
 // jp: 차분한 로즈톤
 const C = {
-  accent: '#8b5cf6', accentText: '#a78bfa', accentBtn: '#8b5cf6',
-  bg: '#000000', border: 'rgba(139,92,246,0.45)', inputBg: '#0b0712',
-  chipBg: 'rgba(139,92,246,0.14)', tableBg: '#0b0712', tableBorder: 'rgba(139,92,246,0.30)',
+  accent: '#ffffff', accentText: '#ffffff', accentBtn: '#ffffff',
+  bg: '#0D1117', border: 'rgba(255,255,255,0.45)', inputBg: '#161B22',
+  chipBg: 'rgba(255,255,255,0.14)', tableBg: '#161B22', tableBorder: 'rgba(255,255,255,0.30)',
 };
 
 const EXAMPLE_CHIPS: { icon: string; text: string }[] = [
@@ -116,7 +116,7 @@ class CardErrorBoundary extends React.Component<
           {this.props.dartUrl && (
             <a href={this.props.dartUrl} target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-[12px] font-bold rounded-lg px-3 py-1.5 mt-2"
-              style={{ background: C.accentBtn, color: '#fff', textDecoration: 'none' }}>
+              style={{ background: C.accentBtn, color: '#000', textDecoration: 'none' }}>
               <ExternalLink size={12} /> DART 원문 보기
             </a>
           )}
@@ -161,7 +161,7 @@ function TableCard({ result }: { result: NotesSearchResult }) {
         {result.dartUrl && (
           <a href={result.dartUrl} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-[12px] font-bold rounded-lg px-3 py-1.5"
-            style={{ background: C.accentBtn, color: '#fff', textDecoration: 'none' }}>
+            style={{ background: C.accentBtn, color: '#000', textDecoration: 'none' }}>
             <ExternalLink size={12} /> 표 원문 보기
           </a>
         )}
@@ -211,7 +211,7 @@ function TableCard({ result }: { result: NotesSearchResult }) {
             </thead>
             <tbody>
               {tableRows.map((r, ri) => (
-                <tr key={ri} style={{ borderBottom: '0.5px solid rgba(139,92,246,0.15)' }}>
+                <tr key={ri} style={{ borderBottom: '0.5px solid rgba(255,255,255,0.15)' }}>
                   {r.map((c, ci) => (
                     <td key={ci} style={{ padding: '5px 10px', color: '#d8d8da', textAlign: isNum(c) ? 'right' : 'left', whiteSpace: 'nowrap' }}>{c}</td>
                   ))}
@@ -293,7 +293,7 @@ function ProseCard({ result }: { result: NotesSearchResult }) {
             <a href={result.dartUrl} target="_blank" rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
               className="inline-flex items-center gap-1.5 text-[12px] font-bold rounded-lg px-3.5 py-2 self-start"
-              style={{ background: C.accentBtn, color: '#ffffff', textDecoration: 'none', marginTop: 6 }}>
+              style={{ background: C.accentBtn, color: '#000', textDecoration: 'none', marginTop: 6 }}>
               <ExternalLink size={13} /> DART 원문에서 보기
             </a>
           )}
@@ -402,7 +402,7 @@ export function NotesSearchSection({ stockCode, stockName }: NotesSearchSectionP
               )}
               <button type="button" onClick={() => runSearch(query)} disabled={!query.trim()}
                 className="text-[13px] font-bold rounded-lg inline-flex items-center gap-1.5"
-                style={{ padding: '7px 18px', background: C.accentBtn, color: '#ffffff', border: 'none', flexShrink: 0, opacity: query.trim() ? 1 : 0.45, cursor: query.trim() ? 'pointer' : 'default' }}>
+                style={{ padding: '7px 18px', background: C.accentBtn, color: '#000', border: 'none', flexShrink: 0, opacity: query.trim() ? 1 : 0.45, cursor: query.trim() ? 'pointer' : 'default' }}>
                 <Search size={14} /> 검색
               </button>
             </div>
@@ -451,7 +451,7 @@ export function NotesSearchSection({ stockCode, stockName }: NotesSearchSectionP
                   <p className="text-[13px] font-medium" style={{ color: 'var(--text-primary)', margin: '0 0 6px' }}>이 종목 주석에서 찾지 못했어요</p>
                   <p className="text-[12px]" style={{ color: 'var(--text-secondary)', lineHeight: 1.6, margin: '0 0 10px' }}>검색한 내용이 이 회사 주석에 없거나, 다른 표현으로 적혀 있을 수 있어요. 단어를 바꿔보거나 DART 원문에서 직접 찾아보세요.</p>
                   {fallbackUrl && (
-                    <a href={fallbackUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[12px] font-bold rounded-lg px-3.5 py-2" style={{ background: C.accentBtn, color: '#ffffff', textDecoration: 'none' }}>
+                    <a href={fallbackUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[12px] font-bold rounded-lg px-3.5 py-2" style={{ background: C.accentBtn, color: '#000', textDecoration: 'none' }}>
                       <ExternalLink size={13} /> DART 원문에서 보기
                     </a>
                   )}
