@@ -1,4 +1,4 @@
-// jp: Express 앱 설정
+﻿// jp: Express ???ㅼ젙
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -44,25 +44,25 @@ import metricsRoutes from './routes/metrics.routes';
 import capitalHistoryRoutes from './routes/capitalHistory.routes';
 import reportInfoRoutes from './routes/reportInfo.routes';
 import newsRoutes from './routes/news.routes';
-import dailyExamplesRoutes from './routes/dailyExamples.routes'; // jp: import는 항상 상단에
-
-// jp: 허용 origin — 개발: localhost 모든 포트 자동 허용(메인 5173 + admin 5174 등), 프로덕션: .env의 CORS_ORIGIN
-// jp: 배포 시 반드시 CORS_ORIGIN=https://your-domain.com 설정할 것 (쉼표로 복수 도메인 가능)
-const corsAllowList: string[] = ENV.CORS_ORIGIN
-  ? ENV.CORS_ORIGIN.split(',').map((s) => s.trim())
-  : [];
+import dailyExamplesRoutes from './routes/dailyExamples.routes'; // jp: import????긽 ?곷떒??
+// jp: ?덉슜 origin ??媛쒕컻: localhost 紐⑤뱺 ?ы듃 ?먮룞 ?덉슜(硫붿씤 5173 + admin 5174 ??, ?꾨줈?뺤뀡: .env??CORS_ORIGIN
+// jp: 諛고룷 ??諛섎뱶??CORS_ORIGIN=https://your-domain.com ?ㅼ젙??寃?(?쇳몴濡?蹂듭닔 ?꾨찓??媛??
+const corsAllowList: string[] = [
+  'https://korea-stock-app-virid.vercel.app',
+  ...(ENV.CORS_ORIGIN ? ENV.CORS_ORIGIN.split(',').map((s) => s.trim()) : []),
+];
 const corsOptions = {
-  // jp: 함수형 origin — 개발 중 포트가 5173/5174/5175로 바뀌어도 자동 허용
+  // jp: ?⑥닔??origin ??媛쒕컻 以??ы듃媛 5173/5174/5175濡?諛붾뚯뼱???먮룞 ?덉슜
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    // jp: origin 없는 요청(서버 간 호출, curl, 헬스체크 등) 허용
+    // jp: origin ?녿뒗 ?붿껌(?쒕쾭 媛??몄텧, curl, ?ъ뒪泥댄겕 ?? ?덉슜
     if (!origin) return callback(null, true);
-    // jp: 개발 환경 - localhost / 127.0.0.1 의 모든 포트 허용
+    // jp: 媛쒕컻 ?섍꼍 - localhost / 127.0.0.1 ??紐⑤뱺 ?ы듃 ?덉슜
     if (ENV.NODE_ENV !== 'production' && /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) {
       return callback(null, true);
     }
-    // jp: 프로덕션 - .env의 CORS_ORIGIN 목록만 허용 (보안)
+    // jp: ?꾨줈?뺤뀡 - .env??CORS_ORIGIN 紐⑸줉留??덉슜 (蹂댁븞)
     if (corsAllowList.includes(origin)) return callback(null, true);
-    // jp: 그 외 차단
+    // jp: 洹???李⑤떒
     return callback(null, false);
   },
   methods: ['GET', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -76,29 +76,29 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
 
-// jp: 전역 throttle rate limit (악의적인 요청 차단 방어)
+// jp: ?꾩뿭 throttle rate limit (?낆쓽?곸씤 ?붿껌 李⑤떒 諛⑹뼱)
 app.use('/api', globalLimiter);
 
-// jp: 관리자 인증 (로그인 + AI)
+// jp: 愿由ъ옄 ?몄쬆 (濡쒓렇??+ AI)
 app.use('/api/admin/auth', adminAuthRoutes);
 
-// jp: AI 분석/기록 = 로그인 필수 (requireAuth) - 비로그인 401 차단
+// jp: AI 遺꾩꽍/湲곕줉 = 濡쒓렇???꾩닔 (requireAuth) - 鍮꾨줈洹몄씤 401 李⑤떒
 app.use('/api/ai', requireAuth, aiAnalysisRoutes);
 app.use('/api/ai', requireAuth, aiDocTestRoutes);
 app.use('/api/ai', requireAuth, aiHistoryRoutes);
 app.use('/api/ai', dailyExamplesRoutes);
 
-// jp: 관리자 데이터 조회/관리 - strictLimiter 빼고 (관리자 작업 우선 보장)
-// jp: 조회가 주 작업이라 strict(분당5회) 적용하면 막힘. requireAdmin만 적용.
+// jp: 愿由ъ옄 ?곗씠??議고쉶/愿由?- strictLimiter 鍮쇨퀬 (愿由ъ옄 ?묒뾽 ?곗꽑 蹂댁옣)
+// jp: 議고쉶媛 二??묒뾽?대씪 strict(遺꾨떦5?? ?곸슜?섎㈃ 留됲옒. requireAdmin留??곸슜.
 app.use('/api/admin/data',    requireAdmin, adminDataRoutes);
-app.use('/api/admin/prompts', requireAdmin, requireRole('admin'), adminPromptsRoutes);  // jp: 프롬프트 편집 (admin 이상)
+app.use('/api/admin/prompts', requireAdmin, requireRole('admin'), adminPromptsRoutes);  // jp: ?꾨＼?꾪듃 ?몄쭛 (admin ?댁긽)
 app.use('/api/admin/briefing', requireAdmin, adminBriefingRoutes);
 app.use('/api/admin/token-stats', requireAdmin, adminTokenStatsRoutes);
 
 // jp: Prometheus scrape endpoint
 app.use(metricsRoutes);
 
-// jp: 헬스체크
+// jp: ?ъ뒪泥댄겕
 app.get('/health', (_req, res) => {
   res.json({
     status:  'ok',
@@ -110,11 +110,8 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/auth', authLimiter, naverAuthRoutes);   // jp: 네이버 소셜 로그인
-app.use('/api/auth', authLimiter, googleAuthRoutes);  // jp: 구글 소셜 로그인
-app.use('/api/notifications', notificationRoutes);     // jp: 알림함 (optionalAuth - 비로그인도 목록 접근)
-app.use('/api/bootstrap',   bootstrapRoutes);          // jp: 첫 화면 한번에
-app.use('/api/market', marketRoutes);
+app.use('/api/auth', authLimiter, naverAuthRoutes);   // jp: ?ㅼ씠踰??뚯뀥 濡쒓렇??app.use('/api/auth', authLimiter, googleAuthRoutes);  // jp: 援ш? ?뚯뀥 濡쒓렇??app.use('/api/notifications', notificationRoutes);     // jp: ?뚮┝??(optionalAuth - 鍮꾨줈洹몄씤??紐⑸줉 ?묎렐)
+app.use('/api/bootstrap',   bootstrapRoutes);          // jp: 泥??붾㈃ ?쒕쾲??app.use('/api/market', marketRoutes);
 app.use('/api/ranking', rankingRoutes);
 app.use('/api/fcm',         fcmRoutes);
 app.use('/api',             healthRoutes);             // jp: /api/health
@@ -122,33 +119,33 @@ app.use('/api/stocks',      stockRoutes);
 app.use('/api/stocks',      orderbookRouter);
 app.use('/api/stocks',      tradesRouter);
 app.use('/api/stocks',      stockDisclosureRouter);    // jp: /api/stocks/:code/disclosures
-app.use('/api/disclosures', disclosureRoutes);         // jp: 중복 등록 제거
+app.use('/api/disclosures', disclosureRoutes);         // jp: 以묐났 ?깅줉 ?쒓굅
 app.use('/api/capital-history', capitalHistoryRoutes);
 app.use('/api/report-info', reportInfoRoutes);
-app.use('/api/notes', requireAuth, notesSearchRoutes);   // jp: RAG 주석 의미 검색 (로그인 필수)
+app.use('/api/notes', requireAuth, notesSearchRoutes);   // jp: RAG 二쇱꽍 ?섎? 寃??(濡쒓렇???꾩닔)
 app.use('/api/news', newsRoutes);
 
-app.use('/api/alerts',      alertRoutes);              // jp: 관심 공시 알림 조건 CRUD (requireAuth)
+app.use('/api/alerts',      alertRoutes);              // jp: 愿??怨듭떆 ?뚮┝ 議곌굔 CRUD (requireAuth)
 app.use('/api/stocks',      minuteChartRouter);
-app.use('/api/watchlist',   watchlistRoutes);          // jp: 관심종목 (requireAuth = 로그인 필수)
-app.use('/api/community',   communityRoutes);          // jp: 종목 커뮤니티 (로그인 필수)
+app.use('/api/watchlist',   watchlistRoutes);          // jp: 愿?ъ쥌紐?(requireAuth = 濡쒓렇???꾩닔)
+app.use('/api/community',   communityRoutes);          // jp: 醫낅ぉ 而ㅻ??덊떚 (濡쒓렇???꾩닔)
 app.use('/api/discovery',   discoveryRoutes);
 app.use('/api/discovery',   stockFeatureRoutes);       // jp: /api/discovery/featured
 app.use('/api/stocks',      stockFeatureRouter);       // jp: /api/stocks/:code/features
 
-// jp: 관리자 API (작업) - requireAdmin + 비싼 작업 strict limit (분당 5회)
+// jp: 愿由ъ옄 API (?묒뾽) - requireAdmin + 鍮꾩떬 ?묒뾽 strict limit (遺꾨떦 5??
 app.use('/api/admin',       requireAdmin, strictLimiter, adminDisclosureRoutes);
-app.use('/api/dev',         requireAdmin, classifyTestRoutes); // jp: 분류 테스트 (관리자 전용)
+app.use('/api/dev',         requireAdmin, classifyTestRoutes); // jp: 遺꾨쪟 ?뚯뒪??(愿由ъ옄 ?꾩슜)
 app.use('/api/admin',       requireAdmin, strictLimiter, adminPriceRoutes);
 app.use('/api/admin',       requireAdmin, adminHealthRouter);
 app.use('/api/admin',       requireAdmin, strictLimiter, adminFeatureRouter);
 
 app.use((_req, res) => {
-  res.status(404).json({ success: false, error: '존재하지 않는 API입니다.' });
+  res.status(404).json({ success: false, error: '議댁옱?섏? ?딅뒗 API?낅땲??' });
 });
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('[App] 에러:', err.message);
-  res.status(500).json({ success: false, error: '서버 오류가 발생했습니다.' });
+  console.error('[App] ?먮윭:', err.message);
+  res.status(500).json({ success: false, error: '?쒕쾭 ?ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.' });
 });
 
 export default app;
