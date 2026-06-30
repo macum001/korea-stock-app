@@ -49,6 +49,7 @@ import dailyExamplesRoutes from './routes/dailyExamples.routes'; // jp: import??
 // jp: 諛고룷 ??諛섎뱶??CORS_ORIGIN=https://your-domain.com ?ㅼ젙??寃?(?쇳몴濡?蹂듭닔 ?꾨찓??媛??
 const corsAllowList: string[] = [
   'https://korea-stock-app-virid.vercel.app',
+  'https://korea-stock-admin.vercel.app',
   ...(ENV.CORS_ORIGIN ? ENV.CORS_ORIGIN.split(',').map((s) => s.trim()) : []),
 ];
 const corsOptions = {
