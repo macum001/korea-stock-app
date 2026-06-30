@@ -1,5 +1,8 @@
 // jp: 어드민 API 클라이언트 - 토큰 저장(localStorage) + 자동 헤더
 
+// jp: 백엔드 주소 - 배포 시 VITE_API_URL 사용, 없으면 로컬(4000)
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 const TOKEN_KEY = 'admin_token';
 
 export function getToken(): string | null {
@@ -26,7 +29,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const res = await fetch(path, { ...options, headers });
+  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
 
   // jp: 401 → 토큰 만료/무효 → 로그인으로
   if (res.status === 401) {
