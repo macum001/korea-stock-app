@@ -71,7 +71,7 @@ export async function fetchLatestDisclosures(
 
   try {
     const all: DartListItem[] = [];
-    const MAX_PAGES = 30;
+    const MAX_PAGES = 200;
     for (let page = 1; page <= MAX_PAGES; page++) {
       const res = await requestDartApi<DartListResponse>('/list.json', {
         bgn_de,
