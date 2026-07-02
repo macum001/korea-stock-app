@@ -1,12 +1,13 @@
-// jp: 공시 상세 시트 - 전체 화면 버전. 핵심 변경사항:
-// jp:   ① AI 스트리밍 분석(원문 기반) ② 공시 영향 통계 주가 영향 데이터 함께 표시
-// jp: AI 분석 완료 후 탭으로 이동해서 분석. '뒤로가기 버튼' 없애지 말 것.
-// jp: ② 회원전용 AI 분석 기록(로그인여부) / ③자본금변동 뒤로가기버튼 / 이동하기 탭버튼 / 연관기사 분리작업(default-user 적용후 정책으로 분리할것)
-// jp: v2: 타법인출자현황·최대주주·주식의총수·배당이력·소액주주 아코디언 → 시각적 카드로 교체
+﻿// jp: 怨듭떆 ?곸꽭 ?쒗듃 - ?꾩껜 ?붾㈃ 踰꾩쟾. ?듭떖 蹂寃쎌궗??
+// jp:   ??AI ?ㅽ듃由щ컢 遺꾩꽍(?먮Ц 湲곕컲) ??怨듭떆 ?곹뼢 ?듦퀎 二쇨? ?곹뼢 ?곗씠???④퍡 ?쒖떆
+// jp: AI 遺꾩꽍 ?꾨즺 ????쑝濡??대룞?댁꽌 遺꾩꽍. '?ㅻ줈媛湲?踰꾪듉' ?놁븷吏 留?寃?
+// jp: ???뚯썝?꾩슜 AI 遺꾩꽍 湲곕줉(濡쒓렇?몄뿬遺) / ??옄蹂멸툑蹂???ㅻ줈媛湲곕쾭??/ ?대룞?섍린 ??쾭??/ ?곌?湲곗궗 遺꾨━?묒뾽(default-user ?곸슜???뺤콉?쇰줈 遺꾨━?좉쾬)
+// jp: v2: ?踰뺤씤異쒖옄?꾪솴쨌理쒕?二쇱＜쨌二쇱떇?섏킑?샕룸같?뱀씠?Β룹냼?≪＜二??꾩퐫?붿뼵 ???쒓컖??移대뱶濡?援먯껜
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Disclosure } from '@/types/disclosure';
 import { apiClient } from '@/services/apiClient';
 import { ImportantDisclosureBadge } from './ImportantDisclosureBadge';
+import { NotesSearchSection } from './NotesSearchSection';
 import { DisclosureImpactStat } from './DisclosureImpactStat';
 import { formatRelativeTime } from '@/utils/format';
 import { useAuthStore } from '@/store/authStore';
@@ -30,8 +31,7 @@ interface AiResultRaw {
   status?: string; ai_status?: string;
 }
 
-// jp: 자본금 변동사항 타입
-interface CapitalChangeItem {
+// jp: ?먮낯湲?蹂?숈궗?????interface CapitalChangeItem {
   date: string;
   type: string;
   stockKind: string;
@@ -40,14 +40,14 @@ interface CapitalChangeItem {
   direction: 'up' | 'down' | 'neutral';
 }
 
-// jp: ===== 사업보고서 5개 데이터 타입 =====
+// jp: ===== ?ъ뾽蹂닿퀬??5媛??곗씠?????=====
 interface InvestmentItem { corpName: string; purpose: string; amount: string; quantity: string; ratio: string; }
 interface ShareholderItem { name: string; relate: string; stockKind: string; quantity: string; ratio: string; }
 interface StockTotalItem { kind: string; issuedTotal: string; treasury: string; distributed: string; }
 interface DividendItem { label: string; thisYear: string; prevYear: string; prev2Year: string; }
 interface MinorityItem { label: string; shareholders: string; quantity: string; ratio: string; }
 
-// jp: ===== 재무 3종 / 감사의견 / 미상환사채 타입 =====
+// jp: ===== ?щТ 3醫?/ 媛먯궗?섍껄 / 誘몄긽?섏궗梨????=====
 interface FinancialTriple { revenue: string; operatingProfit: string; netIncome: string; }
 interface FinancialsResult {
   consolidated: FinancialTriple | null;
@@ -65,7 +65,7 @@ interface BondDetailItem {
   surfRate: string; matRate: string;
 }
 
-// jp: 재무위험·감사의견 표시
+// jp: ?щТ?꾪뿕쨌媛먯궗?섍껄 ?쒖떆
 interface FinRiskSignal { level: 'red' | 'yellow' | 'green'; text: string; }
 interface FinancialRisk {
   year: number | null;
@@ -75,7 +75,7 @@ interface FinancialRisk {
   debtRatio?: number | null;
 }
 
-// jp: 섹션 출처 메타 — fallback으로 과거 보고서에서 보충했는지
+// jp: ?뱀뀡 異쒖쿂 硫뷀? ??fallback?쇰줈 怨쇨굅 蹂닿퀬?쒖뿉??蹂댁땐?덈뒗吏
 interface SectionMeta {
   sourceYear: number | null;
   sourceReprtCode: string | null;
@@ -94,33 +94,33 @@ interface ReportInfoState {
   financials: FinancialsResult | null;
   auditOpinion: AuditOpinionResult | null;
   loading: boolean;
-  // jp: 섹션별 출처 메타 (백엔드 sectionMeta)
+  // jp: ?뱀뀡蹂?異쒖쿂 硫뷀? (諛깆뿏??sectionMeta)
   sectionMeta?: Record<string, SectionMeta | null>;
 }
 
-// jp: 보고서코드 → 한글 라벨
+// jp: 蹂닿퀬?쒖퐫?????쒓? ?쇰꺼
 const REPRT_LABEL: Record<string, string> = {
-  '11011': '사업보고서', '11012': '반기보고서', '11013': '1분기보고서', '11014': '3분기보고서',
+  '11011': '?ъ뾽蹂닿퀬??, '11012': '諛섍린蹂닿퀬??, '11013': '1遺꾧린蹂닿퀬??, '11014': '3遺꾧린蹂닿퀬??,
 };
 
-// jp: fallback 섹션 배지 텍스트 — "2024년 사업보고서 기준"
+// jp: fallback ?뱀뀡 諛곗? ?띿뒪????"2024???ъ뾽蹂닿퀬??湲곗?"
 function fallbackBadgeText(meta: SectionMeta | null | undefined): string | null {
   if (!meta || !meta.isFallback || !meta.sourceYear) return null;
-  const reportLabel = meta.sourceReprtCode ? REPRT_LABEL[meta.sourceReprtCode] || '보고서' : '보고서';
-  return `${meta.sourceYear}년 ${reportLabel} 기준`;
+  const reportLabel = meta.sourceReprtCode ? REPRT_LABEL[meta.sourceReprtCode] || '蹂닿퀬?? : '蹂닿퀬??;
+  return `${meta.sourceYear}??${reportLabel} 湲곗?`;
 }
 
-// jp: 합계/계(소계) 행 판단
+// jp: ?⑷퀎/怨??뚭퀎) ???먮떒
 function isSummaryRow(label: string): boolean {
   const s = (label || '').replace(/\s/g, '');
-  return s === '소계' || s === '계' || s === '합계' || s === '합 계' || s === '소 계';
+  return s === '?뚭퀎' || s === '怨? || s === '?⑷퀎' || s === '??怨? || s === '??怨?;
 }
-// jp: 공백·줄바꿈 정리
+// jp: 怨듬갚쨌以꾨컮轅??뺣━
 function clean(s: string): string {
   return (s || '').replace(/\s*\n\s*/g, ' ').trim();
 }
 
-// jp: 원 단위 문자열 → 억/조 단위 축약 (예: "166650465839" → "1,666억")
+// jp: ???⑥쐞 臾몄옄??????議??⑥쐞 異뺤빟 (?? "166650465839" ??"1,666??)
 function formatKRW(raw: string): string {
   const neg = /^-/.test(raw);
   const digits = (raw || '').replace(/[^0-9]/g, '');
@@ -132,39 +132,39 @@ function formatKRW(raw: string): string {
   if (eok >= 10000) {
     const jo = Math.floor(eok / 10000);
     const rem = Math.round(eok % 10000);
-    out = rem > 0 ? `${jo.toLocaleString()}조 ${rem.toLocaleString()}억` : `${jo.toLocaleString()}조`;
+    out = rem > 0 ? `${jo.toLocaleString()}議?${rem.toLocaleString()}?? : `${jo.toLocaleString()}議?;
   } else if (eok >= 1) {
-    out = `${Math.round(eok).toLocaleString()}억`;
+    out = `${Math.round(eok).toLocaleString()}??;
   } else {
     const man = Math.round(won / 1e4);
-    out = `${man.toLocaleString()}만`;
+    out = `${man.toLocaleString()}留?;
   }
   return (neg ? '-' : '') + out;
 }
 
-// jp: extras 금액 정제 - 백만원/억/조 단위 인식 + 억 소수점1자리 + 조 유지 + 괄호병기 제거
+// jp: extras 湲덉븸 ?뺤젣 - 諛깅쭔????議??⑥쐞 ?몄떇 + ???뚯닔???먮━ + 議??좎? + 愿꾪샇蹂묎린 ?쒓굅
 function cleanAmount(raw: string): string {
   if (!raw || typeof raw !== 'string') return raw || '-';
   const s = raw.trim();
-  if (/원문|없음|미공시|해당없음|N\/A/i.test(s)) return s;
+  if (/?먮Ц|?놁쓬|誘멸났???대떦?놁쓬|N\/A/i.test(s)) return s;
   const main = s.replace(/\s*\(.*?\)\s*/g, '').trim();
-  const neg = /^-/.test(main) || /△/.test(main);
+  const neg = /^-/.test(main) || /??.test(main);
   const numMatch = main.replace(/,/g, '').match(/-?\d+(\.\d+)?/);
   if (!numMatch) return s;
   const num = Math.abs(parseFloat(numMatch[0]));
   if (!Number.isFinite(num)) return s;
   let won: number;
-  if (/조/.test(main)) {
-    const joM = main.replace(/,/g, '').match(/(\d+(?:\.\d+)?)\s*조/);
-    const eokM = main.replace(/,/g, '').match(/조\s*(\d+(?:\.\d+)?)\s*억/);
+  if (/議?.test(main)) {
+    const joM = main.replace(/,/g, '').match(/(\d+(?:\.\d+)?)\s*議?);
+    const eokM = main.replace(/,/g, '').match(/議?s*(\d+(?:\.\d+)?)\s*??);
     const jo = joM ? parseFloat(joM[1]) : 0;
     const eok2 = eokM ? parseFloat(eokM[1]) : 0;
     won = (jo * 1e12) + (eok2 * 1e8);
-  } else if (/백억/.test(main)) { won = num * 1e10;
-  } else if (/억/.test(main)) { won = num * 1e8;
-  } else if (/백만원|백만/.test(main)) { won = num * 1e6;
-  } else if (/천만/.test(main)) { won = num * 1e7;
-  } else if (/만원|만/.test(main)) { won = num * 1e4;
+  } else if (/諛깆뼲/.test(main)) { won = num * 1e10;
+  } else if (/??.test(main)) { won = num * 1e8;
+  } else if (/諛깅쭔??諛깅쭔/.test(main)) { won = num * 1e6;
+  } else if (/泥쒕쭔/.test(main)) { won = num * 1e7;
+  } else if (/留뚯썝|留?.test(main)) { won = num * 1e4;
   } else { won = num; }
   const eok = won / 1e8;
   let out: string;
@@ -172,23 +172,23 @@ function cleanAmount(raw: string): string {
     const jo = Math.floor(eok / 10000);
     const rem = eok % 10000;
     out = rem >= 0.05
-      ? `${jo.toLocaleString()}조 ${rem.toLocaleString(undefined, { maximumFractionDigits: 0 })}억`
-      : `${jo.toLocaleString()}조`;
+      ? `${jo.toLocaleString()}議?${rem.toLocaleString(undefined, { maximumFractionDigits: 0 })}??
+      : `${jo.toLocaleString()}議?;
   } else if (eok >= 1) {
-    out = `${eok.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}억`;
+    out = `${eok.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}??;
   } else {
     const man = Math.round(won / 1e4);
-    out = `${man.toLocaleString()}만`;
+    out = `${man.toLocaleString()}留?;
   }
   return (neg ? '-' : '') + out;
 }
 
-// jp: 긴 단락을 약 70자마다 끊되, 숫자 콤마(10,000)는 보호
+// jp: 湲??⑤씫????70?먮쭏???딅릺, ?レ옄 肄ㅻ쭏(10,000)??蹂댄샇
 function splitLong(para: string, maxLen: number): string[] {
   if (para.length <= maxLen) return [para];
   const out: string[] = [];
   let buf = '';
-  const tokens = para.split(/(?<=,)(?=\s*[가-힣])|(?<=며 )|(?<=고 )|(?<=하여 )|(?<=으로 )|(?<=함 )/);
+  const tokens = para.split(/(?<=,)(?=\s*[媛-??)|(?<=硫?)|(?<=怨?)|(?<=?섏뿬 )|(?<=?쇰줈 )|(?<=??)/);
   for (const tk of tokens) {
     if ((buf + tk).length > maxLen && buf.length > 0) {
       out.push(buf.trim());
@@ -201,7 +201,7 @@ function splitLong(para: string, maxLen: number): string[] {
   return out.length > 0 ? out : [para];
 }
 
-// jp: 본문을 문장/항목 단락으로 분리 + 긴 문장은 약 70자마다 끊기 (숫자 보호)
+// jp: 蹂몃Ц??臾몄옣/??ぉ ?⑤씫?쇰줈 遺꾨━ + 湲?臾몄옣? ??70?먮쭏???딄린 (?レ옄 蹂댄샇)
 function splitParagraphs(text: string): string[] {
   if (!text || typeof text !== 'string') return [];
   const s = text.trim();
@@ -236,8 +236,7 @@ function splitParagraphs(text: string): string[] {
   return final;
 }
 
-// jp: 자본금 방향 스타일
-function directionStyle(direction: 'up' | 'down' | 'neutral'): { color: string; bg: string } {
+// jp: ?먮낯湲?諛⑺뼢 ?ㅽ???function directionStyle(direction: 'up' | 'down' | 'neutral'): { color: string; bg: string } {
   if (direction === 'up')   return { color: '#ffffff', bg: 'rgba(255,255,255,0.04)' };
   if (direction === 'down') return { color: '#ffffff', bg: 'rgba(255,255,255,0.04)' };
   return { color: 'var(--text-secondary)', bg: 'rgba(255,255,255,0.05)' };
@@ -250,7 +249,7 @@ function normalize(r: AiResultRaw) {
     detail:       (r as any).detail || (r as any).ai_detail || '',
     investorNote: r.investorNote || r.ai_investor_note || '',
     riskNote:     r.riskNote || r.ai_risk_note || '',
-    impactLevel:  r.impactLevel || r.impact_level || '중립',
+    impactLevel:  r.impactLevel || r.impact_level || '以묐┰',
     status:       r.status || r.ai_status || 'completed',
     keyNumbers:   (r as any).keyNumbers || (r as any).ai_key_numbers || [],
     timeline:     (r as any).timeline || (r as any).ai_timeline || '',
@@ -261,8 +260,8 @@ function normalize(r: AiResultRaw) {
 }
 
 function impactStyle(level: string): { bg: string; color: string } {
-  if (level.includes('긍정') || level.includes('호재')) return { bg: 'var(--rise-bg)', color: 'var(--rise)' };
-  if (level.includes('부정') || level.includes('악재')) return { bg: 'var(--fall-bg)', color: 'var(--fall)' };
+  if (level.includes('湲띿젙') || level.includes('?몄옱')) return { bg: 'var(--rise-bg)', color: 'var(--rise)' };
+  if (level.includes('遺??) || level.includes('?낆옱')) return { bg: 'var(--fall-bg)', color: 'var(--fall)' };
   return { bg: 'rgba(255,255,255,0.15)', color: '#ffffff' };
 }
 
@@ -275,7 +274,7 @@ function EmptyTab({ text }: { text: string }) {
   );
 }
 
-// ===== 시각적 섹션 공통 헤더 =====
+// ===== ?쒓컖???뱀뀡 怨듯넻 ?ㅻ뜑 =====
 function SectionCard({ icon, title, year, children }: {
   icon: React.ReactNode; title: string; year?: number | null; children: React.ReactNode;
 }) {
@@ -285,7 +284,7 @@ function SectionCard({ icon, title, year, children }: {
         <span style={{ color: '#ffffff' }}>{icon}</span>
         <span className="text-[12px] font-bold" style={{ color: 'var(--text-primary)' }}>{title}</span>
         {year && (
-          <span className="text-[9px] px-1.5 py-0.5 rounded ml-auto" style={{ background: 'rgba(255,255,255,0.12)', color: 'var(--text-tertiary)' }}>{year}년</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded ml-auto" style={{ background: 'rgba(255,255,255,0.12)', color: 'var(--text-tertiary)' }}>{year}??/span>
         )}
       </div>
       {children}
@@ -293,7 +292,7 @@ function SectionCard({ icon, title, year, children }: {
   );
 }
 
-// ── 재무 핵심 (매출·영업이익·당기순이익, 연결/개별) ──
+// ?? ?щТ ?듭떖 (留ㅼ텧쨌?곸뾽?댁씡쨌?밴린?쒖씠?? ?곌껐/媛쒕퀎) ??
 function FinancialsVisual({ fin, summary, creditRating, segments, extras }: {
   fin: FinancialsResult;
   summary?: string;
@@ -308,9 +307,9 @@ function FinancialsVisual({ fin, summary, creditRating, segments, extras }: {
   const [fsTab, setFsTab] = React.useState<'cfs' | 'ofs'>(c ? 'cfs' : 'ofs');
   const active = fsTab === 'cfs' ? c : s;
   const rows: { label: string; key: keyof FinancialTriple }[] = [
-    { label: '매출액', key: 'revenue' },
-    { label: '영업이익', key: 'operatingProfit' },
-    { label: '당기순이익', key: 'netIncome' },
+    { label: '留ㅼ텧??, key: 'revenue' },
+    { label: '?곸뾽?댁씡', key: 'operatingProfit' },
+    { label: '?밴린?쒖씠??, key: 'netIncome' },
   ];
   const valColor = (v: string | undefined) => {
     if (!v) return 'var(--text-tertiary)';
@@ -320,21 +319,21 @@ function FinancialsVisual({ fin, summary, creditRating, segments, extras }: {
   if (c && s) {
     const cNet = parseInt((c.netIncome || '0').replace(/[^0-9-]/g, ''), 10) || 0;
     const sNet = parseInt((s.netIncome || '0').replace(/[^0-9-]/g, ''), 10) || 0;
-    if (cNet < 0 && sNet > 0) note = fsTab === 'cfs' ? '연결 적자 — 종속회사 손실이 반영됐어요. 개별 탭에선 흑자예요.' : '개별 흑자 — 본사 기준 이익이에요. 연결 탭에선 종속회사 손실이 반영돼요.';
-    else if (cNet > 0 && sNet < 0) note = fsTab === 'cfs' ? '연결 흑자 — 종속회사 이익이 반영됐어요. 개별 탭에선 적자예요.' : '개별 적자 — 본사 기준 손실이에요. 연결 탭에선 흑자예요.';
+    if (cNet < 0 && sNet > 0) note = fsTab === 'cfs' ? '?곌껐 ?곸옄 ??醫낆냽?뚯궗 ?먯떎??諛섏쁺?먯뼱?? 媛쒕퀎 ??뿉???묒옄?덉슂.' : '媛쒕퀎 ?묒옄 ??蹂몄궗 湲곗? ?댁씡?댁뿉?? ?곌껐 ??뿉??醫낆냽?뚯궗 ?먯떎??諛섏쁺?쇱슂.';
+    else if (cNet > 0 && sNet < 0) note = fsTab === 'cfs' ? '?곌껐 ?묒옄 ??醫낆냽?뚯궗 ?댁씡??諛섏쁺?먯뼱?? 媛쒕퀎 ??뿉???곸옄?덉슂.' : '媛쒕퀎 ?곸옄 ??蹂몄궗 湲곗? ?먯떎?댁뿉?? ?곌껐 ??뿉???묒옄?덉슂.';
   }
   const SEG_COLORS = ['#ffffff', '#c0c0c0', '#777777', '#e0e0e0', '#999999'];
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
       <div className="flex items-center gap-2 px-3.5 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
         <TrendingUp size={13} style={{ color: '#ffffff' }} />
-        <span className="text-[12px] font-extrabold" style={{ color: 'var(--text-primary)' }}>재무 핵심</span>
+        <span className="text-[12px] font-extrabold" style={{ color: 'var(--text-primary)' }}>?щТ ?듭떖</span>
         {fin.year && <span className="text-[9px] px-1.5 py-0.5 rounded ml-auto" style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text-tertiary)' }}>{fin.year} {fin.reportName}</span>}
       </div>
       {summary && (
         <div className="mx-3.5 mt-3 mb-2 px-3 py-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.25)' }}>
           <span className="text-[12px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            <span className="font-bold" style={{ color: '#ffffff' }}>핵심</span> · {summary}
+            <span className="font-bold" style={{ color: '#ffffff' }}>?듭떖</span> 쨌 {summary}
           </span>
         </div>
       )}
@@ -342,7 +341,7 @@ function FinancialsVisual({ fin, summary, creditRating, segments, extras }: {
         <div className="mx-3.5 mb-2 px-3 py-2.5 rounded-xl flex items-center gap-2.5" style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}>
           <div className="rounded-lg flex items-center justify-center flex-shrink-0" style={{ width: 38, height: 38, background: 'rgba(255,255,255,0.18)', fontSize: 14, fontWeight: 800, color: '#ffffff' }}>{creditRating.grade}</div>
           <div className="flex-1 min-w-0">
-            <div className="text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>신용등급 {creditRating.grade}</div>
+            <div className="text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>?좎슜?깃툒 {creditRating.grade}</div>
             {creditRating.agency && <div className="text-[9px] truncate" style={{ color: 'var(--text-tertiary)' }}>{creditRating.agency}</div>}
           </div>
         </div>
@@ -350,9 +349,9 @@ function FinancialsVisual({ fin, summary, creditRating, segments, extras }: {
       {hasBoth && (
         <div className="mx-3.5 mt-1 mb-2.5 p-[3px] rounded-xl flex gap-[3px]" style={{ background: 'rgba(255,255,255,0.04)' }}>
           <button onClick={() => setFsTab('cfs')} className="flex-1 py-1.5 rounded-lg text-[11px] font-bold active:scale-95 transition-all"
-            style={{ background: fsTab === 'cfs' ? '#ffffff' : 'transparent', color: fsTab === 'cfs' ? '#000000' : 'var(--text-tertiary)' }}>연결</button>
+            style={{ background: fsTab === 'cfs' ? '#ffffff' : 'transparent', color: fsTab === 'cfs' ? '#000000' : 'var(--text-tertiary)' }}>?곌껐</button>
           <button onClick={() => setFsTab('ofs')} className="flex-1 py-1.5 rounded-lg text-[11px] font-bold active:scale-95 transition-all"
-            style={{ background: fsTab === 'ofs' ? '#ffffff' : 'transparent', color: fsTab === 'ofs' ? '#000000' : 'var(--text-tertiary)' }}>개별</button>
+            style={{ background: fsTab === 'ofs' ? '#ffffff' : 'transparent', color: fsTab === 'ofs' ? '#000000' : 'var(--text-tertiary)' }}>媛쒕퀎</button>
         </div>
       )}
       {active && (
@@ -372,7 +371,7 @@ function FinancialsVisual({ fin, summary, creditRating, segments, extras }: {
       )}
       {segments && segments.length >= 2 && (
         <div className="px-3.5 pb-3">
-          <div className="text-[10px] mb-2" style={{ color: 'var(--text-tertiary)' }}>사업부문 매출 비중</div>
+          <div className="text-[10px] mb-2" style={{ color: 'var(--text-tertiary)' }}>?ъ뾽遺臾?留ㅼ텧 鍮꾩쨷</div>
           <div className="flex overflow-hidden mb-2.5" style={{ height: 10, borderRadius: 99, gap: 2 }}>
             {segments.map((sg, i) => (
               <div key={i} style={{ width: `${sg.pct}%`, background: SEG_COLORS[i % SEG_COLORS.length], borderRadius: i === 0 ? '99px 0 0 99px' : i === segments.length - 1 ? '0 99px 99px 0' : 0 }} />
@@ -391,11 +390,11 @@ function FinancialsVisual({ fin, summary, creditRating, segments, extras }: {
       )}
       {extras && extras.length > 0 && (
         <div className="px-3.5 pb-4">
-          <div className="text-[10px] mb-2" style={{ color: 'var(--text-tertiary)' }}>주요 재무 항목</div>
+          <div className="text-[10px] mb-2" style={{ color: 'var(--text-tertiary)' }}>二쇱슂 ?щТ ??ぉ</div>
           <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(2, minmax(0,1fr))' }}>
             {extras.map((e, i) => (
               <div key={i} className="px-3 py-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)' }}>
-                <div className="text-[9px] mb-1" style={{ color: 'var(--text-tertiary)' }}>{e.label}{e.warn ? ' ⚠' : ''}</div>
+                <div className="text-[9px] mb-1" style={{ color: 'var(--text-tertiary)' }}>{e.label}{e.warn ? ' ?? : ''}</div>
                 <div className="text-[14px] font-extrabold" style={{ color: e.warn ? 'var(--warning)' : /^-/.test(e.value) ? 'var(--fall)' : 'var(--text-primary)' }}>{e.value}</div>
               </div>
             ))}
@@ -406,7 +405,7 @@ function FinancialsVisual({ fin, summary, creditRating, segments, extras }: {
   );
 }
 
-// ── 미상환 사채 (CB/BW) — 잔액 + 발행상세(회차/만기/전환가/리픽싱) ──
+// ?? 誘몄긽???ъ콈 (CB/BW) ???붿븸 + 諛쒗뻾?곸꽭(?뚯감/留뚭린/?꾪솚媛/由ы뵿?? ??
 function BondsVisual({ items, details }: { items: UnredeemedBondItem[]; details: BondDetailItem[] }) {
   const hasItems = items && items.length > 0;
   const hasDetails = details && details.length > 0;
@@ -422,30 +421,30 @@ function BondsVisual({ items, details }: { items: UnredeemedBondItem[]; details:
             <div key={i} className="rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
               <div className="flex items-center gap-1.5 px-3 py-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                 <span className="text-[12px] font-extrabold" style={{ color: 'var(--text-primary)' }}>{b.type}</span>
-                {b.round && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.18)', color: '#ffffff' }}>{b.round}회차</span>}
+                {b.round && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.18)', color: '#ffffff' }}>{b.round}?뚯감</span>}
                 {b.amount && <span className="text-[12px] font-bold ml-auto" style={{ color: '#ffffff' }}>{formatKRW(b.amount)}</span>}
               </div>
               <div className="grid grid-cols-2 gap-px" style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <div className="px-3 py-2" style={{ background: 'var(--bg-elevated)' }}>
-                  <div className="text-[9px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>발행일</div>
+                  <div className="text-[9px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>諛쒗뻾??/div>
                   <div className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>{b.issueDate || '-'}</div>
                 </div>
                 <div className="px-3 py-2" style={{ background: 'var(--bg-elevated)' }}>
-                  <div className="text-[9px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>만기일</div>
+                  <div className="text-[9px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>留뚭린??/div>
                   <div className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>{b.maturityDate || '-'}</div>
                 </div>
               </div>
               {(cv > 0 || floor > 0) && (
                 <div className="px-3 py-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>전환가액</span>
-                    <span className="text-[13px] font-extrabold" style={{ color: 'var(--text-primary)' }}>{cv > 0 ? `${cv.toLocaleString()}원` : '-'}</span>
+                    <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>?꾪솚媛??/span>
+                    <span className="text-[13px] font-extrabold" style={{ color: 'var(--text-primary)' }}>{cv > 0 ? `${cv.toLocaleString()}?? : '-'}</span>
                   </div>
                   {floor > 0 && (
                     <>
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>리픽싱 하한 {refixPct > 0 ? `(${refixPct}%)` : ''}</span>
-                        <span className="text-[13px] font-extrabold" style={{ color: 'var(--warning)' }}>{floor.toLocaleString()}원</span>
+                        <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>由ы뵿???섑븳 {refixPct > 0 ? `(${refixPct}%)` : ''}</span>
+                        <span className="text-[13px] font-extrabold" style={{ color: 'var(--warning)' }}>{floor.toLocaleString()}??/span>
                       </div>
                       <div className="flex rounded-md overflow-hidden mt-1" style={{ height: 6, background: 'rgba(255,255,255,0.08)' }}>
                         <div style={{ width: `${refixPct}%`, background: 'var(--warning)' }} />
@@ -456,7 +455,7 @@ function BondsVisual({ items, details }: { items: UnredeemedBondItem[]; details:
               )}
               {(b.convertStart || b.convertEnd) && (
                 <div className="px-3 py-2" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                  <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>전환청구 </span>
+                  <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>?꾪솚泥?뎄 </span>
                   <span className="text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>{b.convertStart} ~ {b.convertEnd}</span>
                 </div>
               )}
@@ -464,12 +463,12 @@ function BondsVisual({ items, details }: { items: UnredeemedBondItem[]; details:
           );
         })}
         <div className="text-[10px] px-1 leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
-          리픽싱(전환가 하향조정)이 발동되면 더 많은 주식으로 전환돼 기존주주 지분 희석이 커져요.
+          由ы뵿???꾪솚媛 ?섑뼢議곗젙)??諛쒕룞?섎㈃ ??留롮? 二쇱떇?쇰줈 ?꾪솚??湲곗〈二쇱＜ 吏遺??ъ꽍??而ㅼ졇??
         </div>
       </div>
     );
   }
-  const main = items.filter((b) => !/합계|소계|^계$/.test(b.category));
+  const main = items.filter((b) => !/?⑷퀎|?뚭퀎|^怨?/.test(b.category));
   const show = main.length > 0 ? main : items;
   return (
     <div className="flex flex-col gap-2 px-3.5 py-3">
@@ -481,12 +480,12 @@ function BondsVisual({ items, details }: { items: UnredeemedBondItem[]; details:
           </div>
           <div className="flex gap-3">
             <div className="flex-1">
-              <div className="text-[9px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>미상환 잔액</div>
+              <div className="text-[9px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>誘몄긽???붿븸</div>
               <div className="text-[15px] font-extrabold" style={{ color: '#ffffff' }}>{formatKRW(b.total)}</div>
             </div>
             {b.within1y && b.within1y !== '-' && (
               <div className="flex-1">
-                <div className="text-[9px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>1년 내 만기</div>
+                <div className="text-[9px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>1????留뚭린</div>
                 <div className="text-[15px] font-extrabold" style={{ color: 'var(--text-primary)' }}>{formatKRW(b.within1y)}</div>
               </div>
             )}
@@ -494,13 +493,13 @@ function BondsVisual({ items, details }: { items: UnredeemedBondItem[]; details:
         </div>
       ))}
       <div className="text-[10px] px-1 leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
-        전환사채(CB)·신주인수권부사채(BW)는 주식 전환·행사 시 지분 희석 가능성이 있어요.
+        ?꾪솚?ъ콈(CB)쨌?좎＜?몄닔沅뚮??ъ콈(BW)??二쇱떇 ?꾪솚쨌?됱궗 ??吏遺??ъ꽍 媛?μ꽦???덉뼱??
       </div>
     </div>
   );
 }
 
-// ── 1. 자본금 변동사항 ──
+// ?? 1. ?먮낯湲?蹂?숈궗????
 function CapitalChangeVisual({ items, embedded }: { items: CapitalChangeItem[]; embedded?: boolean }) {
   if (!items || items.length === 0) return null;
   const content = (
@@ -521,10 +520,10 @@ function CapitalChangeVisual({ items, embedded }: { items: CapitalChangeItem[]; 
               <div className="flex gap-2 flex-wrap">
                 {item.stockKind && <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{item.stockKind}</span>}
                 {item.quantity && item.quantity !== '-' && (
-                  <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{item.quantity}주</span>
+                  <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{item.quantity}二?/span>
                 )}
                 {item.issuePrice && item.issuePrice !== '-' && (
-                  <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>발행가 {item.issuePrice}원</span>
+                  <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>諛쒗뻾媛 {item.issuePrice}??/span>
                 )}
               </div>
             </div>
@@ -536,14 +535,14 @@ function CapitalChangeVisual({ items, embedded }: { items: CapitalChangeItem[]; 
   if (embedded) return (
     <div>
       <div className="flex items-center justify-between px-3.5 pt-3 pb-1">
-        <span className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>자본금 변동사항</span>
-        <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' }}>최근 5년 변동</span>
+        <span className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>?먮낯湲?蹂?숈궗??/span>
+        <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' }}>理쒓렐 5??蹂??/span>
       </div>
       {content}
     </div>
   );
   return (
-    <SectionCard icon={<TrendingUp size={13} />} title="자본금 변동사항 (최근 5년)">
+    <SectionCard icon={<TrendingUp size={13} />} title="?먮낯湲?蹂?숈궗??(理쒓렐 5??">
       {content}
     </SectionCard>
   );
@@ -583,13 +582,13 @@ function InvestmentVisual({ items, year, embedded }: { items: InvestmentItem[]; 
   );
   if (embedded) return content;
   return (
-    <SectionCard icon={<Building2 size={13} />} title="타법인 출자현황" year={year}>
+    <SectionCard icon={<Building2 size={13} />} title="?踰뺤씤 異쒖옄?꾪솴" year={year}>
       {content}
     </SectionCard>
   );
 }
 
-// ── 3. 최대주주 현황 ──
+// ?? 3. 理쒕?二쇱＜ ?꾪솴 ??
 function MajorShareholderVisual({ items, year, embedded }: { items: ShareholderItem[]; year: number | null; embedded?: boolean }) {
   if (!items || items.length === 0) return null;
   const mainItems = items.filter((it) => !isSummaryRow(it.name));
@@ -607,7 +606,7 @@ function MajorShareholderVisual({ items, year, embedded }: { items: ShareholderI
             <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
               style={{ background: isTop ? 'rgba(92,138,255,0.25)' : 'rgba(255,255,255,0.08)' }}>
               {isTop
-                ? <span style={{ fontSize: 14 }}>👑</span>
+                ? <span style={{ fontSize: 14 }}>?몣</span>
                 : <Users size={13} style={{ color: 'var(--text-tertiary)' }} />
               }
             </div>
@@ -619,7 +618,7 @@ function MajorShareholderVisual({ items, year, embedded }: { items: ShareholderI
               <div className="flex gap-2 mt-0.5 flex-wrap">
                 {it.relate && <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{clean(it.relate)}</span>}
                 {it.stockKind && <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{it.stockKind}</span>}
-                {it.quantity && <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{it.quantity}주</span>}
+                {it.quantity && <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{it.quantity}二?/span>}
               </div>
             </div>
           </div>
@@ -628,7 +627,7 @@ function MajorShareholderVisual({ items, year, embedded }: { items: ShareholderI
       {summaryItem && (
         <div className="flex items-center justify-between px-3 py-2 rounded-xl mt-1"
           style={{ background: 'rgba(255,255,255,0.08)', borderTop: '1px solid var(--border)' }}>
-          <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>합계 지분율</span>
+          <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>?⑷퀎 吏遺꾩쑉</span>
           <span className="text-[14px] font-extrabold" style={{ color: '#ffffff' }}>{summaryItem.ratio}%</span>
         </div>
       )}
@@ -636,19 +635,19 @@ function MajorShareholderVisual({ items, year, embedded }: { items: ShareholderI
   );
   if (embedded) return content;
   return (
-    <SectionCard icon={<Users size={13} />} title="최대주주 현황" year={year}>
+    <SectionCard icon={<Users size={13} />} title="理쒕?二쇱＜ ?꾪솴" year={year}>
       {content}
     </SectionCard>
   );
 }
 
-// ── 4. 주식의 총수 ──
+// ?? 4. 二쇱떇??珥앹닔 ??
 function StockTotalVisual({ items, year }: { items: StockTotalItem[]; year: number | null }) {
   if (!items || items.length === 0) return null;
   const parseNum = (s: string) => parseInt((s || '').replace(/[^0-9]/g, ''), 10) || 0;
-  const commonItem  = items.find((it) => /보통주/.test(it.kind));
-  const preferItem  = items.find((it) => /우선주|의결권\s*없/.test(it.kind));
-  const summaryItem = items.find((it) => /합계|소계/.test(it.kind));
+  const commonItem  = items.find((it) => /蹂댄넻二?.test(it.kind));
+  const preferItem  = items.find((it) => /?곗꽑二??섍껐沅?s*??.test(it.kind));
+  const summaryItem = items.find((it) => /?⑷퀎|?뚭퀎/.test(it.kind));
   const etcItems = items.filter((it) => it !== commonItem && it !== preferItem && it !== summaryItem);
   const makeStats = (item: StockTotalItem | undefined, color: string) => {
     if (!item) return null;
@@ -657,10 +656,10 @@ function StockTotalVisual({ items, year }: { items: StockTotalItem[]; year: numb
     const distributed = parseNum(item.distributed) || (issued > 0 ? issued - treasury : 0);
     const distRatio = issued > 0 ? ((distributed / issued) * 100).toFixed(1) : null;
     return [
-      { label: '발행 주식 총수', value: item.issuedTotal || '-', color },
-      { label: '자기주식',       value: item.treasury || '-',     color: '#ffffff' },
-      { label: '유통 주식수',    value: item.distributed || (distributed > 0 ? distributed.toLocaleString() : '-'), color: '#ffffff' },
-      { label: '유통 비율',      value: distRatio ? `${distRatio}%` : '-', color: '#ffffff' },
+      { label: '諛쒗뻾 二쇱떇 珥앹닔', value: item.issuedTotal || '-', color },
+      { label: '?먭린二쇱떇',       value: item.treasury || '-',     color: '#ffffff' },
+      { label: '?좏넻 二쇱떇??,    value: item.distributed || (distributed > 0 ? distributed.toLocaleString() : '-'), color: '#ffffff' },
+      { label: '?좏넻 鍮꾩쑉',      value: distRatio ? `${distRatio}%` : '-', color: '#ffffff' },
     ];
   };
   const commonStats = makeStats(commonItem, '#ffffff');
@@ -677,13 +676,13 @@ function StockTotalVisual({ items, year }: { items: StockTotalItem[]; year: numb
     </div>
   );
   return (
-    <SectionCard icon={<PieChart size={13} />} title="주식의 총수" year={year}>
+    <SectionCard icon={<PieChart size={13} />} title="二쇱떇??珥앹닔" year={year}>
       <div className="px-3.5 py-3 flex flex-col gap-4">
         {commonStats && (
           <div>
             <div className="flex items-center gap-1.5 mb-2.5">
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ffffff', display: 'inline-block', flexShrink: 0 }} />
-              <span className="text-[10px] font-bold" style={{ color: 'var(--text-tertiary)' }}>보통주</span>
+              <span className="text-[10px] font-bold" style={{ color: 'var(--text-tertiary)' }}>蹂댄넻二?/span>
             </div>
             <StatGrid stats={commonStats} />
           </div>
@@ -694,7 +693,7 @@ function StockTotalVisual({ items, year }: { items: StockTotalItem[]; year: numb
             <div>
               <div className="flex items-center gap-1.5 mb-2.5">
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ffffff', display: 'inline-block', flexShrink: 0 }} />
-                <span className="text-[10px] font-bold" style={{ color: 'var(--text-tertiary)' }}>의결권 없는 주식 (우선주)</span>
+                <span className="text-[10px] font-bold" style={{ color: 'var(--text-tertiary)' }}>?섍껐沅??녿뒗 二쇱떇 (?곗꽑二?</span>
               </div>
               <StatGrid stats={preferStats} />
             </div>
@@ -706,17 +705,17 @@ function StockTotalVisual({ items, year }: { items: StockTotalItem[]; year: numb
             <div>
               <div className="flex items-center gap-1.5 mb-2.5">
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.3)', display: 'inline-block', flexShrink: 0 }} />
-                <span className="text-[10px] font-bold" style={{ color: 'var(--text-tertiary)' }}>합계</span>
+                <span className="text-[10px] font-bold" style={{ color: 'var(--text-tertiary)' }}>?⑷퀎</span>
               </div>
               <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(2, minmax(0,1fr))' }}>
                 {summaryItem && (
                   <>
                     <div className="px-3 py-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)' }}>
-                      <div className="text-[10px] mb-1" style={{ color: 'var(--text-tertiary)' }}>총 발행주식</div>
+                      <div className="text-[10px] mb-1" style={{ color: 'var(--text-tertiary)' }}>珥?諛쒗뻾二쇱떇</div>
                       <div className="text-[14px] font-extrabold" style={{ color: '#fff' }}>{summaryItem.issuedTotal || '-'}</div>
                     </div>
                     <div className="px-3 py-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)' }}>
-                      <div className="text-[10px] mb-1" style={{ color: 'var(--text-tertiary)' }}>총 자기주식</div>
+                      <div className="text-[10px] mb-1" style={{ color: 'var(--text-tertiary)' }}>珥??먭린二쇱떇</div>
                       <div className="text-[14px] font-extrabold" style={{ color: 'var(--text-secondary)' }}>{summaryItem.treasury || '-'}</div>
                     </div>
                   </>
@@ -729,7 +728,7 @@ function StockTotalVisual({ items, year }: { items: StockTotalItem[]; year: numb
                 ))}
                 {summaryItem?.distributed && summaryItem.distributed !== '-' && (
                   <div className="px-3 py-2.5 rounded-xl col-span-2" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)' }}>
-                    <div className="text-[10px] mb-1" style={{ color: 'var(--text-tertiary)' }}>비고</div>
+                    <div className="text-[10px] mb-1" style={{ color: 'var(--text-tertiary)' }}>鍮꾧퀬</div>
                     <div className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>{summaryItem.distributed}</div>
                   </div>
                 )}
@@ -745,11 +744,11 @@ function StockTotalVisual({ items, year }: { items: StockTotalItem[]; year: numb
   );
 }
 
-// ── 5. 배당 이력 ──
+// ?? 5. 諛곕떦 ?대젰 ??
 function DividendVisual({ items, year, embedded }: { items: DividendItem[]; year: number | null; embedded?: boolean }) {
   const validItems = items.filter((d) => d.thisYear || d.prevYear || d.prev2Year);
   if (!validItems.length) return null;
-  const dpsRow = validItems.find((d) => /1주당|주당 배당금|현금배당금/.test(d.label));
+  const dpsRow = validItems.find((d) => /1二쇰떦|二쇰떦 諛곕떦湲??꾧툑諛곕떦湲?.test(d.label));
   const parseVal = (s: string) => parseFloat((s || '').replace(/[^0-9.]/g, '')) || 0;
   const vals = dpsRow ? [parseVal(dpsRow.prev2Year), parseVal(dpsRow.prevYear), parseVal(dpsRow.thisYear)] : [];
   const maxVal = Math.max(...vals, 1);
@@ -759,7 +758,7 @@ function DividendVisual({ items, year, embedded }: { items: DividendItem[]; year
     <div className="px-3.5 py-3">
       {dpsRow && vals.some((v) => v > 0) && (
         <div className="mb-4">
-          <div className="text-[10px] mb-3" style={{ color: 'var(--text-tertiary)' }}>1주당 배당금 (원)</div>
+          <div className="text-[10px] mb-3" style={{ color: 'var(--text-tertiary)' }}>1二쇰떦 諛곕떦湲?(??</div>
           <div className="flex items-end gap-3" style={{ height: BAR_H + 28 }}>
             {vals.map((v, i) => {
               const h = maxVal > 0 ? Math.max((v / maxVal) * BAR_H, v > 0 ? 6 : 0) : 0;
@@ -779,7 +778,7 @@ function DividendVisual({ items, year, embedded }: { items: DividendItem[]; year
       )}
       <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
         <div className="flex px-3 py-2" style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid var(--border)' }}>
-          <span className="flex-1 text-[9px] font-bold" style={{ color: 'var(--text-tertiary)' }}>항목</span>
+          <span className="flex-1 text-[9px] font-bold" style={{ color: 'var(--text-tertiary)' }}>??ぉ</span>
           <span className="w-14 text-right text-[9px] font-bold" style={{ color: 'var(--text-tertiary)' }}>{years[2]}</span>
           <span className="w-14 text-right text-[9px]" style={{ color: 'var(--text-tertiary)' }}>{years[1]}</span>
           <span className="w-14 text-right text-[9px]" style={{ color: 'var(--text-tertiary)' }}>{years[0]}</span>
@@ -798,22 +797,22 @@ function DividendVisual({ items, year, embedded }: { items: DividendItem[]; year
   );
   if (embedded) return dividendContent;
   return (
-    <SectionCard icon={<Coins size={13} />} title="배당 이력" year={year}>
+    <SectionCard icon={<Coins size={13} />} title="諛곕떦 ?대젰" year={year}>
       {dividendContent}
     </SectionCard>
   );
 }
 
-// ── 6. 소액주주 현황 ──
+// ?? 6. ?뚯븸二쇱＜ ?꾪솴 ??
 function MinorityVisual({ items, year, embedded }: { items: MinorityItem[]; year: number | null; embedded?: boolean }) {
   if (!items || items.length === 0) return null;
   const parseRatio = (s: string) => parseFloat((s || '').replace(/[^0-9.]/g, '')) || 0;
-  const ratioItem = items.find((it) => /지분율|비율/.test(it.label) || parseRatio(it.ratio) > 0);
+  const ratioItem = items.find((it) => /吏遺꾩쑉|鍮꾩쑉/.test(it.label) || parseRatio(it.ratio) > 0);
   const ratio = ratioItem ? parseRatio(ratioItem.ratio) : 0;
   const R = 28; const C = 36; const CIRC = 2 * Math.PI * R;
   const dash = (ratio / 100) * CIRC;
-  const shareholdersItem = items.find((it) => /주주수|주주 수/.test(it.label));
-  const quantityItem = items.find((it) => /주식수|보유/.test(it.label));
+  const shareholdersItem = items.find((it) => /二쇱＜??二쇱＜ ??.test(it.label));
+  const quantityItem = items.find((it) => /二쇱떇??蹂댁쑀/.test(it.label));
   const otherItems = items.filter((it) => it !== ratioItem && it !== shareholdersItem && it !== quantityItem);
   const minorityContent = (
     <div className="px-3.5 py-3">
@@ -833,19 +832,19 @@ function MinorityVisual({ items, year, embedded }: { items: MinorityItem[]; year
         <div className="flex-1 flex flex-col gap-2">
           {shareholdersItem && (
             <div className="flex items-center justify-between">
-              <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>소액주주 수</span>
+              <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>?뚯븸二쇱＜ ??/span>
               <span className="text-[12px] font-bold" style={{ color: 'var(--text-primary)' }}>{shareholdersItem.shareholders || '-'}</span>
             </div>
           )}
           {ratioItem && (
             <div className="flex items-center justify-between">
-              <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>소액주주 지분</span>
+              <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>?뚯븸二쇱＜ 吏遺?/span>
               <span className="text-[12px] font-bold" style={{ color: '#ffffff' }}>{ratioItem.ratio}</span>
             </div>
           )}
           {quantityItem && (
             <div className="flex items-center justify-between">
-              <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>보유 주식수</span>
+              <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>蹂댁쑀 二쇱떇??/span>
               <span className="text-[12px] font-bold" style={{ color: 'var(--text-secondary)' }}>{quantityItem.quantity || '-'}</span>
             </div>
           )}
@@ -859,8 +858,8 @@ function MinorityVisual({ items, year, embedded }: { items: MinorityItem[]; year
               <span className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>{clean(it.label)}</span>
               <div className="flex gap-2">
                 {it.ratio && <span className="text-[11px] font-bold" style={{ color: '#ffffff' }}>{it.ratio}</span>}
-                {it.shareholders && <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>{it.shareholders}명</span>}
-                {it.quantity && <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>{it.quantity}주</span>}
+                {it.shareholders && <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>{it.shareholders}紐?/span>}
+                {it.quantity && <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>{it.quantity}二?/span>}
               </div>
             </div>
           ))}
@@ -868,13 +867,13 @@ function MinorityVisual({ items, year, embedded }: { items: MinorityItem[]; year
       )}
       <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
         <AlertTriangle size={11} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
-        <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>1% 미만 보유 주주를 소액주주로 분류</span>
+        <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>1% 誘몃쭔 蹂댁쑀 二쇱＜瑜??뚯븸二쇱＜濡?遺꾨쪟</span>
       </div>
     </div>
   );
   if (embedded) return minorityContent;
   return (
-    <SectionCard icon={<Users size={13} />} title="소액주주 현황" year={year}>
+    <SectionCard icon={<Users size={13} />} title="?뚯븸二쇱＜ ?꾪솴" year={year}>
       {minorityContent}
     </SectionCard>
   );
@@ -1071,16 +1070,16 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
 
       const n = normalize(res);
       if (n.status === 'skipped') {
-        setError('AI 분석 기능은 현재 준비중이에요.');
+        setError('AI 遺꾩꽍 湲곕뒫? ?꾩옱 以鍮꾩쨷?댁뿉??');
       } else if (n.status === 'failed' || (!n.summary && n.keyPoints.length === 0)) {
-        setError('AI 분석에 실패했어요. 잠시 후 다시 시도해주세요.');
+        setError('AI 遺꾩꽍???ㅽ뙣?덉뼱?? ?좎떆 ???ㅼ떆 ?쒕룄?댁＜?몄슂.');
       } else {
         setAi(n);
       }
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'AbortError') return;
       if (currentReceiptNoRef.current !== requestedReceiptNo) return;
-      setError('AI 분석에 문제가 생겼습니다.');
+      setError('AI 遺꾩꽍??臾몄젣媛 ?앷꼈?듬땲??');
     } finally {
       if (loadingReceiptNoRef.current === requestedReceiptNo) {
         loadingReceiptNoRef.current = null;
@@ -1089,18 +1088,17 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
     }
   }, [isLoggedIn, disclosure?.receiptNo]);
 
-  // jp: classify — 발행사/공시 유형 분류 (배지 & 안내 문구용)
-  // jp: useMemo로 memoize. disclosure가 null이면 null 반환
-  // jp: 백엔드 issuerType > corpCls > 기업명/공시명 패턴 순으로 우선 적용
+  // jp: classify ??諛쒗뻾??怨듭떆 ?좏삎 遺꾨쪟 (諛곗? & ?덈궡 臾멸뎄??
+  // jp: useMemo濡?memoize. disclosure媛 null?대㈃ null 諛섑솚
+  // jp: 諛깆뿏??issuerType > corpCls > 湲곗뾽紐?怨듭떆紐??⑦꽩 ?쒖쑝濡??곗꽑 ?곸슜
   const classify = useMemo(
     () => getDisclosureClassification(disclosure),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [disclosure?.receiptNo, (disclosure as any)?.market, (disclosure as any)?.corpCls, (disclosure as any)?.issuerType],
   );
 
-  // jp: 모든 Hook 선언 완료 후 조건부 return (React Hook 규칙)
-  // jp: Hook은 조건부 return 이전에 반드시 모두 선언되어야 함
-  if (!isOpen || !disclosure) return null;
+  // jp: 紐⑤뱺 Hook ?좎뼵 ?꾨즺 ??議곌굔遺 return (React Hook 洹쒖튃)
+  // jp: Hook? 議곌굔遺 return ?댁쟾??諛섎뱶??紐⑤몢 ?좎뼵?섏뼱????  if (!isOpen || !disclosure) return null;
 
   const hasReportData =
     reportInfo.investments.length > 0 ||
@@ -1116,7 +1114,7 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
       <div className="flex-1 overflow-y-auto pb-32">
         <header className="sticky top-0 z-20 px-4 pt-4 pb-3"
           style={{ background: 'var(--bg-secondary)', borderBottom: '0.5px solid var(--border)' }}>
-          <button onClick={onClose} aria-label="뒤로가기"
+          <button onClick={onClose} aria-label="?ㅻ줈媛湲?
             className="w-[38px] h-[38px] rounded-[12px] flex items-center justify-center active:scale-95 transition-all"
             style={{
               background: 'var(--bg-elevated)',
@@ -1134,38 +1132,38 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
           <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-black"
               style={{ background: 'var(--bg-elevated)', color: 'var(--accent)' }}>
-              {disclosure.stockName?.[0] ?? '·'}
+              {disclosure.stockName?.[0] ?? '쨌'}
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{disclosure.stockName}</span>
               <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
-                {disclosure.stockCode ? `${disclosure.stockCode} · ` : ''}{formatRelativeTime(disclosure.disclosedAt)}
+                {disclosure.stockCode ? `${disclosure.stockCode} 쨌 ` : ''}{formatRelativeTime(disclosure.disclosedAt)}
               </span>
             </div>
           </div>
 
-          {/* jp: 발행사 유형·공시 유형 배지 */}
+          {/* jp: 諛쒗뻾???좏삎쨌怨듭떆 ?좏삎 諛곗? */}
           {classify && (
             <DisclosureBadges classification={classify} size="sm" className="mb-3" />
           )}
 
-          {/* AI 분석 버튼 */}
+          {/* AI 遺꾩꽍 踰꾪듉 */}
           {!ai && !loading && (
             <div className="mb-5 flex flex-col gap-2.5">
               <button onClick={runAi}
                 className="flex items-center justify-center gap-2 py-3.5 rounded-2xl text-[13px] font-bold active:scale-[0.98] transition-all"
                 style={{ background: '#ffffff', color: '#000000' }}>
-                <Sparkles size={16} /> AI 공시분석 시작
+                <Sparkles size={16} /> AI 怨듭떆遺꾩꽍 ?쒖옉
               </button>
               <button onClick={() => window.open(`https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${disclosure.receiptNo}`, '_blank', 'noopener')}
                 className="flex items-center justify-center gap-2 py-3.5 rounded-2xl text-[13px] font-bold active:scale-[0.98] transition-all"
                 style={{ background: 'rgba(92,138,255,0.14)', border: '1px solid rgba(92,138,255,0.5)', color: '#5c8aff' }}>
-                <ExternalLink size={15} /> DART 원문 보기
+                <ExternalLink size={15} /> DART ?먮Ц 蹂닿린
               </button>
             </div>
           )}
 
-          {/* AI 로딩 */}
+          {/* AI 濡쒕뵫 */}
           {loading && !ai && (
             <div className="mb-5 relative overflow-hidden p-5 rounded-2xl text-center flex flex-col items-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-border)' }}>
               <div className="absolute top-0 h-full" style={{ left: '-40%', width: '40%', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)', animation: 'dssSweep 1.8s linear infinite' }} />
@@ -1176,20 +1174,20 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                   <Sparkles size={17} color="#000" />
                 </div>
               </div>
-              <p className="relative text-[14px] font-extrabold" style={{ color: 'var(--text-primary)' }}>AI가 공시를 분석하고 있어요</p>
-              <p className="relative text-[11px] mt-1" style={{ color: '#ffffff' }}>잠시만 기다려주세요</p>
+              <p className="relative text-[14px] font-extrabold" style={{ color: 'var(--text-primary)' }}>AI媛 怨듭떆瑜?遺꾩꽍?섍퀬 ?덉뼱??/p>
+              <p className="relative text-[11px] mt-1" style={{ color: '#ffffff' }}>?좎떆留?湲곕떎?ㅼ＜?몄슂</p>
               <style>{`@keyframes dssRing{0%{transform:scale(0.7);opacity:0.8}100%{transform:scale(1.8);opacity:0}}@keyframes dssSweep{0%{left:-40%}100%{left:100%}}`}</style>
             </div>
           )}
 
-          {/* AI 결과 */}
+          {/* AI 寃곌낵 */}
           {ai && (
             <div className="mb-5 rounded-2xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-border)' }}>
               <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.18)' }}>
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#ffffff' }}>
                   <Sparkles size={14} color="#000" />
                 </div>
-                <span className="text-[12px] font-extrabold" style={{ color: 'var(--text-primary)' }}>AI 공시 분석</span>
+                <span className="text-[12px] font-extrabold" style={{ color: 'var(--text-primary)' }}>AI 怨듭떆 遺꾩꽍</span>
                 <button onClick={() => window.open(`https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${disclosure.receiptNo}`, '_blank', 'noopener')}
                   className="ml-auto flex items-center gap-1 px-2.5 py-1.5 rounded-lg active:scale-95 transition-all"
                   style={{ background: 'rgba(92,138,255,0.14)', border: '1px solid rgba(92,138,255,0.4)', color: '#5c8aff' }}>
@@ -1240,7 +1238,7 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                       if (reportInfo.creditRating && reportInfo.creditRating.grade) {
                         creditRating = { grade: reportInfo.creditRating.grade, agency: reportInfo.creditRating.agency };
                       } else {
-                        const crRow = kn.find((n) => /신용등급/.test(n.label));
+                        const crRow = kn.find((n) => /?좎슜?깃툒/.test(n.label));
                         if (crRow) {
                           const gm = crRow.value.match(/(AAA|AA[+-]?|A[+-]?|BBB[+-]?|BB[+-]?|B[+-]?|CCC[+-]?|CC[+-]?|C[+-]?|D)\b/);
                           const am = crRow.value.match(/\(([^)]+)\)/);
@@ -1248,17 +1246,17 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                         }
                       }
                       const segments = kn
-                        .filter((n) => /비중/.test(n.label) || /\([\d.]+\s*%\)/.test(n.value))
+                        .filter((n) => /鍮꾩쨷/.test(n.label) || /\([\d.]+\s*%\)/.test(n.value))
                         .map((n) => {
                           const m = n.value.match(/([\d.]+)\s*%/);
-                          return m ? { label: n.label.replace(/\s*(사업)?\s*매출\s*비중\s*$/, '').replace(/\s*비중\s*$/, ''), pct: parseFloat(m[1]), value: `${parseFloat(m[1])}%` } : null;
+                          return m ? { label: n.label.replace(/\s*(?ъ뾽)?\s*留ㅼ텧\s*鍮꾩쨷\s*$/, '').replace(/\s*鍮꾩쨷\s*$/, ''), pct: parseFloat(m[1]), value: `${parseFloat(m[1])}%` } : null;
                         })
                         .filter((x): x is { label: string; pct: number; value: string } => x !== null)
                         .slice(0, 5);
-                      const EXTRA_RE = /매출채권|재고자산|부채총계|자본총계|현금|유동/;
+                      const EXTRA_RE = /留ㅼ텧梨꾧텒|?ш퀬?먯궛|遺梨꾩킑怨??먮낯珥앷퀎|?꾧툑|?좊룞/;
                       const extras = kn
-                        .filter((n) => EXTRA_RE.test(n.label) && !/원문에\s*없음|없음/.test(n.value))
-                        .map((n) => ({ label: n.label, value: cleanAmount(n.value), warn: /매출채권/.test(n.label) }))
+                        .filter((n) => EXTRA_RE.test(n.label) && !/?먮Ц??s*?놁쓬|?놁쓬/.test(n.value))
+                        .map((n) => ({ label: n.label, value: cleanAmount(n.value), warn: /留ㅼ텧梨꾧텒/.test(n.label) }))
                         .slice(0, 4);
                       return (
                         <div className="mt-3">
@@ -1275,10 +1273,10 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
 
                     {ai.keyNumbers && ai.keyNumbers.length > 0 && (() => {
                       const rawNums = ai.keyNumbers as { label: string; value: string }[];
-                      const EMPTY_RE = /원문에\s*없음|확인\s*불가|없음|N\/A|^-$/;
+                      const EMPTY_RE = /?먮Ц??s*?놁쓬|?뺤씤\s*遺덇?|?놁쓬|N\/A|^-$/;
                       const hasFinBlock = !!(reportInfo.financials && (reportInfo.financials.consolidated || reportInfo.financials.separate));
-                      const FIN_RE = /매출액|영업이익|당기순이익|순이익|매출총이익|영업손실|순손실/;
-                      const ABSORBED_RE = /신용등급|비중|매출채권|재고자산|부채총계|자본총계|현금및현금성|유동자산|유동부채/;
+                      const FIN_RE = /留ㅼ텧???곸뾽?댁씡|?밴린?쒖씠???쒖씠??留ㅼ텧珥앹씠???곸뾽?먯떎|?쒖넀??;
+                      const ABSORBED_RE = /?좎슜?깃툒|鍮꾩쨷|留ㅼ텧梨꾧텒|?ш퀬?먯궛|遺梨꾩킑怨??먮낯珥앷퀎|?꾧툑諛륂쁽湲덉꽦|?좊룞?먯궛|?좊룞遺梨?;
                       const nums = rawNums.filter((n) => {
                         if (EMPTY_RE.test(n.value)) return false;
                         if (hasFinBlock && FIN_RE.test(n.label)) return false;
@@ -1286,19 +1284,19 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                         return true;
                       });
                       if (nums.length === 0) return null;
-                      const isUp = (v: string) => /^\+|▲/.test(v);
-                      const isDn = (v: string) => /△|^-\d|▼/.test(v);
+                      const isUp = (v: string) => /^\+|??.test(v);
+                      const isDn = (v: string) => /??^-\d|??.test(v);
                       const numColor = (v: string) => isUp(v) ? 'var(--rise)' : isDn(v) ? 'var(--fall)' : 'var(--text-primary)';
                       const used = new Set<{ label: string; value: string }>();
-                      const HERO_RE = /^전체\s*영업이익|^영업이익$|^당기순이익$|^순이익$|영업이익\s*\(|당기순이익\s*\(/;
-                      const HERO_FALLBACK_RE = /영업이익|당기순이익|순이익/;
+                      const HERO_RE = /^?꾩껜\s*?곸뾽?댁씡|^?곸뾽?댁씡$|^?밴린?쒖씠??|^?쒖씠??|?곸뾽?댁씡\s*\(|?밴린?쒖씠??s*\(/;
+                      const HERO_FALLBACK_RE = /?곸뾽?댁씡|?밴린?쒖씠???쒖씠??;
                       let hero = nums.find((n) => HERO_RE.test(n.label));
                       if (!hero) hero = nums.find((n) => HERO_FALLBACK_RE.test(n.label));
                       if (!hero) hero = nums[0];
                       used.add(hero);
-                      const heroWarn = /손실|적자/.test(hero.label) || isDn(hero.value);
+                      const heroWarn = /?먯떎|?곸옄/.test(hero.label) || isDn(hero.value);
                       const yoyRow = nums.find((n) =>
-                        !used.has(n) && /전년.*동기|동기.*대비|증감률|증가율|전년\s*대비/.test(n.label)
+                        !used.has(n) && /?꾨뀈.*?숆린|?숆린.*?鍮?利앷컧瑜?利앷????꾨뀈\s*?鍮?.test(n.label)
                       );
                       if (yoyRow) used.add(yoyRow);
                       const SEG_RE = /\(([\d.]+)\s*%\)/;
@@ -1307,23 +1305,23 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                         .filter((n) => !used.has(n) && SEG_RE.test(n.value))
                         .map((n) => {
                           const m = n.value.match(SEG_RE);
-                          return { ref: n, label: n.label.replace(/\s*사업부문\s*(매출액?|영업이익)?\s*$/, '').replace(/\s*(매출액?|영업이익)\s*$/, ''), value: n.value, pct: m ? parseFloat(m[1]) : 0 };
+                          return { ref: n, label: n.label.replace(/\s*?ъ뾽遺臾?s*(留ㅼ텧??|?곸뾽?댁씡)?\s*$/, '').replace(/\s*(留ㅼ텧??|?곸뾽?댁씡)\s*$/, ''), value: n.value, pct: m ? parseFloat(m[1]) : 0 };
                         });
                       segs.forEach((s) => used.add(s.ref));
-                      const SALES_RE = /매출액|순매출|총매출|^매출$|조달\s*금액|주당\s*배당금/;
+                      const SALES_RE = /留ㅼ텧???쒕ℓ異?珥앸ℓ異?^留ㅼ텧$|議곕떖\s*湲덉븸|二쇰떦\s*諛곕떦湲?;
                       const salesCard = nums.find((n) => !used.has(n) && SALES_RE.test(n.label));
                       if (salesCard) used.add(salesCard);
-                      const PREV_PROFIT_RE = /(전분기|직전분기|전기).*(영업이익|당기순이익|순이익)|(영업이익|당기순이익|순이익).*(전분기|직전분기|전기)|발행가|신주\s*발행/;
+                      const PREV_PROFIT_RE = /(?꾨텇湲?吏곸쟾遺꾧린|?꾧린).*(?곸뾽?댁씡|?밴린?쒖씠???쒖씠??|(?곸뾽?댁씡|?밴린?쒖씠???쒖씠??.*(?꾨텇湲?吏곸쟾遺꾧린|?꾧린)|諛쒗뻾媛|?좎＜\s*諛쒗뻾/;
                       const prevProfitCard = nums.find((n) => !used.has(n) && PREV_PROFIT_RE.test(n.label));
                       if (prevProfitCard) used.add(prevProfitCard);
                       const subCards = [salesCard, prevProfitCard].filter((n): n is { label: string; value: string } => !!n);
                       const PCT = /([\d.]+)\s*%/;
-                      const beforeRow = nums.find((n) => !used.has(n) && /(변동\s*전|지분\s*전|이전\s*지분)/.test(n.label) && PCT.test(n.value));
-                      const afterRow  = nums.find((n) => !used.has(n) && /(변동\s*후|지분\s*후|이후\s*지분)/.test(n.label) && PCT.test(n.value));
-                      const purposeRow = nums.find((n) => !used.has(n) && /변동\s*목적|지분\s*목적/.test(n.label));
-                      const dilRow = nums.find((n) => !used.has(n) && /희석률|희석\s*비율/.test(n.label));
-                      const dyRow = nums.find((n) => !used.has(n) && /시가배당률|시가\s*배당/.test(n.label));
-                      const dpsRow = nums.find((n) => !used.has(n) && /1주당\s*배당금|주당\s*배당금/.test(n.label));
+                      const beforeRow = nums.find((n) => !used.has(n) && /(蹂??s*??吏遺?s*???댁쟾\s*吏遺?/.test(n.label) && PCT.test(n.value));
+                      const afterRow  = nums.find((n) => !used.has(n) && /(蹂??s*??吏遺?s*???댄썑\s*吏遺?/.test(n.label) && PCT.test(n.value));
+                      const purposeRow = nums.find((n) => !used.has(n) && /蹂??s*紐⑹쟻|吏遺?s*紐⑹쟻/.test(n.label));
+                      const dilRow = nums.find((n) => !used.has(n) && /?ъ꽍瑜??ъ꽍\s*鍮꾩쑉/.test(n.label));
+                      const dyRow = nums.find((n) => !used.has(n) && /?쒓?諛곕떦瑜??쒓?\s*諛곕떦/.test(n.label));
+                      const dpsRow = nums.find((n) => !used.has(n) && /1二쇰떦\s*諛곕떦湲?二쇰떦\s*諛곕떦湲?.test(n.label));
                       [beforeRow, afterRow, purposeRow, dilRow, dyRow, dpsRow].forEach((r) => { if (r) used.add(r); });
                       const restRows = nums.filter((n) => !used.has(n));
                       return (
@@ -1350,10 +1348,10 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                             </div>
                           )}
                           {segs.length >= 2 && (() => {
-                            const isProfit = segs.some((s) => /영업이익/.test(s.ref.label));
+                            const isProfit = segs.some((s) => /?곸뾽?댁씡/.test(s.ref.label));
                             return (
                             <div className="px-3.5 py-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                              <div className="text-[10px] mb-2" style={{ color: 'var(--text-tertiary)' }}>{isProfit ? '사업부문별 영업이익' : '사업부문 매출비중'}</div>
+                              <div className="text-[10px] mb-2" style={{ color: 'var(--text-tertiary)' }}>{isProfit ? '?ъ뾽遺臾몃퀎 ?곸뾽?댁씡' : '?ъ뾽遺臾?留ㅼ텧鍮꾩쨷'}</div>
                               <div className="flex overflow-hidden mb-3" style={{ height: 8, borderRadius: 99, gap: 2 }}>
                                 {segs.map((s, i) => (
                                   <div key={i} style={{ width: `${s.pct}%`, background: SEG_COLORS[i % SEG_COLORS.length], borderRadius: i === 0 ? '99px 0 0 99px' : i === segs.length - 1 ? '0 99px 99px 0' : 0 }} />
@@ -1376,30 +1374,30 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                             const av = parseFloat((afterRow.value.match(PCT) || [])[1] || '0');
                             const isBuy = av >= bv;
                             const col = isBuy ? 'var(--rise)' : 'var(--fall)';
-                            const isControl = purposeRow ? /경영권\s*확보|경영권참여/.test(purposeRow.value) : false;
+                            const isControl = purposeRow ? /寃쎌쁺沅?s*?뺣낫|寃쎌쁺沅뚯갭??.test(purposeRow.value) : false;
                             return (
                               <div className="px-3.5 py-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                                <div className="text-[10px] font-semibold mb-2.5" style={{ color: 'var(--text-tertiary)' }}>지분 변동 현황</div>
+                                <div className="text-[10px] font-semibold mb-2.5" style={{ color: 'var(--text-tertiary)' }}>吏遺?蹂???꾪솴</div>
                                 <div className="flex items-center gap-2.5">
                                   <div className="text-center flex-shrink-0">
-                                    <div className="text-[9px]" style={{ color: 'var(--text-tertiary)' }}>변동 전</div>
+                                    <div className="text-[9px]" style={{ color: 'var(--text-tertiary)' }}>蹂????/div>
                                     <div className="text-[16px] font-bold" style={{ color: 'var(--text-secondary)' }}>{beforeRow.value.replace(/\s*\(.*/, '')}</div>
                                   </div>
                                   <div className="flex-1 flex flex-col items-center gap-0.5">
-                                    <span style={{ color: col, fontSize: 18 }}>→</span>
-                                    <span className="text-[9px] font-bold" style={{ color: col }}>{isBuy ? '매수' : '매도'}</span>
+                                    <span style={{ color: col, fontSize: 18 }}>??/span>
+                                    <span className="text-[9px] font-bold" style={{ color: col }}>{isBuy ? '留ㅼ닔' : '留ㅻ룄'}</span>
                                   </div>
                                   <div className="text-center flex-shrink-0">
-                                    <div className="text-[9px] font-bold" style={{ color: col }}>변동 후</div>
+                                    <div className="text-[9px] font-bold" style={{ color: col }}>蹂????/div>
                                     <div className="text-[18px] font-extrabold" style={{ color: col }}>{afterRow.value.replace(/\s*\(.*/, '')}</div>
                                   </div>
                                 </div>
                                 {purposeRow && (
                                   <div className="mt-2.5 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
                                     style={{ background: isControl ? 'rgba(255,82,82,0.10)' : 'rgba(255,255,255,0.04)' }}>
-                                    <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>변동 목적</span>
+                                    <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>蹂??紐⑹쟻</span>
                                     <span className="text-[11px] font-bold" style={{ color: isControl ? '#e8893f' : 'var(--text-secondary)' }}>{purposeRow.value}</span>
-                                    {isControl && <span className="text-[9px] ml-auto" style={{ color: '#e8893f' }}>경영권참여 의심</span>}
+                                    {isControl && <span className="text-[9px] ml-auto" style={{ color: '#e8893f' }}>寃쎌쁺沅뚯갭???섏떖</span>}
                                   </div>
                                 )}
                               </div>
@@ -1414,16 +1412,16 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                             return (
                               <div className="px-3.5 py-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                                 <div className="flex items-center justify-between mb-2">
-                                  <span className="text-[10px] font-semibold" style={{ color: 'var(--text-tertiary)' }}>기존주주 희석 영향</span>
-                                  <span className="text-[12px] font-extrabold" style={{ color: 'var(--warning)' }}>희석 {dil}%</span>
+                                  <span className="text-[10px] font-semibold" style={{ color: 'var(--text-tertiary)' }}>湲곗〈二쇱＜ ?ъ꽍 ?곹뼢</span>
+                                  <span className="text-[12px] font-extrabold" style={{ color: 'var(--warning)' }}>?ъ꽍 {dil}%</span>
                                 </div>
                                 <div className="flex rounded-md overflow-hidden mb-1.5" style={{ height: 10 }}>
                                   <div style={{ width: `${existing}%`, background: '#ffffff' }} />
                                   <div style={{ width: `${dil}%`, background: 'var(--warning)' }} />
                                 </div>
                                 <div className="flex justify-between text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
-                                  <span>기존 {existing}%</span>
-                                  <span style={{ color: 'var(--warning)' }}>신주 {dil}%</span>
+                                  <span>湲곗〈 {existing}%</span>
+                                  <span style={{ color: 'var(--warning)' }}>?좎＜ {dil}%</span>
                                 </div>
                               </div>
                             );
@@ -1433,28 +1431,28 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                             if (!m) return null;
                             const dy = parseFloat(m[1]);
                             if (!(dy >= 0 && dy <= 50)) return null;
-                            const tiers = ['낮음', '보통', '양호', '고배당'];
+                            const tiers = ['??쓬', '蹂댄넻', '?묓샇', '怨좊같??];
                             const ti = dy < 1 ? 0 : dy < 2.5 ? 1 : dy < 4 ? 2 : 3;
                             const C = '#ffffff';
                             return (
                               <div className="px-3.5 py-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                                 <div className="flex items-center justify-between mb-2">
-                                  <span className="text-[10px] font-semibold" style={{ color: 'var(--text-tertiary)' }}>시가배당률</span>
+                                  <span className="text-[10px] font-semibold" style={{ color: 'var(--text-tertiary)' }}>?쒓?諛곕떦瑜?/span>
                                   <span className="text-[14px] font-extrabold" style={{ color: C }}>{dy}% <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{tiers[ti]}</span></span>
                                 </div>
                                 <div className="flex gap-1 mb-1">
                                   {tiers.map((_, i) => (<div key={i} style={{ flex: 1, height: 6, borderRadius: 3, background: i <= ti ? C : 'rgba(255,255,255,0.1)', opacity: i < ti ? 0.5 : 1 }} />))}
                                 </div>
-                                {dpsRow && <div className="text-[10px] mt-1" style={{ color: 'var(--text-secondary)' }}>주당 {dpsRow.value}</div>}
+                                {dpsRow && <div className="text-[10px] mt-1" style={{ color: 'var(--text-secondary)' }}>二쇰떦 {dpsRow.value}</div>}
                               </div>
                             );
                           })()}
                           {restRows.length > 0 && (
                             <div>
-                              <div className="text-[10px] mb-1.5 px-1" style={{ color: 'var(--text-tertiary)' }}>그 외 지표</div>
+                              <div className="text-[10px] mb-1.5 px-1" style={{ color: 'var(--text-tertiary)' }}>洹???吏??/div>
                               <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
                                 {restRows.map((kn, i) => {
-                                  const hasChange = /[+\-△]|▲|▼/.test(kn.value);
+                                  const hasChange = /[+\-??|????.test(kn.value);
                                   return (
                                     <div key={i} className="flex items-center gap-2 px-3.5 py-2.5"
                                       style={{ background: 'var(--bg-elevated)', borderTop: i === 0 ? 'none' : '1px solid var(--border)' }}>
@@ -1470,17 +1468,17 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                         </div>
                       );
                     })()}
-                    {!ai.summary && !ai.detail && <EmptyTab text="요약 정보가 없어요" />}
+                    {!ai.summary && !ai.detail && <EmptyTab text="?붿빟 ?뺣낫媛 ?놁뼱?? />}
                   </>
                   {ai.investorNote && (
                     <div className="mt-5">
-                      <div className="text-[11px] font-bold mb-2" style={{ color: '#ffffff' }}>투자 포인트</div>
+                      <div className="text-[11px] font-bold mb-2" style={{ color: '#ffffff' }}>?ъ옄 ?ъ씤??/div>
                       <p className="text-[12px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{ai.investorNote}</p>
                     </div>
                   )}
                   {ai.riskSignals && ai.riskSignals.length > 0 && (
                     <div className="mt-5">
-                      <div className="text-[11px] font-bold mb-2" style={{ color: '#e8893f' }}>리스크</div>
+                      <div className="text-[11px] font-bold mb-2" style={{ color: '#e8893f' }}>由ъ뒪??/div>
                       <div className="flex flex-col gap-2">
                         {ai.riskSignals.map((rs: { level: string; text: string }, i: number) => {
                           const c = rs.level === 'red' ? { dot: '#e8893f', bg: 'rgba(232,137,63,0.10)' } : rs.level === 'yellow' ? { dot: '#e8893f', bg: 'rgba(232,137,63,0.10)' } : { dot: '#9DA7B3', bg: 'rgba(255,255,255,0.10)' };
@@ -1496,7 +1494,7 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                   )}
                   {ai.timeline && (
                     <div className="mt-5">
-                      <div className="text-[11px] font-bold mb-2" style={{ color: '#ffffff' }}>일정 확인</div>
+                      <div className="text-[11px] font-bold mb-2" style={{ color: '#ffffff' }}>?쇱젙 ?뺤씤</div>
                       <div className="flex gap-2 p-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
                         <FileText size={14} style={{ color: '#ffffff', marginTop: 2, flexShrink: 0 }} />
                         <span className="text-[12px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{ai.timeline}</span>
@@ -1513,27 +1511,26 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
               <div className="w-11 h-11 rounded-full flex items-center justify-center mx-auto mb-2.5" style={{ background: '#ffffff' }}>
                 <Sparkles size={18} color="#000" />
               </div>
-              <p className="text-[13px] font-extrabold mb-1.5" style={{ color: 'var(--text-primary)' }}>로그인하면 AI 분석을 볼 수 있어요</p>
+              <p className="text-[13px] font-extrabold mb-1.5" style={{ color: 'var(--text-primary)' }}>濡쒓렇?명븯硫?AI 遺꾩꽍??蹂????덉뼱??/p>
               <button onClick={() => setShowLogin(true)} className="mt-2 px-5 py-2 rounded-xl text-[12px] font-bold active:scale-95 transition-all" style={{ background: '#ffffff', color: '#000000' }}>
-                로그인하기
-              </button>
+                濡쒓렇?명븯湲?              </button>
             </div>
           )}
 
-          {/* 재무위험·감사의견 배너 */}
+          {/* ?щТ?꾪뿕쨌媛먯궗?섍껄 諛곕꼫 */}
           {finRisk && finRisk.signals && finRisk.signals.length > 0 && (() => {
             const lv = finRisk.overallLevel;
             const head = lv === 'red'
-              ? { color: '#e8893f', bg: 'rgba(232,137,63,0.10)', border: 'rgba(232,137,63,0.30)', label: '감사의견·재무위험 주의' }
+              ? { color: '#e8893f', bg: 'rgba(232,137,63,0.10)', border: 'rgba(232,137,63,0.30)', label: '媛먯궗?섍껄쨌?щТ?꾪뿕 二쇱쓽' }
               : lv === 'yellow'
-              ? { color: '#e8893f', bg: 'rgba(232,137,63,0.08)', border: 'rgba(232,137,63,0.25)', label: '재무 주의 신호' }
-              : { color: '#9DA7B3', bg: 'rgba(255,255,255,0.08)', border: 'rgba(255,255,255,0.20)', label: '재무 전반적 양호' };
+              ? { color: '#e8893f', bg: 'rgba(232,137,63,0.08)', border: 'rgba(232,137,63,0.25)', label: '?щТ 二쇱쓽 ?좏샇' }
+              : { color: '#9DA7B3', bg: 'rgba(255,255,255,0.08)', border: 'rgba(255,255,255,0.20)', label: '?щТ ?꾨컲???묓샇' };
             return (
               <div className="mb-5 rounded-2xl overflow-hidden" style={{ background: head.bg, border: `1px solid ${head.border}` }}>
                 <div className="flex items-center gap-2 px-3.5 py-2.5" style={{ borderBottom: `1px solid ${head.border}` }}>
                   <ShieldAlert size={15} style={{ color: head.color }} />
                   <span className="text-[12px] font-extrabold" style={{ color: head.color }}>{head.label}</span>
-                  {finRisk.year && <span className="text-[9px] px-1.5 py-0.5 rounded ml-auto" style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text-tertiary)' }}>{finRisk.year}년 재무</span>}
+                  {finRisk.year && <span className="text-[9px] px-1.5 py-0.5 rounded ml-auto" style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text-tertiary)' }}>{finRisk.year}???щТ</span>}
                 </div>
                 <div className="px-3.5 py-2.5 flex flex-col gap-2">
                   {finRisk.signals.map((s, i) => {
@@ -1547,44 +1544,44 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                   })}
                   {reportInfo.auditOpinion && reportInfo.auditOpinion.opinion && (() => {
                     const op = reportInfo.auditOpinion.opinion;
-                    const isClean = /적정/.test(op);
+                    const isClean = /?곸젙/.test(op);
                     const c = isClean ? '#9DA7B3' : '#e8893f';
                     return (
                       <div className="flex gap-2 items-center">
                         <span style={{ width: 8, height: 8, borderRadius: 99, background: c, marginTop: 0, flexShrink: 0 }} />
                         <span className="text-[12px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>
-                          감사의견 <span className="font-bold" style={{ color: c }}>{op}</span>
-                          {reportInfo.auditOpinion.auditor && <span style={{ color: 'var(--text-tertiary)' }}> · {reportInfo.auditOpinion.auditor}</span>}
+                          媛먯궗?섍껄 <span className="font-bold" style={{ color: c }}>{op}</span>
+                          {reportInfo.auditOpinion.auditor && <span style={{ color: 'var(--text-tertiary)' }}> 쨌 {reportInfo.auditOpinion.auditor}</span>}
                         </span>
                       </div>
                     );
                   })()}
                   <p className="text-[10px] mt-1" style={{ color: 'var(--text-tertiary)' }}>
-                    DART 재무공시 기반 자동 산정. 정확한 재무현황 확인은 실제 공시를 확인해주세요.
+                    DART ?щТ怨듭떆 湲곕컲 ?먮룞 ?곗젙. ?뺥솗???щТ?꾪솴 ?뺤씤? ?ㅼ젣 怨듭떆瑜??뺤씤?댁＜?몄슂.
                   </p>
                 </div>
               </div>
             );
           })()}
 
-          {/* 기본 요약 */}
-          <div className="text-[11px] font-bold mb-2" style={{ color: 'var(--text-tertiary)' }}>공시 내용</div>
+          {/* 湲곕낯 ?붿빟 */}
+          <div className="text-[11px] font-bold mb-2" style={{ color: 'var(--text-tertiary)' }}>怨듭떆 ?댁슜</div>
           <p className="text-sm leading-relaxed p-4 rounded-2xl mb-5" style={{ color: 'var(--text-secondary)', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
             {disclosure.summary}
           </p>
 
-          {/* 공시 영향 통계 */}
+          {/* 怨듭떆 ?곹뼢 ?듦퀎 */}
           <DisclosureImpactStat receiptNo={disclosure.receiptNo} />
 
-          {/* 사업보고서 + 자본금 로딩 */}
+          {/* ?ъ뾽蹂닿퀬??+ ?먮낯湲?濡쒕뵫 */}
           {(capLoading || reportInfo.loading) && (
             <div className="mt-3 flex items-center justify-center py-3 rounded-2xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
               <Loader2 size={13} className="animate-spin" style={{ color: 'var(--text-tertiary)' }} />
-              <span className="text-[10px] ml-2" style={{ color: 'var(--text-tertiary)' }}>사업보고서 정보 불러오는 중…</span>
+              <span className="text-[10px] ml-2" style={{ color: 'var(--text-tertiary)' }}>?ъ뾽蹂닿퀬???뺣낫 遺덈윭?ㅻ뒗 以묅?/span>
             </div>
           )}
 
-          {/* jp: 데이터 없을 때 안내 — 발행사/공시 유형에 맞는 문구 자동 선택 */}
+          {/* jp: ?곗씠???놁쓣 ???덈궡 ??諛쒗뻾??怨듭떆 ?좏삎??留욌뒗 臾멸뎄 ?먮룞 ?좏깮 */}
           {!capLoading && !reportInfo.loading &&
            !hasReportData &&
            !(reportInfo.financials && (reportInfo.financials.consolidated || reportInfo.financials.separate)) &&
@@ -1601,28 +1598,29 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
             />
           )}
 
-          {/* jp: 주석 내용 검색 - 분석 완료 + 종목코드 있을 때, 탭 위 고정 */}
+          {/* jp: 二쇱꽍 ?댁슜 寃??- 遺꾩꽍 ?꾨즺 + 醫낅ぉ肄붾뱶 ?덉쓣 ?? ????怨좎젙 */}
           {ai && disclosure.stockCode && /^(\uC0AC\uC5C5\uBCF4\uACE0\uC11C|\uBD84\uAE30\uBCF4\uACE0\uC11C|\uBC18\uAE30\uBCF4\uACE0\uC11C)/.test((disclosure.reportName || '').trim()) && (
             <div className="mt-3">
+              <NotesSearchSection stockCode={disclosure.stockCode} stockName={disclosure.stockName} />
             </div>
           )}
 
-          {/* 사업보고서 섹션 — 6개 탭 카드 상단 배치 */}
+          {/* ?ъ뾽蹂닿퀬???뱀뀡 ??6媛???移대뱶 ?곷떒 諛곗튂 */}
           {reportInfo.loading && (
             <div className="mt-3 rounded-2xl py-8 text-center" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
               <Loader2 size={18} className="animate-spin mx-auto mb-2" style={{ color: 'var(--text-tertiary)' }} />
-              <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>재무정보 불러오는 중...</span>
+              <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>?щТ?뺣낫 遺덈윭?ㅻ뒗 以?..</span>
             </div>
           )}
           {!reportInfo.loading && hasReportData && (() => {
             const TABS = [
-              { key: 'capital' as const,     icon: <TrendingUp size={14} />, label: '자본금',   color: '#ffffff', hasData: !!(capItems && capItems.length > 0) },
-              { key: 'investment' as const,  icon: <Building2 size={14} />, label: '출자현황', color: '#ffffff', hasData: reportInfo.investments.filter((it) => !isSummaryRow(it.corpName)).length > 0 },
-              { key: 'bonds' as const,       icon: <FileText size={14} />,  label: '미상환사채', color: '#ffffff', hasData: reportInfo.bonds.length > 0 || reportInfo.bondDetails.length > 0 },
-              { key: 'shareholder' as const, icon: <Users size={14} />,     label: '최대주주', color: '#ffffff', hasData: reportInfo.majorShareholders.filter((it) => !isSummaryRow(it.name)).length > 0 },
-              { key: 'stock' as const,       icon: <PieChart size={14} />,  label: '주식총수', color: '#ffffff', hasData: reportInfo.stockTotal.length > 0 },
-              { key: 'dividend' as const,    icon: <Coins size={14} />,     label: '배당이력', color: '#ffffff', hasData: reportInfo.dividends.filter((d) => d.thisYear || d.prevYear || d.prev2Year).length > 0 },
-              { key: 'minority' as const,    icon: <Users size={14} />,     label: '소액주주', color: '#ffffff', hasData: reportInfo.minority.length > 0 },
+              { key: 'capital' as const,     icon: <TrendingUp size={14} />, label: '?먮낯湲?,   color: '#ffffff', hasData: !!(capItems && capItems.length > 0) },
+              { key: 'investment' as const,  icon: <Building2 size={14} />, label: '異쒖옄?꾪솴', color: '#ffffff', hasData: reportInfo.investments.filter((it) => !isSummaryRow(it.corpName)).length > 0 },
+              { key: 'bonds' as const,       icon: <FileText size={14} />,  label: '誘몄긽?섏궗梨?, color: '#ffffff', hasData: reportInfo.bonds.length > 0 || reportInfo.bondDetails.length > 0 },
+              { key: 'shareholder' as const, icon: <Users size={14} />,     label: '理쒕?二쇱＜', color: '#ffffff', hasData: reportInfo.majorShareholders.filter((it) => !isSummaryRow(it.name)).length > 0 },
+              { key: 'stock' as const,       icon: <PieChart size={14} />,  label: '二쇱떇珥앹닔', color: '#ffffff', hasData: reportInfo.stockTotal.length > 0 },
+              { key: 'dividend' as const,    icon: <Coins size={14} />,     label: '諛곕떦?대젰', color: '#ffffff', hasData: reportInfo.dividends.filter((d) => d.thisYear || d.prevYear || d.prev2Year).length > 0 },
+              { key: 'minority' as const,    icon: <Users size={14} />,     label: '?뚯븸二쇱＜', color: '#ffffff', hasData: reportInfo.minority.length > 0 },
             ].filter((t) => t.hasData);
 
             if (TABS.length === 0) return null;
@@ -1677,14 +1675,13 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
                         style={{ background: 'rgba(232,137,63,0.10)', border: '1px solid rgba(232,137,63,0.25)' }}>
                         <AlertTriangle size={12} style={{ color: '#e8893f', flexShrink: 0 }} />
                         <span className="text-[10.5px] leading-snug" style={{ color: 'var(--text-secondary)' }}>
-                          이 공시에는 해당 정보가 없어 <span style={{ color: '#e8893f', fontWeight: 700 }}>{badgeText}</span> 데이터를 보여드려요
-                        </span>
+                          ??怨듭떆?먮뒗 ?대떦 ?뺣낫媛 ?놁뼱 <span style={{ color: '#e8893f', fontWeight: 700 }}>{badgeText}</span> ?곗씠?곕? 蹂댁뿬?쒕젮??                        </span>
                       </div>
                     );
                   })()}
                   {validKey === 'capital'     && (
                     capLoading
-                      ? <div className="px-3.5 py-6 text-center text-[11px]" style={{ color: 'var(--text-tertiary)' }}>불러오는 중...</div>
+                      ? <div className="px-3.5 py-6 text-center text-[11px]" style={{ color: 'var(--text-tertiary)' }}>遺덈윭?ㅻ뒗 以?..</div>
                       : <CapitalChangeVisual items={capItems ?? []} embedded />
                   )}
                   {validKey === 'investment'  && <InvestmentVisual items={reportInfo.investments} year={reportYear} embedded />}
@@ -1698,11 +1695,11 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
             );
           })()}
 
-          {/* 연관 공시 */}
+          {/* ?곌? 怨듭떆 */}
           {related.length > 0 && (
             <div className="mt-5">
               <div className="text-[11px] font-bold mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-tertiary)' }}>
-                <FileText size={12} /> {disclosure.stockName} 이전 공시
+                <FileText size={12} /> {disclosure.stockName} ?댁쟾 怨듭떆
               </div>
               <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                 {related.map((d, i) => (
@@ -1718,15 +1715,15 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
             </div>
           )}
 
-          {/* 공시 정보 */}
-          <div className="text-[11px] font-bold mb-2 mt-5" style={{ color: 'var(--text-tertiary)' }}>공시 정보</div>
+          {/* 怨듭떆 ?뺣낫 */}
+          <div className="text-[11px] font-bold mb-2 mt-5" style={{ color: 'var(--text-tertiary)' }}>怨듭떆 ?뺣낫</div>
           <div className="flex gap-2">
             <div className="flex-1 p-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-              <div className="text-[9.5px] mb-1" style={{ color: 'var(--text-tertiary)' }}>공시일</div>
+              <div className="text-[9.5px] mb-1" style={{ color: 'var(--text-tertiary)' }}>怨듭떆??/div>
               <div className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>{disclosure.disclosedAt?.slice(0, 10).replace(/-/g, '.')}</div>
             </div>
             <div className="flex-1 p-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-              <div className="text-[9.5px] mb-1" style={{ color: 'var(--text-tertiary)' }}>접수번호</div>
+              <div className="text-[9.5px] mb-1" style={{ color: 'var(--text-tertiary)' }}>?묒닔踰덊샇</div>
               <div className="text-xs font-mono font-bold" style={{ color: 'var(--text-primary)' }}>{disclosure.receiptNo}</div>
             </div>
           </div>
@@ -1737,16 +1734,15 @@ export function DisclosureSummarySheet({ disclosure, isOpen, onClose }: Disclosu
 
       <AuthModal open={showLogin} onClose={() => setShowLogin(false)} />
 
-      {/* 하단 고정 버튼 */}
+      {/* ?섎떒 怨좎젙 踰꾪듉 */}
       <div className="absolute left-0 right-0 bottom-0 px-4 pt-4 pb-5 flex flex-col gap-2.5"
         style={{ background: 'linear-gradient(to top, var(--bg-primary) 78%, transparent)' }}>
         <a href={disclosure.originalUrl} target="_blank" rel="noopener noreferrer"
           className="w-full py-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 active:scale-[0.99] transition-all"
           style={{ background: 'rgba(92,138,255,0.14)', border: '1px solid rgba(92,138,255,0.5)', color: '#5c8aff' }}>
-          <ExternalLink size={16} /> DART 원문 보기
+          <ExternalLink size={16} /> DART ?먮Ц 蹂닿린
         </a>
       </div>
     </div>
   );
 }
-

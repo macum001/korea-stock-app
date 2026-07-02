@@ -1,4 +1,4 @@
-// jp: Express ???ㅼ젙
+﻿// jp: Express ???ㅼ젙
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -30,6 +30,7 @@ import fcmRoutes from './routes/fcm.routes';
 import classifyTestRoutes from './routes/classifyTest.routes';
 import notificationRoutes from './routes/notification.routes';
 import aiAnalysisRoutes from './routes/aiAnalysis.routes';
+import notesSearchRoutes from './routes/notesSearch.routes';
 import aiHistoryRoutes from './routes/aiHistory.routes';
 import aiDocTestRoutes from './routes/aiDocTest.routes';
 import adminAuthRoutes from './routes/admin/auth.routes';
@@ -48,7 +49,6 @@ import dailyExamplesRoutes from './routes/dailyExamples.routes'; // jp: import??
 // jp: 諛고룷 ??諛섎뱶??CORS_ORIGIN=https://your-domain.com ?ㅼ젙??寃?(?쇳몴濡?蹂듭닔 ?꾨찓??媛??
 const corsAllowList: string[] = [
   'https://korea-stock-app-virid.vercel.app',
-  'https://korea-stock-admin.vercel.app',
   ...(ENV.CORS_ORIGIN ? ENV.CORS_ORIGIN.split(',').map((s) => s.trim()) : []),
 ];
 const corsOptions = {
@@ -122,6 +122,7 @@ app.use('/api/stocks',      stockDisclosureRouter);    // jp: /api/stocks/:code/
 app.use('/api/disclosures', disclosureRoutes);         // jp: 以묐났 ?깅줉 ?쒓굅
 app.use('/api/capital-history', capitalHistoryRoutes);
 app.use('/api/report-info', reportInfoRoutes);
+app.use('/api/notes', requireAuth, notesSearchRoutes);   // jp: RAG 二쇱꽍 ?섎? 寃??(濡쒓렇???꾩닔)
 app.use('/api/news', newsRoutes);
 
 app.use('/api/alerts',      alertRoutes);              // jp: 愿??怨듭떆 ?뚮┝ 議곌굔 CRUD (requireAuth)
@@ -148,4 +149,3 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 });
 
 export default app;
-

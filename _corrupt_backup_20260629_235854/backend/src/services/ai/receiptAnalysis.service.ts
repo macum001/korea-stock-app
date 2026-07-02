@@ -7,6 +7,7 @@ import { query } from '../../config/db';
 import { safeGet, safeSetEx } from '../../config/redis';
 import { extractDisclosureCore } from './dartDocument.service';
 import { getPrompt } from './promptStore.service';
+import { embedAndStoreNotes } from './notesEmbedding.service';
 
 // ─────────────────────────────────────────────
 // 타입 정의
@@ -961,6 +962,28 @@ export async function analyzeByReceiptNo(receiptNo: string): Promise<ReceiptAnal
       // jp: 백그라운드 실행 (응답 대기 안 함) — 실패해도 분석 결과에 영향 없음
       // jp: 임베딩 실패 시 notes_embed_status에 failed 기록
       //     → notesEmbedRetry.job이 10분마다 자동으로 잡아서 재처리
+      if (row.corp_code) {
+        embedAndStoreNotes({
+          corpCode:    row.corp_code,
+          stockCode:   row.stock_code || undefined,
+          stockName:   row.stock_name || undefined,
+          receiptNo:   row.receipt_no,
+          reportName:  row.report_name,
+          disclosedAt: row.disclosed_at,
+        }).then((r) => {
+          if (r.ok && r.chunks > 0) {
+            console.log(`[RAG] 주석 자동 임베딩: ${row.stock_name} ${r.chunks}청크`);
+          } else if (!r.ok && r.skipped !== 'not-periodic' && r.skipped !== 'already-embedded') {
+            // jp: 정기보고서인데 임베딩 실패 — 로그로 남겨서 모니터링 가능하게
+            // jp: notes_embed_status는 embedAndStoreNotes 내부에서 'failed'로 기록됨
+            // jp: notesEmbedRetry.job이 10분 후 자동 재처리
+            console.warn(`[RAG] 주석 임베딩 실패 (${row.receipt_no}): ${r.skipped || 'unknown'} — 재시도 잡이 처리 예정`);
+          }
+        }).catch((err) => {
+          // jp: 예외 발생 시에도 notes_embed_status는 이미 embedAndStoreNotes 내부에서 기록됨
+          console.warn('[RAG] 주석 임베딩 예외 (재시도 잡이 처리 예정):', err instanceof Error ? err.message : err);
+        });
+      }
 
       return result;
 
@@ -1057,4 +1080,3 @@ const DEFAULT_SYSTEM_PROMPT = `너는 한국 상장사 공시를 초등학생도
 - keyNumbers에는 원문에서 찾은 숫자만 넣는다. 없으면 빈 배열.
 
 반드시 JSON만 출력한다 (설명·마크다운 없이).`;
-
