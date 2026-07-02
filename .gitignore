@@ -94,3 +94,9 @@ backend_tree.txt
 frontend_tree.txt
 tree.txt
 ops_queries.sql
+
+# jp: 정리 - 일회성 스크립트/백업 (추적 제외)
+_corrupt_backup_*/
+*.py
+backend/src/scripts/.backfill_progress.txt
+backend/src/scripts/backfillByDateRange.ts
