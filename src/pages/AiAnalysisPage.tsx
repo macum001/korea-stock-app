@@ -33,12 +33,12 @@ import { getDisclosureClassification, ISSUER_LABEL, ISSUER_STYLE } from '@/utils
 import { ChevronDown } from 'lucide-react';
 
 const C = {
-  purple: '#ffffff',
-  pink: '#ffffff',
-  green: '#ffffff',
-  amber: '#ffffff',
+  purple: '#8b5cf6',
+  pink: '#ec4899',
+  green: '#10b981',
+  amber: '#f59e0b',
   heroGrad: '#161B22',
-  btnGrad: '#ffffff',
+  btnGrad: '#8b5cf6',
 };
 
 type SubTab = 'stock' | 'market' | 'disclosure' | 'news';
