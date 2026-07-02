@@ -1,4 +1,4 @@
-﻿// jp: AI인사이트 탭 - 상단 서브탭 4개
+// jp: AI인사이트 탭 - 상단 서브탭 4개
 // jp: AI종목분석 / AI시황분석(BriefingCurrent+BriefingHistoryList 직접) / AI공시분석(FeedPage 내부 직접) / 종목뉴스
 // jp: onGoToDisclosures 제거 — 공시 클릭은 분석 시트로 통일 (App.tsx와 동일 방향)
 import { useState, useEffect, useRef } from 'react';
@@ -6,6 +6,7 @@ import {
   Info, X, TrendingUp, TrendingDown, FileText,
   Sparkles, ArrowRight, Newspaper,
   Search, AlertTriangle,
+  BarChart3, Building2, Gift, Lightbulb,
 } from 'lucide-react';
 import { aiService, StockAnalysisResult } from '@/services/aiService';
 import { StreamingStockTab } from '@/components/ai/StreamingStockTab';
@@ -13,7 +14,6 @@ import { newsService, StockNewsItem } from '@/services/aiService';
 import { RecentAnalysis } from '@/components/ai/RecentAnalysis';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { useAuthStore } from '@/store/authStore';
-import { apiClient } from '@/services/apiClient';
 
 // jp: AI시황분석용
 import { BriefingCurrent } from '@/components/briefing/BriefingCurrent';
@@ -90,23 +90,113 @@ export function AiAnalysisPage({ onOpenDisclosure }: AiAnalysisPageProps) {
 }
 
 // ===== AI종목분석 =====
-// jp: 예시 색상 풀 - 순환 사용
-const EXAMPLE_STYLES = [
-  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#ffffff', subColor: 'var(--text-tertiary)' },
-  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#ffffff', subColor: 'var(--text-tertiary)' },
-  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#ffffff', subColor: 'var(--text-tertiary)' },
-  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#ffffff', subColor: 'var(--text-tertiary)' },
-  { bg: 'var(--bg-elevated)', border: 'var(--border)', iconColor: '#ffffff', subColor: 'var(--text-tertiary)' },
+// ===== AI종목분석 인트로 (입력 전 안내) — 바이올렛 =====
+const V = {
+  accent: '#8b5cf6',
+  accentLight: '#a78bfa',
+  badge: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+  cardBg: 'rgba(139,92,246,0.06)',
+  cardBorder: 'rgba(139,92,246,0.35)',
+  arrowBorder: 'rgba(167,139,250,0.40)',
+  panelBg: 'rgba(255,255,255,0.03)',
+  panelBorder: 'rgba(255,255,255,0.08)',
+  divider: 'rgba(255,255,255,0.10)',
+  white: '#ffffff',
+  sub: 'rgba(255,255,255,0.55)',
+  bullet: 'rgba(255,255,255,0.82)',
+};
+
+const INTRO_CARDS = [
+  { icon: Building2, title: '기업 개요', subtitle: '뭐하는 회사인지',
+    items: ['사업 내용, 주요 제품/서비스', '설립일, 상장일, 본사 위치', '대표이사, 주요 자회사'] },
+  { icon: TrendingUp, title: '재무 현황', subtitle: '매출·영업이익',
+    items: ['매출액, 영업이익, 당기순이익 추이', '주요 재무지표 (ROE, 부채비율 등)', '최근 재무제표 요약'] },
+  { icon: AlertTriangle, title: '조심할 것', subtitle: '리스크 요인',
+    items: ['재무적 리스크 요인', '사업·경영 리스크 요인', '최근 이슈 및 규제 리스크'] },
+  { icon: Gift, title: '지켜볼 사항', subtitle: '주목 포인트',
+    items: ['성장 동력 및 모멘텀', '신사업 및 투자 계획', '향후 체크 포인트'] },
 ];
 
-// jp: 폴백 예시 (API 실패 시)
-const FALLBACK_EXAMPLES = [
-  { text: '삼성전자 최근 공시 중 주가에 영향줄 내용 있어?', sub: '공시 + 뉴스 분석' },
-  { text: 'SK하이닉스 이번 분기 실적 공시 어떻게 나왔어?', sub: '실적 공시 해석' },
-  { text: '현대차 오늘 뉴스랑 공시 같이 보면 어때?', sub: '공시 + 뉴스 크로스체크' },
-  { text: '오늘 반도체 관련주 흐름 어때?', sub: '섹터 흐름 분석' },
-  { text: '삼성바이오로직스 최근 뉴스랑 공시 종합해줘', sub: '뉴스 + 공시 종합' },
+const INTRO_STEPS = [
+  { title: '종목명이나 코드를 입력 (삼성전자, 005930)', desc: '분석하고 싶은 종목명을 입력하면, AI가 관련 정보를 수집해요.' },
+  { title: '기업 개요·재무·공시·뉴스를 AI가 종합 분석', desc: 'AI가 다양한 데이터를 한 번에 분석해 핵심 내용을 요약해드려요.' },
+  { title: '조심할 것·지켜볼 사항까지 한눈에 확인', desc: '리스크와 주목 포인트를 함께 확인하고, 투자 판단에 활용해보세요.' },
 ];
+
+function StockIntro() {
+  return (
+    <div className="mb-5">
+      {/* 헤더 */}
+      <div className="text-center mb-5">
+        <div className="flex items-center justify-center gap-1.5 mb-1.5">
+          <BarChart3 size={22} style={{ color: V.accentLight }} />
+          <h2 className="text-[20px] font-bold" style={{ color: V.white }}>AI 기업분석</h2>
+        </div>
+        <p className="text-[12px] leading-[1.5]" style={{ color: V.sub }}>
+          종목 하나로 기업의 현재 상황을<br />AI가 한 번에 정리해드려요
+        </p>
+      </div>
+
+      {/* 2x2 카드 */}
+      <div className="grid grid-cols-2 gap-2.5 mb-3">
+        {INTRO_CARDS.map((c) => {
+          const Icon = c.icon;
+          return (
+            <div key={c.title} className="rounded-[16px] p-3.5"
+              style={{ background: V.cardBg, border: `1px solid ${V.cardBorder}` }}>
+              <div className="flex items-start justify-between mb-2.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-center justify-center rounded-full flex-shrink-0"
+                    style={{ width: 34, height: 34, background: V.badge }}>
+                    <Icon size={17} color="#fff" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-bold leading-tight" style={{ color: V.white }}>{c.title}</p>
+                    <p className="text-[10px] mt-0.5 truncate" style={{ color: V.sub }}>{c.subtitle}</p>
+                  </div>
+                </div>
+                <span className="flex items-center justify-center rounded-full flex-shrink-0"
+                  style={{ width: 22, height: 22, border: `1px solid ${V.arrowBorder}`, color: V.accentLight }}>
+                  <ArrowRight size={11} />
+                </span>
+              </div>
+              <div className="h-px mb-2.5" style={{ background: V.divider }} />
+              <ul className="flex flex-col gap-1.5">
+                {c.items.map((it) => (
+                  <li key={it} className="flex items-start gap-1.5">
+                    <span className="rounded-full flex-shrink-0" style={{ width: 4, height: 4, marginTop: 6, background: V.accentLight }} />
+                    <span className="text-[11px] leading-[1.35]" style={{ color: V.bullet }}>{it}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 사용법 */}
+      <div className="rounded-[16px] p-4" style={{ background: V.panelBg, border: `1px solid ${V.panelBorder}` }}>
+        <div className="flex items-center gap-1.5 mb-3.5">
+          <Lightbulb size={16} style={{ color: V.accentLight }} />
+          <h3 className="text-[14px] font-bold" style={{ color: V.white }}>이렇게 사용하세요</h3>
+        </div>
+        <ol className="flex flex-col gap-3.5">
+          {INTRO_STEPS.map((s, i) => (
+            <li key={i} className="flex gap-2.5">
+              <span className="flex items-center justify-center rounded-full flex-shrink-0 text-[12px] font-bold"
+                style={{ width: 24, height: 24, background: V.accent, color: '#fff' }}>{i + 1}</span>
+              <div>
+                <p className="text-[12.5px] font-semibold leading-snug" style={{ color: V.white }}>{s.title}</p>
+                <p className="text-[11px] mt-0.5 leading-[1.45]" style={{ color: V.sub }}>{s.desc}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  );
+}
+
 
 function StockTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosure | string, c?: string, n?: string) => void }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -116,14 +206,7 @@ function StockTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosure | 
   const [error, setError] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
   const [showLogin, setShowLogin] = useState(false);
-  // jp: 오늘의 예시 - API에서 로드 (새벽 5시 크론잡으로 매일 갱신)
-  const [examples, setExamples] = useState(FALLBACK_EXAMPLES);
 
-  useEffect(() => {
-    apiClient.get<{ text: string; sub: string }[]>('/api/ai/daily-examples')
-      .then((data) => { if (Array.isArray(data) && data.length > 0) setExamples(data); })
-      .catch(() => { /* 폴백 유지 */ });
-  }, []);
 
   const analyze = async (v: string) => {
     const q = v.trim();
@@ -161,25 +244,7 @@ function StockTab({ onOpenDisclosure }: { onOpenDisclosure?: (arg: Disclosure | 
       <p className="text-[10px] flex items-center gap-1 mb-[18px]" style={{ color: 'var(--text-tertiary)' }}>
         <Sparkles size={11} /> 종목코드/종목명 OK, 자연어 질문도 OK
       </p>
-      <p className="text-[11px] mb-[9px]" style={{ color: 'var(--text-tertiary)' }}>이렇게 물어보세요</p>
-      <div className="flex flex-col gap-2 mb-5">
-        {examples.map((ex, i) => {
-          const style = EXAMPLE_STYLES[i % EXAMPLE_STYLES.length];
-          return (
-            <button key={ex.text} onClick={() => setInput(ex.text)}
-              className="rounded-xl px-3.5 py-[11px] flex items-center gap-2.5 text-left active:opacity-70"
-              style={{ background: style.bg, border: `1px solid ${style.border}` }}>
-              <span style={{ color: style.iconColor, flexShrink: 0 }}>
-                <Sparkles size={15} />
-              </span>
-              <div>
-                <p className="text-[12px]" style={{ color: 'var(--text-primary)' }}>{ex.text}</p>
-                <p className="text-[10px] mt-0.5" style={{ color: style.subColor }}>{ex.sub}</p>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+      {!result && !busy && <StockIntro />}
       <AuthModal open={showLogin} onClose={() => setShowLogin(false)} />
       {busy && <LoadingDots text="종목을 분석하고 있어요.." />}
       {error && <ErrorBox msg={error} onClose={() => setError('')} />}
