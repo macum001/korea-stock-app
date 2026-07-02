@@ -39,11 +39,6 @@ export const ENV = {
     API_KEY:  requireEnv('DART_API_KEY'),
     BASE_URL: 'https://opendart.fss.or.kr/api',
   },
-  // jp: Voyage AI 임베딩 (RAG 주석 검색용)
-  VOYAGE: {
-    API_KEY: process.env.VOYAGE_API_KEY || '',
-    MODEL: process.env.VOYAGE_MODEL || 'voyage-3.5',
-  },
 
   NAVER: {
     CLIENT_ID:     requireEnv('NAVER_CLIENT_ID'),
@@ -80,5 +75,6 @@ export const ENV = {
   // jp: 정기 수집이 가져올 최근 일수 (기본 7일). 전체 시장 최신 공시를 이 기간만큼 받음
   DISCLOSURE_SYNC_DAYS: parseInt(process.env.DISCLOSURE_SYNC_DAYS || '7', 10),
 };
+
 
 
